@@ -1,196 +1,194 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useState, useContext } from 'react';
 import {
   StyleSheet,
   View,
-  ScrollView,
-  TouchableOpacity,
   Image,
+  TouchableOpacity,
+  ScrollView,
   Switch,
-  Alert,
+  Platform,
+  Linking,
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { AuthContext } from '../../app/_layout';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
+import { AuthContext } from '../../app/_layout';
 
-// Mock user data
-const DEFAULT_USER = {
-  username: '--',
-  email: '--',
-  profileImageUrl: null as string | null,
-  bio: '--',
-  interests: ['--'],
-  joinedDate: 'Recently',
-  isAuthenticated: false,
-};
+// Define the types for settings items
+interface SettingItem {
+  id: string;
+  icon: "bell" | "house.fill" | "magnifyingglass" | "bookmark.fill" | "star.fill" | "safari" | "person.circle" | "arrow.right" | "heart" | "bookmark" | "square.and.arrow.up" | "doc.text";
+  label: string;
+  hasToggle: boolean;
+  value?: boolean;
+  onToggle?: () => void;
+  onPress?: () => void;
+}
+
+interface SettingSection {
+  title: string;
+  items: SettingItem[];
+}
 
 export default function ProfileScreen() {
-  const router = useRouter();
+  const [darkMode, setDarkMode] = useState(false);
+  const [notifications, setNotifications] = useState(true);
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme || 'light'];
-  const { isAuthenticated, bypassAuth, setIsAuthenticated, setBypassAuth } = useContext(AuthContext);
-  
-  // State for user data
-  const [userData, setUserData] = useState(DEFAULT_USER);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [darkModeEnabled, setDarkModeEnabled] = useState(colorScheme === 'dark');
-  
-  useEffect(() => {
-    // In a real app, this would fetch user data from an API
-    // For now, we'll use our mock data based on auth state
-    if (isAuthenticated) {
-      setUserData({
-        username: 'JohnDoe',
-        email: 'john.doe@example.com',
-        profileImageUrl: 'https://via.placeholder.com/150',
-        bio: 'Researcher in the field of AI and Machine Learning',
-        interests: ['Artificial Intelligence', 'Machine Learning', 'Neural Networks'],
-        joinedDate: 'January 2023',
-        isAuthenticated: true,
-      });
-    } else if (bypassAuth) {
-      // Keep the default user data for users who just clicked "Get Started"
-      setUserData({
-        ...DEFAULT_USER,
-        isAuthenticated: false,
-      });
-    }
-  }, [isAuthenticated, bypassAuth]);
+  const router = useRouter();
+  const { setIsAuthenticated, setBypassAuth } = useContext(AuthContext);
 
-  const handleLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to log out?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Logout',
-          onPress: () => {
-            setIsAuthenticated(false);
-            setBypassAuth(false);
-            router.replace('/login');
-          },
-          style: 'destructive',
-        },
-      ],
-      { cancelable: true }
-    );
-  };
-
-  const handleLoginSignup = () => {
+  const handleLogout = async () => {
+    // Use the context to handle logout
+    setIsAuthenticated(false);
+    setBypassAuth(false);
     router.replace('/login');
   };
 
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+    // Here you would implement the actual theme change logic
+  };
+
+  const toggleNotifications = () => {
+    setNotifications(!notifications);
+    // Here you would implement the actual notification settings change
+  };
+
+  const profileImage = 'https://via.placeholder.com/150';
+  const userName = 'Alex Johnson';
+  const userEmail = 'alex.johnson@example.com';
+
+  const settingsSections: SettingSection[] = [
+    {
+      title: 'Preferences',
+      items: [
+        {
+          id: 'dark-mode',
+          icon: 'star.fill',
+          label: 'Dark Mode',
+          hasToggle: true,
+          value: darkMode,
+          onToggle: toggleDarkMode,
+        },
+        {
+          id: 'notifications',
+          icon: 'bell',
+          label: 'Notifications',
+          hasToggle: true,
+          value: notifications,
+          onToggle: toggleNotifications,
+        },
+      ],
+    },
+    {
+      title: 'Account',
+      items: [
+        {
+          id: 'edit-profile',
+          icon: 'person.circle',
+          label: 'Edit Profile',
+          hasToggle: false,
+          onPress: () => router.push('/'),
+        },
+        {
+          id: 'change-password',
+          icon: 'doc.text',
+          label: 'Change Password',
+          hasToggle: false,
+          onPress: () => router.push('/'),
+        },
+      ],
+    },
+    {
+      title: 'Support',
+      items: [
+        {
+          id: 'help',
+          icon: 'safari',
+          label: 'Help Center',
+          hasToggle: false,
+          onPress: () => Linking.openURL('https://rescroll.com/help'),
+        },
+        {
+          id: 'feedback',
+          icon: 'bookmark',
+          label: 'Send Feedback',
+          hasToggle: false,
+          onPress: () => Linking.openURL('mailto:feedback@rescroll.com'),
+        },
+        {
+          id: 'privacy',
+          icon: 'bookmark.fill',
+          label: 'Privacy Policy',
+          hasToggle: false,
+          onPress: () => Linking.openURL('https://rescroll.com/privacy'),
+        },
+      ],
+    },
+  ];
+
+  const renderSettingItem = (item: SettingItem) => (
+    <TouchableOpacity
+      key={item.id}
+      style={styles.settingItem}
+      onPress={item.hasToggle ? undefined : item.onPress}
+      activeOpacity={item.hasToggle ? 1 : 0.7}
+    >
+      <View style={styles.settingItemLeft}>
+        <View style={styles.iconContainer}>
+          <IconSymbol name={item.icon} size={20} color={colors.primary} />
+        </View>
+        <ThemedText style={styles.settingLabel}>{item.label}</ThemedText>
+      </View>
+      {item.hasToggle ? (
+        <Switch
+          value={item.value}
+          onValueChange={item.onToggle}
+          trackColor={{ false: colors.lightGray, true: colors.primary }}
+          thumbColor={Platform.OS === 'ios' ? '' : '#fff'}
+          ios_backgroundColor={colors.lightGray}
+        />
+      ) : (
+        <IconSymbol name="arrow.right" size={18} color={colors.darkGray} />
+      )}
+    </TouchableOpacity>
+  );
+
   return (
     <ThemedView style={styles.container}>
-      <Stack.Screen options={{ 
-        title: 'Profile',
-        headerRight: () => (
-          <TouchableOpacity 
-            style={{ marginRight: 15 }}
-            onPress={() => Alert.alert('Settings', 'Settings functionality will be implemented in a future update.')}
-          >
-            <IconSymbol name="gearshape" size={22} color="#333" />
-          </TouchableOpacity>
-        )
-      }} />
+      <Stack.Screen options={{ headerShown: false }} />
+      
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <View style={styles.header}>
+          <ThemedText style={styles.screenTitle}>Profile</ThemedText>
+        </View>
 
-      <ScrollView style={styles.scrollView}>
-        <View style={styles.profileHeader}>
-          {userData.profileImageUrl ? (
-            <Image 
-              source={{ uri: userData.profileImageUrl }} 
-              style={styles.profileImage} 
-            />
-          ) : (
-            <View style={styles.profileImagePlaceholder}>
-              <IconSymbol name="person.fill" size={50} color="#ccc" />
+        <View style={styles.profileSection}>
+          <Image source={{ uri: profileImage }} style={styles.profileImage} />
+          <ThemedText style={styles.userName}>{userName}</ThemedText>
+          <ThemedText style={styles.userEmail}>{userEmail}</ThemedText>
+        </View>
+
+        {settingsSections.map((section) => (
+          <View key={section.title} style={styles.settingsSection}>
+            <ThemedText style={styles.sectionTitle}>{section.title}</ThemedText>
+            <View style={styles.settingsContainer}>
+              {section.items.map(renderSettingItem)}
             </View>
-          )}
-          
-          <ThemedText style={styles.username}>{userData.username}</ThemedText>
-          <ThemedText style={styles.email}>{userData.email}</ThemedText>
-          
-          {!isAuthenticated && !bypassAuth ? (
-            <TouchableOpacity 
-              style={styles.loginButton}
-              onPress={handleLoginSignup}
-            >
-              <ThemedText style={styles.loginButtonText}>Log In / Sign Up</ThemedText>
-            </TouchableOpacity>
-          ) : (
-            <ThemedText style={styles.joinDate}>Member since {userData.joinedDate}</ThemedText>
-          )}
-        </View>
-
-        <View style={styles.section}>
-          <ThemedText style={styles.sectionTitle}>Bio</ThemedText>
-          <ThemedText style={styles.bioText}>{userData.bio}</ThemedText>
-        </View>
-
-        <View style={styles.section}>
-          <ThemedText style={styles.sectionTitle}>Research Interests</ThemedText>
-          <View style={styles.interestsContainer}>
-            {userData.interests.map((interest, index) => (
-              <View key={index} style={styles.interestBadge}>
-                <ThemedText style={styles.interestText}>{interest}</ThemedText>
-              </View>
-            ))}
           </View>
-        </View>
+        ))}
 
-        <View style={styles.section}>
-          <ThemedText style={styles.sectionTitle}>Settings</ThemedText>
-          
-          <View style={styles.settingItem}>
-            <View style={styles.settingTextContainer}>
-              <ThemedText style={styles.settingLabel}>Notifications</ThemedText>
-              <ThemedText style={styles.settingDescription}>
-                Receive updates about new papers and features
-              </ThemedText>
-            </View>
-            <Switch
-              value={notificationsEnabled}
-              onValueChange={setNotificationsEnabled}
-              trackColor={{ false: '#d0d0d0', true: '#3498db' }}
-              thumbColor="#fff"
-            />
-          </View>
-          
-          <View style={styles.settingItem}>
-            <View style={styles.settingTextContainer}>
-              <ThemedText style={styles.settingLabel}>Dark Mode</ThemedText>
-              <ThemedText style={styles.settingDescription}>
-                Switch between light and dark themes
-              </ThemedText>
-            </View>
-            <Switch
-              value={darkModeEnabled}
-              onValueChange={setDarkModeEnabled}
-              trackColor={{ false: '#d0d0d0', true: '#3498db' }}
-              thumbColor="#fff"
-            />
-          </View>
-        </View>
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <IconSymbol name="arrow.right" size={20} color="#fff" />
+          <ThemedText style={styles.logoutText}>Log Out</ThemedText>
+        </TouchableOpacity>
 
-        {(isAuthenticated || bypassAuth) && (
-          <TouchableOpacity 
-            style={styles.logoutButton}
-            onPress={handleLogout}
-          >
-            <IconSymbol name="rectangle.portrait.and.arrow.right" size={18} color="#e74c3c" />
-            <ThemedText style={styles.logoutButtonText}>Log Out</ThemedText>
-          </TouchableOpacity>
-        )}
-
-        <View style={styles.footerContainer}>
-          <ThemedText style={styles.versionText}>ReScroll v1.0.0</ThemedText>
+        <View style={styles.footer}>
+          <ThemedText style={styles.version}>ReScroll v1.0.0</ThemedText>
         </View>
       </ScrollView>
     </ThemedView>
@@ -200,132 +198,96 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 16,
   },
-  scrollView: {
-    flex: 1,
+  header: {
+    marginTop: 16,
+    marginBottom: 20,
   },
-  profileHeader: {
+  screenTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  profileSection: {
     alignItems: 'center',
-    padding: 20,
-    paddingTop: 30,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    marginBottom: 30,
   },
   profileImage: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    marginBottom: 15,
-  },
-  profileImagePlaceholder: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    marginBottom: 16,
     backgroundColor: '#f0f0f0',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 15,
   },
-  username: {
-    fontSize: 24,
+  userName: {
+    fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 5,
+    marginBottom: 4,
   },
-  email: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 10,
-  },
-  joinDate: {
-    fontSize: 12,
+  userEmail: {
+    fontSize: 16,
     color: '#888',
-    marginTop: 5,
   },
-  loginButton: {
-    backgroundColor: '#3498db',
-    paddingVertical: 8,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-    marginTop: 10,
-  },
-  loginButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 14,
-  },
-  section: {
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+  settingsSection: {
+    marginBottom: 24,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 15,
+    fontWeight: '600',
+    marginBottom: 12,
   },
-  bioText: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: '#444',
-  },
-  interestsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  interestBadge: {
-    backgroundColor: '#f0f5fa',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    marginRight: 10,
-    marginBottom: 10,
-  },
-  interestText: {
-    fontSize: 14,
-    color: '#3498db',
+  settingsContainer: {
+    backgroundColor: '#f5f5f5',
+    borderRadius: 12,
+    overflow: 'hidden',
   },
   settingItem: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: '#ebebeb',
   },
-  settingTextContainer: {
-    flex: 1,
-    marginRight: 10,
+  settingItemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  iconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
   },
   settingLabel: {
     fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 3,
-  },
-  settingDescription: {
-    fontSize: 13,
-    color: '#666',
   },
   logoutButton: {
+    backgroundColor: '#FF5A60',
+    borderRadius: 12,
+    paddingVertical: 16,
+    marginTop: 20,
+    marginBottom: 40,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 15,
-    margin: 20,
-    backgroundColor: '#f8e6e6',
-    borderRadius: 8,
   },
-  logoutButtonText: {
-    marginLeft: 8,
+  logoutText: {
+    color: 'white',
     fontSize: 16,
-    fontWeight: '500',
-    color: '#e74c3c',
+    fontWeight: '600',
+    marginLeft: 8,
   },
-  footerContainer: {
-    padding: 20,
+  footer: {
     alignItems: 'center',
+    marginBottom: 20,
   },
-  versionText: {
-    fontSize: 12,
+  version: {
+    fontSize: 14,
     color: '#888',
   },
 }); 

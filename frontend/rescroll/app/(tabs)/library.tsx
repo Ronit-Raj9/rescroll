@@ -6,201 +6,122 @@ import {
   TouchableOpacity,
   FlatList,
   Image,
+  TextInput,
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import { useColorScheme } from '@/hooks/useColorScheme';
+import { Colors } from '@/constants/Colors';
 
 // Sample data for saved papers
 const SAVED_PAPERS = [
   {
     id: '1',
-    title: 'Attention Is All You Need',
-    authors: 'Vaswani, A., et al.',
-    journal: 'NeurIPS',
-    year: '2017',
-    imageUrl: 'https://via.placeholder.com/100',
+    title: "Nature's Beauty",
+    summary: 'Discover the beauty of nature in this breathtaking article.',
+    date: '2 days ago',
+    imageUrl: 'https://via.placeholder.com/300x200',
   },
   {
     id: '2',
-    title: 'BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding',
-    authors: 'Devlin, J., et al.',
-    journal: 'NAACL',
-    year: '2019',
-    imageUrl: 'https://via.placeholder.com/100',
+    title: 'Interior Design Tips',
+    summary: 'Explore tips for creating a cozy and stylish living space.',
+    date: '1 week ago',
+    imageUrl: 'https://via.placeholder.com/300x200',
   },
   {
     id: '3',
-    title: 'Deep Residual Learning for Image Recognition',
-    authors: 'He, K., et al.',
-    journal: 'CVPR',
-    year: '2016',
-    imageUrl: 'https://via.placeholder.com/100',
+    title: 'Gourmet Cooking',
+    summary: 'Learn the secrets behind gourmet cooking from top chefs.',
+    date: '4 days ago',
+    imageUrl: 'https://via.placeholder.com/300x200',
   },
-];
-
-// Sample data for reading history
-const READING_HISTORY = [
   {
     id: '4',
-    title: 'GPT-3: Language Models are Few-Shot Learners',
-    authors: 'Brown, T.B., et al.',
-    journal: 'NeurIPS',
-    year: '2020',
-    lastRead: '2 days ago',
-    imageUrl: 'https://via.placeholder.com/100',
-  },
-  {
-    id: '5',
-    title: 'Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer',
-    authors: 'Raffel, C., et al.',
-    journal: 'JMLR',
-    year: '2020',
-    lastRead: '1 week ago',
-    imageUrl: 'https://via.placeholder.com/100',
+    title: 'Picnic Ideas',
+    summary: 'Ideas for the perfect outdoor picnic with friends.',
+    date: '3 days ago',
+    imageUrl: 'https://via.placeholder.com/300x200',
   },
 ];
 
+// Define the type for the saved paper items
+interface SavedPaper {
+  id: string;
+  title: string;
+  summary: string;
+  date: string;
+  imageUrl: string;
+}
+
 export default function LibraryScreen() {
+  const [searchQuery, setSearchQuery] = useState('');
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'saved' | 'history'>('saved');
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme || 'light'];
 
-  const handlePaperPress = (paperId: string) => {
-    router.push(`/paper/${paperId}`);
-  };
-
-  const renderSavedPaper = ({ item }: { item: any }) => (
-    <TouchableOpacity 
-      style={styles.paperItem}
-      onPress={() => handlePaperPress(item.id)}
-    >
-      <View style={styles.paperImageContainer}>
-        <View style={styles.paperImagePlaceholder}>
-          <IconSymbol name="doc.text" size={24} color="#ccc" />
-        </View>
-      </View>
-      <View style={styles.paperInfo}>
-        <ThemedText style={styles.paperTitle} numberOfLines={2}>{item.title}</ThemedText>
-        <ThemedText style={styles.paperAuthors} numberOfLines={1}>{item.authors}</ThemedText>
-        <ThemedText style={styles.paperJournal}>{item.journal} • {item.year}</ThemedText>
-      </View>
-      <TouchableOpacity style={styles.bookmarkButton}>
-        <IconSymbol name="bookmark.fill" size={20} color="#3498db" />
-      </TouchableOpacity>
-    </TouchableOpacity>
+  const filteredPapers = SAVED_PAPERS.filter(paper => 
+    paper.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    paper.summary.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const renderHistoryItem = ({ item }: { item: any }) => (
-    <TouchableOpacity 
-      style={styles.paperItem}
-      onPress={() => handlePaperPress(item.id)}
-    >
-      <View style={styles.paperImageContainer}>
-        <View style={styles.paperImagePlaceholder}>
-          <IconSymbol name="doc.text" size={24} color="#ccc" />
-        </View>
+  const renderBookmarkItem = ({ item }: { item: SavedPaper }) => (
+    <View style={styles.bookmarkItem}>
+      <View style={styles.bookmarkContent}>
+        <ThemedText style={styles.bookmarkTitle}>{item.title}</ThemedText>
+        <ThemedText style={styles.bookmarkSummary}>{item.summary}</ThemedText>
+        <ThemedText style={styles.bookmarkDate}>Published {item.date}</ThemedText>
+        <TouchableOpacity 
+          style={styles.readMoreButton}
+          onPress={() => router.push(`/paper/${item.id}`)}
+        >
+          <ThemedText style={styles.readMoreText}>Read More</ThemedText>
+        </TouchableOpacity>
       </View>
-      <View style={styles.paperInfo}>
-        <ThemedText style={styles.paperTitle} numberOfLines={2}>{item.title}</ThemedText>
-        <ThemedText style={styles.paperAuthors} numberOfLines={1}>{item.authors}</ThemedText>
-        <View style={styles.historyMeta}>
-          <ThemedText style={styles.paperJournal}>{item.journal} • {item.year}</ThemedText>
-          <ThemedText style={styles.lastRead}>Last read: {item.lastRead}</ThemedText>
-        </View>
-      </View>
-      <TouchableOpacity style={styles.moreButton}>
-        <IconSymbol name="ellipsis" size={20} color="#888" />
-      </TouchableOpacity>
-    </TouchableOpacity>
+      <Image 
+        source={{ uri: item.imageUrl }}
+        style={styles.bookmarkImage}
+      />
+    </View>
   );
 
   return (
     <ThemedView style={styles.container}>
-      <Stack.Screen options={{ 
-        title: 'My Library',
-        headerRight: () => (
-          <View style={{ flexDirection: 'row' }}>
-            <TouchableOpacity style={{ marginRight: 15 }}>
-              <IconSymbol name="bell" size={24} color="#333" />
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={{ marginRight: 15 }}
-              onPress={() => router.push('/(tabs)/profile')}
-            >
-              <IconSymbol name="person.circle" size={24} color="#333" />
-            </TouchableOpacity>
-          </View>
-        )
-      }} />
-
-      <View style={styles.tabContainer}>
-        <TouchableOpacity 
-          style={[
-            styles.tab, 
-            activeTab === 'saved' ? styles.activeTab : null
-          ]}
-          onPress={() => setActiveTab('saved')}
-        >
-          <ThemedText 
-            style={[
-              styles.tabText, 
-              activeTab === 'saved' ? styles.activeTabText : null
-            ]}
-          >
-            Saved Papers
-          </ThemedText>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[
-            styles.tab, 
-            activeTab === 'history' ? styles.activeTab : null
-          ]}
-          onPress={() => setActiveTab('history')}
-        >
-          <ThemedText 
-            style={[
-              styles.tabText, 
-              activeTab === 'history' ? styles.activeTabText : null
-            ]}
-          >
-            Reading History
-          </ThemedText>
-        </TouchableOpacity>
+      <Stack.Screen options={{ headerShown: false }} />
+      
+      <View style={styles.header}>
+        <ThemedText style={styles.screenTitle}>Bookmarks</ThemedText>
+        
+        <View style={styles.searchBarContainer}>
+          <IconSymbol name="magnifyingglass" size={20} color={colors.darkGray} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search bookmarks"
+            placeholderTextColor={colors.darkGray}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
       </View>
 
-      {activeTab === 'saved' ? (
+      <ThemedText style={styles.sectionTitle}>Bookmarks</ThemedText>
+
+      {filteredPapers.length > 0 ? (
         <FlatList
-          data={SAVED_PAPERS}
-          renderItem={renderSavedPaper}
+          data={filteredPapers}
+          renderItem={renderBookmarkItem}
           keyExtractor={item => item.id}
+          showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.listContainer}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <IconSymbol name="bookmark" size={60} color="#ccc" />
-              <ThemedText style={styles.emptyText}>No saved papers yet</ThemedText>
-              <ThemedText style={styles.emptySubtext}>
-                Papers you save will appear here
-              </ThemedText>
-            </View>
-          }
         />
       ) : (
-        <FlatList
-          data={READING_HISTORY}
-          renderItem={renderHistoryItem}
-          keyExtractor={item => item.id}
-          contentContainerStyle={styles.listContainer}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <IconSymbol name="clock" size={60} color="#ccc" />
-              <ThemedText style={styles.emptyText}>No reading history</ThemedText>
-              <ThemedText style={styles.emptySubtext}>
-                Papers you've read will appear here
-              </ThemedText>
-            </View>
-          }
-        />
+        <View style={styles.emptyContainer}>
+          <IconSymbol name="bookmark" size={60} color={colors.lightGray} />
+          <ThemedText style={styles.emptyText}>No bookmarks found</ThemedText>
+          <ThemedText style={styles.emptySubtext}>Papers you save will appear here</ThemedText>
+        </View>
       )}
     </ThemedView>
   );
@@ -209,109 +130,93 @@ export default function LibraryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 16,
   },
-  tabContainer: {
+  header: {
+    marginTop: 16,
+    marginBottom: 20,
+  },
+  screenTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  searchBarContainer: {
     flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-    backgroundColor: '#fff',
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 15,
     alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
   },
-  activeTab: {
-    borderBottomWidth: 2,
-    borderBottomColor: '#3498db',
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    marginLeft: 8,
   },
-  tabText: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: '#666',
-  },
-  activeTabText: {
-    color: '#3498db',
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 16,
   },
   listContainer: {
-    padding: 15,
-    paddingBottom: 40,
+    paddingBottom: 20,
   },
-  paperItem: {
+  bookmarkItem: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  paperImageContainer: {
-    width: 60,
-    height: 80,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 5,
-    marginRight: 15,
-    overflow: 'hidden',
-  },
-  paperImagePlaceholder: {
-    width: '100%',
-    height: '100%',
+    marginBottom: 24,
     alignItems: 'center',
-    justifyContent: 'center',
   },
-  paperInfo: {
+  bookmarkContent: {
     flex: 1,
-    justifyContent: 'center',
+    marginRight: 16,
   },
-  paperTitle: {
+  bookmarkTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 5,
+    marginBottom: 8,
   },
-  paperAuthors: {
+  bookmarkSummary: {
     fontSize: 14,
     color: '#555',
-    marginBottom: 5,
+    marginBottom: 8,
+    lineHeight: 20,
   },
-  paperJournal: {
+  bookmarkDate: {
     fontSize: 12,
     color: '#888',
+    marginBottom: 12,
   },
-  historyMeta: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  readMoreButton: {
+    backgroundColor: '#FF5A60',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
   },
-  lastRead: {
+  readMoreText: {
+    color: 'white',
+    fontWeight: '500',
     fontSize: 12,
-    color: '#3498db',
-    fontStyle: 'italic',
   },
-  bookmarkButton: {
-    padding: 5,
-  },
-  moreButton: {
-    padding: 5,
+  bookmarkImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
   },
   emptyContainer: {
     flex: 1,
-    alignItems: 'center',
     justifyContent: 'center',
-    padding: 40,
+    alignItems: 'center',
   },
   emptyText: {
     fontSize: 18,
-    fontWeight: 'bold',
-    marginTop: 20,
-    marginBottom: 10,
+    fontWeight: '600',
+    marginTop: 16,
+    marginBottom: 8,
   },
   emptySubtext: {
     fontSize: 14,
     color: '#888',
-    textAlign: 'center',
   },
 }); 

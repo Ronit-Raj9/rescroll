@@ -1,15 +1,20 @@
 import React, { useState, useContext } from 'react';
-import { StyleSheet, TextInput, View, TouchableOpacity, Image, Text } from 'react-native';
+import { StyleSheet, TextInput, View, TouchableOpacity, Image, Text, KeyboardAvoidingView, Platform } from 'react-native';
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
 import { useRouter } from 'expo-router';
 import { AuthContext } from '../../app/_layout';
+import { IconSymbol } from '../ui/IconSymbol';
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/hooks/useColorScheme';
 
 export const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const router = useRouter();
   const { setIsAuthenticated, setBypassAuth } = useContext(AuthContext);
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme || 'light'];
 
   const handleLogin = () => {
     // TODO: Implement actual authentication logic
@@ -33,53 +38,66 @@ export const LoginForm = () => {
 
   return (
     <ThemedView style={styles.container}>
-      <View style={styles.logoContainer}>
-        {/* App logo goes here */}
-        <ThemedText style={styles.logoText}>ReScroll</ThemedText>
-        <ThemedText style={styles.tagline}>Discover, Learn, Explore Research</ThemedText>
-      </View>
-
-      <View style={styles.formContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Email or Username"
-          placeholderTextColor="#888"
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          keyboardType="email-address"
-        />
-
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          placeholderTextColor="#888"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
-
-        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-          <Text style={styles.loginButtonText}>Log In</Text>
-        </TouchableOpacity>
-
-        <View style={styles.divider}>
-          <View style={styles.dividerLine} />
-          <ThemedText style={styles.dividerText}>or</ThemedText>
-          <View style={styles.dividerLine} />
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardAvoidView}
+      >
+        <View style={styles.logoContainer}>
+          <ThemedText style={styles.formTitle}>Log In</ThemedText>
+          <ThemedText style={styles.tagline}>Welcome back to ReScroll</ThemedText>
         </View>
 
-        <TouchableOpacity style={styles.signupButton} onPress={navigateToSignup}>
-          <Text style={styles.signupButtonText}>Sign Up</Text>
-        </TouchableOpacity>
-        
-        <View style={styles.getStartedContainer}>
-          <ThemedText style={styles.getStartedText}>Don't want to sign up yet?</ThemedText>
-          <TouchableOpacity onPress={handleGetStarted}>
-            <ThemedText style={styles.getStartedButton}>Get Started</ThemedText>
+        <View style={styles.formContainer}>
+          <View style={styles.inputContainer}>
+            <View style={styles.iconContainer}>
+              <IconSymbol name="person.circle" size={20} color={colors.darkGray} />
+            </View>
+            <TextInput
+              style={styles.input}
+              placeholder="Email or Username"
+              placeholderTextColor={colors.darkGray}
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <View style={styles.iconContainer}>
+              <IconSymbol name="bookmark" size={20} color={colors.darkGray} />
+            </View>
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              placeholderTextColor={colors.darkGray}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+            />
+          </View>
+
+          <TouchableOpacity style={[styles.button, styles.primaryButton]} onPress={handleLogin}>
+            <Text style={styles.buttonText}>Log In</Text>
           </TouchableOpacity>
+          
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <ThemedText style={styles.dividerText}>or</ThemedText>
+            <View style={styles.dividerLine} />
+          </View>
+
+          <TouchableOpacity style={[styles.button, styles.secondaryButton]} onPress={navigateToSignup}>
+            <Text style={styles.secondaryButtonText}>Create Account</Text>
+          </TouchableOpacity>
+          
+          <View style={styles.getStartedContainer}>
+            <TouchableOpacity onPress={handleGetStarted}>
+              <ThemedText style={styles.getStartedButton}>Continue without logging in</ThemedText>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </ThemedView>
   );
 };
@@ -88,13 +106,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+  },
+  keyboardAvoidView: {
+    flex: 1,
     justifyContent: 'center',
   },
   logoContainer: {
     alignItems: 'center',
     marginBottom: 40,
   },
-  logoText: {
+  formTitle: {
     fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 8,
@@ -107,22 +128,47 @@ const styles = StyleSheet.create({
   formContainer: {
     width: '100%',
   },
-  input: {
-    backgroundColor: '#f0f0f0',
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
     borderRadius: 8,
-    padding: 15,
-    marginBottom: 15,
+    marginBottom: 16,
+    overflow: 'hidden',
+  },
+  iconContainer: {
+    paddingHorizontal: 15,
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  input: {
+    flex: 1,
+    height: 50,
     fontSize: 16,
   },
-  loginButton: {
-    backgroundColor: '#3498db',
+  button: {
     borderRadius: 8,
     padding: 15,
     alignItems: 'center',
+    justifyContent: 'center',
     marginTop: 10,
   },
-  loginButtonText: {
+  primaryButton: {
+    backgroundColor: '#FF5A60',
+  },
+  buttonText: {
     color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  secondaryButton: {
+    backgroundColor: 'white',
+    borderWidth: 1,
+    borderColor: '#FF5A60',
+  },
+  secondaryButtonText: {
+    color: '#FF5A60',
     fontSize: 16,
     fontWeight: 'bold',
   },
@@ -134,35 +180,19 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#ddd',
+    backgroundColor: '#E0E0E0',
   },
   dividerText: {
     paddingHorizontal: 10,
     color: '#888',
   },
-  signupButton: {
-    backgroundColor: '#2ecc71',
-    borderRadius: 8,
-    padding: 15,
-    alignItems: 'center',
-  },
-  signupButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
   getStartedContainer: {
     marginTop: 30,
     alignItems: 'center',
   },
-  getStartedText: {
+  getStartedButton: {
     fontSize: 14,
     color: '#666',
-    marginBottom: 8,
-  },
-  getStartedButton: {
-    fontSize: 16,
-    color: '#3498db',
-    fontWeight: 'bold',
+    textDecorationLine: 'underline',
   },
 }); 
