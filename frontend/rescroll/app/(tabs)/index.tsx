@@ -148,10 +148,6 @@ export default function HomeScreen() {
     );
   };
 
-  const navigateToProfile = () => {
-    router.push('/profile');
-  };
-
   const navigateToNotifications = () => {
     router.push('/notifications');
   };
@@ -233,14 +229,13 @@ export default function HomeScreen() {
 
         <View style={styles.header}>
           <View style={styles.headerContent}>
-            {/* Slightly smaller title */}
-            <ThemedText style={styles.screenTitle}>Discover</ThemedText>
+            <ThemedText style={styles.screenTitle}>ReScroll</ThemedText>
             <View style={styles.headerIcons}>
-              <TouchableOpacity style={styles.iconButton} onPress={navigateToNotifications}>
+              <TouchableOpacity 
+                style={styles.iconButton}
+                onPress={navigateToNotifications}
+              >
                 <IconSymbol name="bell" size={24} color={colors.text} />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.iconButton} onPress={navigateToProfile}>
-                <IconSymbol name="person.circle" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
           </View>
@@ -282,7 +277,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  // Slightly smaller than before (24 -> 20)
   screenTitle: {
     fontSize: 20,
     fontWeight: 'bold',
@@ -303,15 +297,19 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   cardImage: {
-    width: '100%',
-    height: '100%',
+    width: '75%',
+    height: '75%',
     position: 'absolute',
+    left: '12.5%',
+    top: '12.5%',
+    borderRadius: 16,
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     padding: 20,
     justifyContent: 'space-between',
+    borderRadius: 16,
   },
   paperDetails: {
     flex: 1,
@@ -333,7 +331,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginLeft: 6,
   },
-  // Slightly smaller than before (28 -> 24)
   paperTitle: {
     color: '#fff',
     fontSize: 18,
@@ -341,7 +338,6 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     lineHeight: 30,
   },
-  // More opaque (was #ccc, now #eee), left-aligned
   paperAuthors: {
     color: '#cccccc80',
     fontSize: 13,
@@ -354,7 +350,6 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginBottom: 16,
   },
-  // Moved buttons slightly lower (bottom: 10) and made them smaller
   actionButtonsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',

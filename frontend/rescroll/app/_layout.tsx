@@ -106,6 +106,10 @@ export default function RootLayout() {
           <Stack.Screen name="login" options={{ headerShown: false }} />
           <Stack.Screen name="signup" options={{ headerShown: false }} />
           <Stack.Screen name="interest-selection" options={{ headerShown: false, gestureEnabled: false }} />
+          
+          {/* Removing all profile-related screens */}
+          
+          <Stack.Screen name="notifications" options={{ headerShown: false }} />
           <Stack.Screen name="+not-found" />
         </Stack>
         <StatusBar style="auto" />
