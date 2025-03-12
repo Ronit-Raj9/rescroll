@@ -19,6 +19,14 @@ const MAPPING = {
   'bookmark': require('../../assets/icons/bookmark.png'),
   'square.and.arrow.up': require('../../assets/icons/share.png'),
   'doc.text': require('../../assets/icons/document.png'),
+  // Using existing icons as fallbacks for profile-related icons
+  'xmark': require('../../assets/icons/person_circle.png'), // Using person_circle as fallback
+  'pencil': require('../../assets/icons/share.png'), // Using share as fallback
+  'moon.fill': require('../../assets/icons/star_fill.png'), // Using star.fill as fallback
+  'gear': require('../../assets/icons/safari.png'), // Using safari as fallback
+  'chevron.right': require('../../assets/icons/arrow_right.png'), // Using arrow_right as fallback
+  'lock.fill': require('../../assets/icons/bookmark_fill.png'), // Using bookmark.fill as fallback
+  'questionmark.circle.fill': require('../../assets/icons/person_circle.png'), // Using person_circle as fallback
 } as const;
 
 export type IconSymbolName = keyof typeof MAPPING;

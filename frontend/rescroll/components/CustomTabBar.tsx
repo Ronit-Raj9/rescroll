@@ -3,7 +3,6 @@ import { View, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { IconSymbol } from './ui/IconSymbol';
 import { ThemedText } from './ThemedText';
-import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 
 // Type for our iconName
@@ -11,8 +10,7 @@ type IconName = "house.fill" | "magnifyingglass" | "bookmark.fill" | "star.fill"
 
 // Custom tab bar component that only renders visible tabs
 export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme || 'light'];
+  const colors = Colors.light;
   
   // Get screen width to calculate tab sizes
   const screenWidth = Dimensions.get('window').width;

@@ -1,12 +1,11 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import 'react-native-gesture-handler';
+import { useEffect, useState, createContext } from 'react';
 import { useFonts } from 'expo-font';
 import { Stack, useSegments, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useState, createContext } from 'react';
 import 'react-native-reanimated';
-
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -65,7 +64,6 @@ const useProtectedRoute = (isAuthenticated: boolean, isFirstTime: boolean, bypas
 };
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
   // In a real app, these would come from an authentication system and local storage
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isFirstTime, setIsFirstTime] = useState(false);
@@ -100,19 +98,20 @@ export default function RootLayout() {
 
   return (
     <AuthContext.Provider value={authContextValue}>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <ThemeProvider value={DefaultTheme}>
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="login" options={{ headerShown: false }} />
           <Stack.Screen name="signup" options={{ headerShown: false }} />
           <Stack.Screen name="interest-selection" options={{ headerShown: false, gestureEnabled: false }} />
           
-          {/* Removing all profile-related screens */}
+          {/* Profile-related screens */}
+          <Stack.Screen name="profile-settings" options={{ headerShown: true, presentation: 'modal' }} />
           
           <Stack.Screen name="notifications" options={{ headerShown: false }} />
           <Stack.Screen name="+not-found" />
         </Stack>
-        <StatusBar style="auto" />
+        <StatusBar style="light" />
       </ThemeProvider>
     </AuthContext.Provider>
   );

@@ -84,7 +84,7 @@ export default function HomeScreen() {
   const [hasMoreData, setHasMoreData] = useState(true);
   const [viewIndex, setViewIndex] = useState(0);
   const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme || 'light'];
+  const colors = Colors.light; // Always use light theme
   const flatListRef = useRef<FlatList>(null);
   const router = useRouter();
 
@@ -152,6 +152,10 @@ export default function HomeScreen() {
     router.push('/notifications');
   };
 
+  const navigateToProfile = () => {
+    router.push('/profile-settings');
+  };
+
   const renderPaperCard = ({ item, index }: { item: Paper; index: number }) => {
     return (
       <View style={[styles.cardContainer, { height: ITEM_HEIGHT }]}>
@@ -182,7 +186,7 @@ export default function HomeScreen() {
                 <IconSymbol
                   name="heart"
                   size={22}
-                  color={item.isLiked ? colors.primary : '#fff'}
+                  color={item.isLiked ? colors.primary : '#555'}
                 />
               </TouchableOpacity>
 
@@ -190,12 +194,12 @@ export default function HomeScreen() {
                 <IconSymbol
                   name="bookmark.fill"
                   size={22}
-                  color={item.isSaved ? colors.primary : '#fff'}
+                  color={item.isSaved ? colors.primary : '#555'}
                 />
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.actionButton}>
-                <IconSymbol name="square.and.arrow.up" size={22} color="#fff" />
+                <IconSymbol name="square.and.arrow.up" size={22} color="#555" />
               </TouchableOpacity>
             </View>
           </View>
@@ -223,7 +227,7 @@ export default function HomeScreen() {
   );
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#000' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
       <ThemedView style={styles.container}>
         <Stack.Screen options={{ headerShown: false }} />
 
@@ -236,6 +240,12 @@ export default function HomeScreen() {
                 onPress={navigateToNotifications}
               >
                 <IconSymbol name="bell" size={24} color={colors.text} />
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.iconButton}
+                onPress={navigateToProfile}
+              >
+                <IconSymbol name="person.circle" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
           </View>
@@ -265,12 +275,12 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#fff',
   },
   header: {
     paddingHorizontal: 16,
     paddingBottom: 16,
-    backgroundColor: '#000',
+    backgroundColor: '#fff',
   },
   headerContent: {
     flexDirection: 'row',
@@ -291,10 +301,12 @@ const styles = StyleSheet.create({
   },
   cardContainer: {
     width: SCREEN_WIDTH,
+    backgroundColor: '#fff',
   },
   cardContent: {
     flex: 1,
     position: 'relative',
+    backgroundColor: '#fff',
   },
   cardImage: {
     width: '75%',
@@ -303,10 +315,12 @@ const styles = StyleSheet.create({
     left: '12.5%',
     top: '12.5%',
     borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#eee',
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     padding: 20,
     justifyContent: 'space-between',
     borderRadius: 16,
@@ -319,7 +333,7 @@ const styles = StyleSheet.create({
   achievementContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 90, 96, 0.2)',
+    backgroundColor: 'rgba(255, 90, 96, 0.1)',
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 16,
@@ -327,25 +341,25 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   achievementText: {
-    color: '#fff',
+    color: '#333',
     fontSize: 14,
     marginLeft: 6,
   },
   paperTitle: {
-    color: '#fff',
+    color: '#333',
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 10,
     lineHeight: 30,
   },
   paperAuthors: {
-    color: '#cccccc80',
+    color: '#666',
     fontSize: 13,
     marginBottom: 16,
     textAlign: 'left',
   },
   paperSummary: {
-    color: '#ddd',
+    color: '#444',
     fontSize: 15,
     lineHeight: 22,
     marginBottom: 16,
@@ -363,7 +377,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    backgroundColor: 'rgba(240, 240, 240, 0.8)',
     justifyContent: 'center',
     alignItems: 'center',
   },

@@ -5,13 +5,11 @@ import { Platform, TouchableOpacity, View, StyleSheet, Dimensions } from 'react-
 import { HapticTab } from '@/components/HapticTab';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
 import { ThemedText } from '@/components/ThemedText';
 import { CustomTabBar } from '@/components/CustomTabBar';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme || 'light'];
+  const colors = Colors.light;
   const router = useRouter();
   const pathname = usePathname();
   const segments = useSegments();

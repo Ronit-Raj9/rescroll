@@ -24,21 +24,9 @@ export const Colors = {
     card: '#FFFFFF',
     border: '#E5E5E5',
   },
-  dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: primaryColor,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: primaryColor,
-    primary: primaryColor,
-    secondary: secondaryColor,
-    lightGray: '#2A2A2A',
-    mediumGray: '#404040',
-    darkGray: '#A0A0A0',
-    error: '#FF453A',
-    success: '#30D158',
-    card: '#1D1D1D',
-    border: '#333333',
-  },
+  // Keep a reference to dark for TypeScript compatibility
+  // but make it the same as light
+  get dark() {
+    return this.light;
+  }
 };
