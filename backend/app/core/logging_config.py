@@ -1,3 +1,4 @@
+import os
 import logging
 import sys
 from pathlib import Path
@@ -25,17 +26,17 @@ LOGGING_CONFIG = {
         },
         "file": {
             "class": "logging.handlers.RotatingFileHandler",
-            "filename": "logs/app.log",
-            "maxBytes": 1024 * 1024,  # 1MB
-            "backupCount": 3,
+            "filename": os.path.join("logs", "app.log"),
+            "maxBytes": 10485760,  # 10MB
+            "backupCount": 5,
             "formatter": "default",
             "level": "DEBUG",
         },
         "error_file": {
             "class": "logging.handlers.RotatingFileHandler",
-            "filename": "logs/error.log",
-            "maxBytes": 1024 * 1024,  # 1MB
-            "backupCount": 3,
+            "filename": os.path.join("logs", "error.log"),
+            "maxBytes": 10485760,  # 10MB
+            "backupCount": 5,
             "formatter": "default",
             "level": "ERROR",
         },
@@ -51,4 +52,4 @@ LOGGING_CONFIG = {
         "handlers": ["console", "file", "error_file"],
         "level": "INFO",
     },
-} 
+}

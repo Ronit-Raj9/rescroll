@@ -1,0 +1,57 @@
+from typing import Optional
+from sqlalchemy import Column, Integer, String, Float, JSON, ForeignKey, DateTime, Boolean
+from sqlalchemy.orm import relationship
+from app.models.base import Base
+
+class ReadingHistory(Base):
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("user.id"))
+    paper_id = Column(Integer, ForeignKey("researchpaper.id"))
+    report_id = Column(Integer, ForeignKey("newsreport.id"))
+    start_time = Column(DateTime)
+    end_time = Column(DateTime)
+    time_spent = Column(Integer)  # Time spent in seconds
+    completion_percentage = Column(Float)  # 0-100%
+    interaction_data = Column(JSON)  # Scroll depth, highlights, etc.
+    
+    # Relationships
+    user = relationship("User", back_populates="reading_history")
+    paper = relationship("ResearchPaper", back_populates="reading_history")
+    report = relationship("NewsReport", back_populates="reading_history")
+
+class QuizResult(Base):
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("user.id"))
+    paper_id = Column(Integer, ForeignKey("researchpaper.id"))
+    score = Column(Float)  # 0-100%
+    answers = Column(JSON)  # User's answers
+    time_taken = Column(Integer)  # Time taken in seconds
+    difficulty_level = Column(String)
+    
+    # Relationships
+    user = relationship("User", back_populates="quiz_results")
+
+class UserPreference(Base):
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("user.id"), unique=True)
+    preferred_domains = Column(JSON)  # List of preferred research domains
+    preferred_difficulty = Column(String)
+    preferred_sources = Column(JSON)  # List of preferred paper sources
+    notification_preferences = Column(JSON)
+    
+    # Relationships
+    user = relationship("User", back_populates="user_preferences")
+
+class WeeklyProgress(Base):
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("user.id"))
+    week_start = Column(DateTime)
+    week_end = Column(DateTime)
+    articles_read = Column(Integer)
+    total_reading_time = Column(Integer)  # in minutes
+    domains_covered = Column(JSON)  # List of domains read
+    quiz_scores = Column(JSON)  # List of quiz scores
+    streak_maintained = Column(Boolean)
+    
+    # Relationships
+    user = relationship("User") 
