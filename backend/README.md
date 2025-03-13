@@ -167,3 +167,10 @@ Set up pre-commit hooks to ensure code quality:
 ```bash
 pre-commit install
 ```
+
+This will run the following checks before each commit:
+- Code formatting (black)
+- Import sorting (isort)
+- Type checking (mypy)
+- YAML validation
+- File formatting

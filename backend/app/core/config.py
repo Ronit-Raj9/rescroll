@@ -2,6 +2,7 @@ from typing import Any, List, Optional, Union
 from pydantic import AnyHttpUrl, validator
 from pydantic_settings import BaseSettings
 import secrets
+from functools import lru_cache
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Rescroll"
@@ -10,9 +11,16 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     
     # CORS
-    CORS_ORIGINS: List[AnyHttpUrl] = []
+    BACKEND_CORS_ORIGINS: List[str] = [
+        "http://localhost:3000",
+        "http://localhost:8000",
+        "https://ionia-next.vercel.app",
+        "https://www.ionia.sbs",
+        "https://ionia.sbs",
+        "https://ionia-next-production.up.railway.app"
+    ]
 
-    @validator("CORS_ORIGINS", pre=True)
+    @validator("BACKEND_CORS_ORIGINS", pre=True)
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
         if isinstance(v, str) and not v.startswith("["):
             return [i.strip() for i in v.split(",")]
@@ -47,7 +55,7 @@ class Settings(BaseSettings):
 
     # MongoDB
     MONGODB_URL: str
-    DB_NAME: str
+    DB_NAME: str = "rescroll"
     
     # Redis
     REDIS_HOST: str
@@ -79,4 +87,8 @@ class Settings(BaseSettings):
         case_sensitive = True
         env_file = ".env"
 
-settings = Settings() 
+@lru_cache()
+def get_settings() -> Settings:
+    return Settings()
+
+settings = get_settings()

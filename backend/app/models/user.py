@@ -1,12 +1,7 @@
-from typing import Optional, Annotated, List
+from typing import Optional, Annotated, List, Dict, Any
 from pydantic import BaseModel, EmailStr, Field, BeforeValidator
 from bson import ObjectId
-from sqlalchemy import Column, String, Boolean, Integer, Float, JSON, ForeignKey, DateTime
-from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
-
-from app.db.base_class import Base
-from app.models.associations import user_interests
+from ..db.mongodb import db
 
 def validate_object_id(v: str | ObjectId) -> ObjectId:
     if isinstance(v, ObjectId):
@@ -20,7 +15,17 @@ PyObjectId = Annotated[ObjectId, BeforeValidator(validate_object_id)]
 class UserBase(BaseModel):
     email: EmailStr
     full_name: str
+    username: str
     is_active: bool = True
+    is_superuser: bool = False
+    profile_image: Optional[str] = None
+    
+    # Analytics fields
+    reading_time: int = 0  # Total reading time in minutes
+    articles_read: int = 0  # Total number of articles read
+    favorite_domains: List[str] = []  # List of favorite research domains
+    reading_streak: int = 0  # Current reading streak in days
+    last_read_date: Optional[str] = None  # Last date when user read an article
 
 class UserCreate(UserBase):
     password: str
@@ -37,37 +42,50 @@ class UserInDB(UserBase):
             "example": {
                 "email": "user@example.com",
                 "full_name": "John Doe",
+                "username": "johndoe",
                 "is_active": True,
                 "_id": "507f1f77bcf86cd799439011"
             }
         }
     }
 
-class User(Base):
-    __tablename__ = "users"
+class User:
+    collection = None
 
-    id = Column(Integer, primary_key=True, index=True)
-    email = Column(String, unique=True, index=True, nullable=False)
-    username = Column(String, unique=True, index=True, nullable=False)
-    full_name = Column(String, index=True)
-    hashed_password = Column(String, nullable=False)
-    is_active = Column(Boolean(), default=True)
-    is_superuser = Column(Boolean(), default=False)
-    profile_image = Column(String, nullable=True)  # URL to the profile image in Cloudinary
+    @classmethod
+    async def get_collection(cls):
+        if not cls.collection:
+            cls.collection = db.users
+            # Create indexes
+            await cls.collection.create_index("email", unique=True)
+            await cls.collection.create_index("username", unique=True)
+        return cls.collection
 
-    # Analytics fields
-    reading_time = Column(Integer, default=0)  # Total reading time in minutes
-    articles_read = Column(Integer, default=0)  # Total number of articles read
-    favorite_domains = Column(JSON, default=list)  # List of favorite research domains
-    reading_streak = Column(Integer, default=0)  # Current reading streak in days
-    last_read_date = Column(String)  # Last date when user read an article
-    
-    # Relationships - using string references to avoid circular imports
-    reading_history = relationship("ReadingHistory", back_populates="user")
-    quiz_results = relationship("QuizResult", back_populates="user")
-    preferences = relationship("UserPreference", back_populates="user", uselist=False)
-    interests = relationship("Topic", secondary=user_interests, back_populates="interested_users")
-    paper_summary_requests = relationship("PaperSummaryRequest", back_populates="user")
-    
-    def __repr__(self):
-        return f"<User {self.username}>" 
+    @classmethod
+    async def find_one(cls, filter_dict: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        collection = await cls.get_collection()
+        if "_id" in filter_dict and isinstance(filter_dict["_id"], str):
+            filter_dict["_id"] = ObjectId(filter_dict["_id"])
+        return await collection.find_one(filter_dict)
+
+    @classmethod
+    async def insert_one(cls, document: Dict[str, Any]):
+        collection = await cls.get_collection()
+        result = await collection.insert_one(document)
+        return result
+
+    @classmethod
+    async def update_one(cls, filter_dict: Dict[str, Any], update_dict: Dict[str, Any]):
+        collection = await cls.get_collection()
+        if "_id" in filter_dict and isinstance(filter_dict["_id"], str):
+            filter_dict["_id"] = ObjectId(filter_dict["_id"])
+        result = await collection.update_one(filter_dict, update_dict)
+        return result
+
+    @classmethod
+    async def delete_one(cls, filter_dict: Dict[str, Any]):
+        collection = await cls.get_collection()
+        if "_id" in filter_dict and isinstance(filter_dict["_id"], str):
+            filter_dict["_id"] = ObjectId(filter_dict["_id"])
+        result = await collection.delete_one(filter_dict)
+        return result

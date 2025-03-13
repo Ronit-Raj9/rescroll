@@ -1,7 +1,12 @@
 #!/bin/bash
 
-# Activate virtual environment
-source venv/bin/activate
+# Activate virtual environment if it exists
+if [ -d "venv" ]; then
+    source venv/bin/activate
+    echo "Virtual environment activated."
+else
+    echo "No virtual environment found. Consider creating one with: python -m venv venv"
+fi
 
 # Function to kill process using a port
 kill_port() {
@@ -20,16 +25,32 @@ kill_port 6379  # Redis
 
 # Create necessary directories
 mkdir -p logs static
+mkdir -p static/{avatars,covers}
 
-# Start Redis server if not running
-if ! pgrep redis-server > /dev/null; then
-    echo "Starting Redis server..."
-    sudo systemctl start redis-server
+# Install dependencies if requirements.txt exists
+if [ -f "requirements.txt" ]; then
+    echo "Installing dependencies..."
+    pip install -r requirements.txt
 fi
 
-# Wait for Redis to start
-sleep 2
+# Start Redis server if not running
+if command -v redis-server &> /dev/null; then
+    if ! pgrep redis-server > /dev/null; then
+        echo "Starting Redis server..."
+        if command -v systemctl &> /dev/null; then
+            sudo systemctl start redis-server
+        else
+            redis-server --daemonize yes
+        fi
+        # Wait for Redis to start
+        sleep 2
+    else
+        echo "Redis server is already running."
+    fi
+else
+    echo "Redis server not found. Skipping Redis startup."
+fi
 
 # Start FastAPI application with uvicorn
 echo "Starting FastAPI application..."
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload 
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
