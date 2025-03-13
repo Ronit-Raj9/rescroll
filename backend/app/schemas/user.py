@@ -7,6 +7,7 @@ class UserBase(BaseModel):
     full_name: Optional[str] = None
     is_active: Optional[bool] = True
     is_superuser: bool = False
+    profile_image: Optional[str] = None
 
 class UserCreate(UserBase):
     email: EmailStr
@@ -33,4 +34,7 @@ class Token(BaseModel):
     token_type: str
 
 class TokenPayload(BaseModel):
-    sub: Optional[int] = None 
+    sub: Optional[int] = None
+
+class ProfileImage(BaseModel):
+    image_url: str 

@@ -1,16 +1,38 @@
 # Rescroll API Documentation
 
-This directory contains comprehensive documentation for the Rescroll API.
+Welcome to the Rescroll API documentation. This documentation provides detailed information about the available endpoints, authentication methods, and usage examples.
 
-## Available Documentation
+## Documentation Structure
 
-### API Documentation
+- [API Documentation](api/index.md) - Main API documentation
+  - [API v1](api/v1/index.md) - Documentation for API v1
+    - [Authentication](api/v1/authentication.md) - Authentication guide
+    - Endpoints:
+      - [Authentication Endpoints](api/v1/endpoints/auth.md)
+      - [User Endpoints](api/v1/endpoints/users.md)
+      - [Paper Endpoints](api/v1/endpoints/papers.md)
+      - [Profile Image Endpoints](api/v1/endpoints/profile_images.md)
 
-- [**api_documentation.md**](./api_documentation.md): Detailed documentation of all API endpoints, including request/response formats, authentication methods, and examples.
+## Postman Collection
 
-### Postman Collection
+A Postman collection is available for testing the API:
+- [Rescroll API Postman Collection](rescroll_api_postman_collection.json)
 
-- [**rescroll_api_postman_collection.json**](./rescroll_api_postman_collection.json): A ready-to-import Postman collection for testing all API endpoints.
+## Legacy Documentation
+
+The following documentation files are kept for reference but are being phased out in favor of the new structure:
+- [API Documentation (Legacy)](api_documentation.md)
+- [Authentication (Legacy)](authentication.md)
+- [Paper Summary API (Legacy)](paper_summary_api.md)
+- [Profile Image API (Legacy)](profile_image_api.md)
+
+## Getting Started
+
+To get started with the Rescroll API:
+
+1. Set up the backend by following the instructions in the [main README](../README.md)
+2. Use the [Postman Collection](rescroll_api_postman_collection.json) to test the API
+3. Refer to the [API Documentation](api/index.md) for detailed information about the endpoints
 
 ## Quick Start
 

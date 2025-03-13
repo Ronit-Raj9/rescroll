@@ -53,6 +53,23 @@ def update_user_profile_image(db: Session, db_user: User, image_url: str) -> Use
     db.refresh(db_user)
     return db_user
 
+def remove_profile_image(db: Session, db_user: User) -> User:
+    """
+    Remove the profile image URL from a user record.
+    
+    Args:
+        db: Database session
+        db_user: User object to update
+        
+    Returns:
+        Updated User object
+    """
+    db_user.profile_image = None
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
 def authenticate_user(db: Session, email: str, password: str) -> Optional[User]:
     user = get_user_by_email(db, email=email)
     if not user:

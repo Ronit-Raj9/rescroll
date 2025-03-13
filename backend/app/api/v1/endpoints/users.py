@@ -74,6 +74,35 @@ async def upload_profile_image(
     
     return {"image_url": image_url}
 
+@router.delete("/me/profile-image", response_model=schemas.User)
+def delete_profile_image(
+    *,
+    db: Session = Depends(deps.get_db),
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> Any:
+    """
+    Delete the profile image of the current user.
+    """
+    # Check if user has a profile image
+    if not current_user.profile_image:
+        raise HTTPException(
+            status_code=400,
+            detail="No profile image to delete.",
+        )
+    
+    # Delete the image from Cloudinary
+    delete_result = delete_image(current_user.profile_image)
+    
+    if not delete_result:
+        # Even if Cloudinary deletion fails, we should still remove the reference
+        # from the user's profile, but log the issue
+        print(f"Warning: Failed to delete image from Cloudinary: {current_user.profile_image}")
+    
+    # Update user profile to remove image URL
+    user = crud.user.remove_profile_image(db, db_user=current_user)
+    
+    return user
+
 @router.get("/me", response_model=schemas.User)
 def read_user_me(
     db: Session = Depends(deps.get_db),

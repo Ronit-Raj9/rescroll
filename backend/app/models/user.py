@@ -67,6 +67,7 @@ class User(Base):
     quiz_results = relationship("QuizResult", back_populates="user")
     preferences = relationship("UserPreference", back_populates="user", uselist=False)
     interests = relationship("Topic", secondary=user_interests, back_populates="interested_users")
+    paper_summary_requests = relationship("PaperSummaryRequest", back_populates="user")
     
     def __repr__(self):
         return f"<User {self.username}>" 

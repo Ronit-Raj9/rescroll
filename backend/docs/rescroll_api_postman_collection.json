@@ -141,13 +141,12 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/auth/login/test-token",
+							"raw": "{{base_url}}/auth/test-token",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
 								"auth",
-								"login",
 								"test-token"
 							]
 						},
@@ -249,7 +248,7 @@
 								"me"
 							]
 						},
-						"description": "Retrieves the profile of the currently authenticated user"
+						"description": "Retrieves the currently authenticated user"
 					},
 					"response": []
 				},
@@ -269,7 +268,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"email\": \"updated@example.com\",\n  \"username\": \"updated_username\",\n  \"full_name\": \"Updated Name\"\n}"
+							"raw": "{\n  \"full_name\": \"Updated Name\",\n  \"email\": \"updated@example.com\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/users/me",
@@ -281,91 +280,7 @@
 								"me"
 							]
 						},
-						"description": "Updates the profile of the currently authenticated user"
-					},
-					"response": []
-				},
-				{
-					"name": "Upload Profile Image",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{access_token}}"
-							}
-						],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "file",
-									"type": "file",
-									"src": "/path/to/image.jpg"
-								}
-							]
-						},
-						"url": {
-							"raw": "{{base_url}}/users/me/profile-image",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"users",
-								"me",
-								"profile-image"
-							]
-						},
-						"description": "Uploads a profile image for the currently authenticated user"
-					},
-					"response": []
-				},
-				{
-					"name": "Delete Profile Image",
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{access_token}}"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/users/me/profile-image",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"users",
-								"me",
-								"profile-image"
-							]
-						},
-						"description": "Removes the profile image of the currently authenticated user"
-					},
-					"response": []
-				},
-				{
-					"name": "Get User by ID",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{access_token}}"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/users/1",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"users",
-								"1"
-							]
-						},
-						"description": "Retrieves a user profile by ID"
+						"description": "Updates the currently authenticated user's information"
 					},
 					"response": []
 				},
@@ -399,12 +314,174 @@
 								}
 							]
 						},
-						"description": "Retrieves a list of users with pagination (Admin only)"
+						"description": "Retrieves a list of users (admin only)"
 					},
 					"response": []
 				}
 			],
 			"description": "User management endpoints"
+		},
+		{
+			"name": "Profile Images",
+			"item": [
+				{
+					"name": "Upload Profile Image",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/path/to/image.jpg"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/users/me/profile-image",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"me",
+								"profile-image"
+							]
+						},
+						"description": "Uploads a profile image for the current user"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Profile Image",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users/me/profile-image",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"me",
+								"profile-image"
+							]
+						},
+						"description": "Deletes the profile image for the current user"
+					},
+					"response": []
+				}
+			],
+			"description": "Profile image management endpoints"
+		},
+		{
+			"name": "Papers",
+			"item": [
+				{
+					"name": "Search Papers",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/papers/search/?query=quantum computing&start=0&max_results=5",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"papers",
+								"search",
+								""
+							],
+							"query": [
+								{
+									"key": "query",
+									"value": "quantum computing"
+								},
+								{
+									"key": "start",
+									"value": "0"
+								},
+								{
+									"key": "max_results",
+									"value": "5"
+								}
+							]
+						},
+						"description": "Search for papers on arXiv based on a query string"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Paper Details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/papers/arxiv/2304.12345",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"papers",
+								"arxiv",
+								"2304.12345"
+							]
+						},
+						"description": "Get detailed information about a specific paper from arXiv"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Paper Summary",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/papers/arxiv/2304.12345/summary",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"papers",
+								"arxiv",
+								"2304.12345",
+								"summary"
+							]
+						},
+						"description": "Generate an AI-powered summary for a specific paper using Google's Gemini AI"
+					},
+					"response": []
+				}
+			],
+			"description": "Paper search and summary endpoints"
 		}
 	],
 	"event": [
@@ -430,8 +507,7 @@
 	"variable": [
 		{
 			"key": "base_url",
-			"value": "http://localhost:8000/api/v1",
-			"type": "string"
+			"value": "http://localhost:8000/api/v1"
 		}
 	]
 } 
