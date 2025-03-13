@@ -22,6 +22,8 @@ node_modules/
 .expo/
 dist/
 build/
+package-lock.json
+yarn.lock
 
 # Environment files
 .env*
@@ -46,3 +48,28 @@ yarn-error.log*
 .yarn/
 __pycache__/
 *.pyc
+
+# Large files and binaries
+clickhouse
+*.so
+*.db
+*.sqlite
+*.sqlite3
+*.log
+logs/*.log
+backend/venv/
+frontend/rescroll/expo.apk
+
+# Database dumps
+*.dump
+*.sql
+*.bak
+
+# Media files
+*.mp4
+*.mp3
+*.wav
+*.avi
+*.mov
+*.flv
+*.wmv
