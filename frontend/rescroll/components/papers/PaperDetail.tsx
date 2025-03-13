@@ -144,7 +144,7 @@ export const AudioPlayer: React.FC<{ audioUrl: string; onClose: () => void }> = 
   );
 };
 
-export function PaperDetail({ paper, onGoBack }) {
+export function PaperDetail({ paper, onGoBack }: { paper: PaperDetailProps, onGoBack: () => void }) {
   const [activeTab, setActiveTab] = useState<'summary' | 'citations'>('summary');
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [isSaved, setIsSaved] = useState(false);

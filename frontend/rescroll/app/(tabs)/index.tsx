@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useContext } from 'react';
 import {
   StyleSheet,
   View,
@@ -15,6 +15,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
+import { AppContext } from '../../app/_layout';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const ITEM_HEIGHT = SCREEN_HEIGHT - 120; // Allow space for tab bar and header
@@ -87,6 +88,7 @@ export default function HomeScreen() {
   const colors = Colors.light; // Always use light theme
   const flatListRef = useRef<FlatList>(null);
   const router = useRouter();
+  const { navigateTo } = useContext(AppContext);
 
   const loadMorePapers = useCallback(() => {
     if (isLoading || !hasMoreData) return;
@@ -153,7 +155,7 @@ export default function HomeScreen() {
   };
 
   const navigateToProfile = () => {
-    router.push('/profile-settings');
+    navigateTo('/profile-settings');
   };
 
   const renderPaperCard = ({ item, index }: { item: Paper; index: number }) => {

@@ -27,6 +27,25 @@ const MAPPING = {
   'chevron.right': require('../../assets/icons/arrow_right.png'), // Using arrow_right as fallback
   'lock.fill': require('../../assets/icons/bookmark_fill.png'), // Using bookmark.fill as fallback
   'questionmark.circle.fill': require('../../assets/icons/person_circle.png'), // Using person_circle as fallback
+  // Enhanced notification icons with better fallbacks
+  'doc.badge.plus': require('../../assets/icons/bookmark_fill.png'), // More distinctive fallback
+  'quote.bubble': require('../../assets/icons/heart.png'), // More distinctive fallback
+  'text.bubble': require('../../assets/icons/bell.png'), // More distinctive fallback
+  'star': require('../../assets/icons/star_fill.png'), // Using star.fill as fallback
+  'calendar': require('../../assets/icons/safari.png'), // More distinctive fallback
+  'ellipsis': require('../../assets/icons/magnifying_glass.png'), // Using magnifying_glass as fallback
+  'bell.slash': require('../../assets/icons/bell.png'), // Using bell as fallback
+  'xmark.circle.fill': require('../../assets/icons/person_circle.png'), // Using person_circle as fallback
+  'circle.dotted': require('../../assets/icons/star_fill.png'), // Using star.fill as fallback
+  'pause.circle.fill': require('../../assets/icons/bookmark_fill.png'), // Using bookmark.fill as fallback
+  'play.circle.fill': require('../../assets/icons/bookmark_fill.png'), // Using bookmark.fill as fallback
+  'chart.bar.doc.horizontal': require('../../assets/icons/document.png'), // Using document as fallback
+  'pause.circle': require('../../assets/icons/bookmark_fill.png'), // Using bookmark.fill as fallback
+  'play.circle': require('../../assets/icons/bookmark_fill.png'), // Using bookmark.fill as fallback
+  'arrow.down.doc': require('../../assets/icons/document.png'), // Using document as fallback
+  'doc.text.image': require('../../assets/icons/document.png'), // Using document as fallback
+  'heart.fill': require('../../assets/icons/heart.png'), // Using heart as fallback
+  'link': require('../../assets/icons/share.png'), // Using share as fallback
 } as const;
 
 export type IconSymbolName = keyof typeof MAPPING;

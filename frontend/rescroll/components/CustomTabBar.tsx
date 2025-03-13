@@ -8,6 +8,9 @@ import { Colors } from '@/constants/Colors';
 // Type for our iconName
 type IconName = "house.fill" | "magnifyingglass" | "bookmark.fill" | "star.fill" | "safari" | "bell" | "person.circle" | "arrow.right" | "heart" | "bookmark" | "square.and.arrow.up" | "doc.text";
 
+// Explicitly define the allowed tab names to ensure no other tabs appear
+const ALLOWED_TABS = ['index', 'search', 'tops', 'library', 'explore'];
+
 // Custom tab bar component that only renders visible tabs
 export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const colors = Colors.light;
@@ -19,7 +22,11 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
   const visibleRoutes = state.routes.filter(route => {
     const { options } = descriptors[route.key];
     // Only show tabs that don't have a custom tabBarButton
-    return descriptors[route.key] && !options.tabBarButton;
+    // Exclude the profile route from the tab bar and ensure only allowed tabs are shown
+    return descriptors[route.key] && 
+           !options.tabBarButton && 
+           route.name !== 'profile' &&
+           ALLOWED_TABS.includes(route.name);
   });
   
   const tabWidth = screenWidth / visibleRoutes.length;
@@ -59,6 +66,7 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
           case 'explore':
             iconName = 'safari';
             break;
+          // No default case for any other tab names
         }
         
         const onPress = () => {

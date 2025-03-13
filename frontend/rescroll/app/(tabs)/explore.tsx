@@ -9,7 +9,7 @@ import { Colors } from '@/constants/Colors';
 
 export default function ExploreScreen() {
   const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme || 'light'];
+  const colors = Colors[colorScheme as 'light' | 'dark'];
 
   return (
     <ThemedView style={styles.container}>

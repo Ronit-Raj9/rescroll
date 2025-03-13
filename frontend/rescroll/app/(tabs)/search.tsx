@@ -96,7 +96,7 @@ export default function SearchScreen() {
   const [recentSearches, setRecentSearches] = useState<string[]>([...SEARCH_SUGGESTIONS]);
   const router = useRouter();
   const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme || 'light'];
+  const colors = Colors[colorScheme as 'light' | 'dark'];
   
   const numColumns = 2;
   const screenWidth = Dimensions.get('window').width;

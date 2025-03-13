@@ -60,7 +60,7 @@ export default function LibraryScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const router = useRouter();
   const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme || 'light'];
+  const colors = Colors[colorScheme as 'light' | 'dark'];
 
   const filteredPapers = SAVED_PAPERS.filter(paper => 
     paper.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
