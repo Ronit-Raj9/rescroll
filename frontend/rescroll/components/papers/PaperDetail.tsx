@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   StyleSheet,
   View,
@@ -6,6 +6,12 @@ import {
   TouchableOpacity,
   Image,
   ActivityIndicator,
+  Dimensions,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
+  Alert,
+  Animated,
 } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -138,47 +144,19 @@ export const AudioPlayer: React.FC<{ audioUrl: string; onClose: () => void }> = 
   );
 };
 
-export const PaperDetail: React.FC<Partial<PaperDetailProps>> = ({
-  title = 'Attention Is All You Need',
-  abstract = 'The dominant sequence transduction models are based on complex recurrent or convolutional neural networks that include an encoder and a decoder. The best performing models also connect the encoder and decoder through an attention mechanism. We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely...',
-  summary = 'The paper introduces the Transformer model architecture, which relies entirely on self-attention mechanisms instead of recurrence or convolution. The Transformer uses multi-head attention to jointly attend to information from different representation subspaces. The model achieves state-of-the-art results on English-to-German and English-to-French translation tasks, while being more parallelizable and requiring significantly less time to train than recurrent or convolutional models.',
-  authors = [
-    { id: '1', name: 'Ashish Vaswani', affiliation: 'Google Brain', imageUrl: 'https://via.placeholder.com/50' },
-    { id: '2', name: 'Noam Shazeer', affiliation: 'Google Brain', imageUrl: 'https://via.placeholder.com/50' },
-    { id: '3', name: 'Niki Parmar', affiliation: 'Google Research', imageUrl: 'https://via.placeholder.com/50' },
-    { id: '4', name: 'Jakob Uszkoreit', affiliation: 'Google Research', imageUrl: 'https://via.placeholder.com/50' },
-    { id: '5', name: 'Llion Jones', affiliation: 'Google Research', imageUrl: 'https://via.placeholder.com/50' },
-    { id: '6', name: 'Aidan N. Gomez', affiliation: 'University of Toronto', imageUrl: 'https://via.placeholder.com/50' },
-    { id: '7', name: 'Łukasz Kaiser', affiliation: 'Google Brain', imageUrl: 'https://via.placeholder.com/50' },
-    { id: '8', name: 'Illia Polosukhin', affiliation: 'Google Research', imageUrl: 'https://via.placeholder.com/50' },
-  ],
-  journal = 'Advances in Neural Information Processing Systems (NeurIPS)',
-  year = '2017',
-  doi = '10.48550/arXiv.1706.03762',
-  citationCount = 78592,
-  citations = [
-    { id: '1', title: 'BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding', authors: 'Devlin, J., Chang, M., Lee, K., & Toutanova, K.', year: '2018', journal: 'arXiv preprint', citationCount: 49830 },
-    { id: '2', title: 'Deep Residual Learning for Image Recognition', authors: 'He, K., Zhang, X., Ren, S., & Sun, J.', year: '2016', journal: 'CVPR', citationCount: 126141 },
-    { id: '3', title: 'GPT-3: Language Models are Few-Shot Learners', authors: 'Brown, T.B., et al.', year: '2020', journal: 'NeurIPS', citationCount: 13589 },
-  ],
-  pdfUrl = 'https://arxiv.org/pdf/1706.03762.pdf',
-  keywords = ['transformer', 'attention', 'neural networks', 'NLP', 'machine translation'],
-  hasAudioSummary = true,
-  audioSummaryUrl = 'https://example.com/audio/summary.mp3',
-  onClose,
-}) => {
+export function PaperDetail({ paper, onGoBack }) {
   const [activeTab, setActiveTab] = useState<'summary' | 'citations'>('summary');
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme || 'light'];
+  const colors = Colors.light;
 
   return (
     <ThemedView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerActions}>
-          {onClose && (
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+          {onGoBack && (
+            <TouchableOpacity onPress={onGoBack} style={styles.closeButton}>
               <IconSymbol name="xmark" size={18} color={colors.text} />
             </TouchableOpacity>
           )}
@@ -198,19 +176,19 @@ export const PaperDetail: React.FC<Partial<PaperDetailProps>> = ({
             </TouchableOpacity>
           </View>
         </View>
-        <ThemedText style={styles.title}>{title}</ThemedText>
+        <ThemedText style={styles.title}>{paper.title}</ThemedText>
         <View style={styles.journalInfo}>
-          <ThemedText style={styles.journalText}>{journal} • {year}</ThemedText>
+          <ThemedText style={styles.journalText}>{paper.journal} • {paper.year}</ThemedText>
         </View>
         <View style={styles.citationContainer}>
           <IconSymbol name="chart.bar.doc.horizontal" size={16} color="#888" />
           <ThemedText style={styles.citationText}>
-            {citationCount.toLocaleString()} citations
+            {paper.citationCount.toLocaleString()} citations
           </ThemedText>
         </View>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.authorList}>
-          {authors.map(author => (
+          {paper.authors.map(author => (
             <TouchableOpacity key={author.id} style={styles.authorItem}>
               {author.imageUrl ? (
                 <Image source={{ uri: author.imageUrl }} style={styles.authorImage} />
@@ -272,13 +250,13 @@ export const PaperDetail: React.FC<Partial<PaperDetailProps>> = ({
           <View style={styles.summaryTab}>
             <View style={styles.section}>
               <ThemedText style={styles.sectionTitle}>Abstract</ThemedText>
-              <ThemedText style={styles.abstractText}>{abstract}</ThemedText>
+              <ThemedText style={styles.abstractText}>{paper.abstract}</ThemedText>
             </View>
             
             <View style={styles.section}>
               <View style={styles.sectionTitleRow}>
                 <ThemedText style={styles.sectionTitle}>Summary</ThemedText>
-                {hasAudioSummary && (
+                {paper.hasAudioSummary && (
                   <TouchableOpacity 
                     style={styles.audioButton}
                     onPress={() => setIsPlayingAudio(!isPlayingAudio)}
@@ -294,13 +272,13 @@ export const PaperDetail: React.FC<Partial<PaperDetailProps>> = ({
                   </TouchableOpacity>
                 )}
               </View>
-              <ThemedText style={styles.summaryText}>{summary}</ThemedText>
+              <ThemedText style={styles.summaryText}>{paper.summary}</ThemedText>
             </View>
 
-            {isPlayingAudio && hasAudioSummary && (
+            {isPlayingAudio && paper.hasAudioSummary && (
               <View style={styles.audioPlayerContainer}>
                 <AudioPlayer 
-                  audioUrl={audioSummaryUrl || ''} 
+                  audioUrl={paper.audioSummaryUrl || ''} 
                   onClose={() => setIsPlayingAudio(false)}
                 />
               </View>
@@ -309,7 +287,7 @@ export const PaperDetail: React.FC<Partial<PaperDetailProps>> = ({
             <View style={styles.section}>
               <ThemedText style={styles.sectionTitle}>Keywords</ThemedText>
               <View style={styles.keywordContainer}>
-                {keywords.map((keyword, index) => (
+                {paper.keywords.map((keyword, index) => (
                   <TouchableOpacity key={index} style={styles.keywordBadge}>
                     <ThemedText style={styles.keywordText}>{keyword}</ThemedText>
                   </TouchableOpacity>
@@ -332,10 +310,10 @@ export const PaperDetail: React.FC<Partial<PaperDetailProps>> = ({
         ) : (
           <View style={styles.citationsTab}>
             <View style={styles.section}>
-              <ThemedText style={styles.sectionTitle}>Cited by {citationCount.toLocaleString()} papers</ThemedText>
+              <ThemedText style={styles.sectionTitle}>Cited by {paper.citationCount.toLocaleString()} papers</ThemedText>
               
               <View style={styles.citationsList}>
-                {citations.map(citation => (
+                {paper.citations.map(citation => (
                   <TouchableOpacity key={citation.id} style={styles.citationItem}>
                     <ThemedText style={styles.citationTitle}>{citation.title}</ThemedText>
                     <ThemedText style={styles.citationAuthors}>{citation.authors}</ThemedText>
@@ -364,7 +342,7 @@ export const PaperDetail: React.FC<Partial<PaperDetailProps>> = ({
       </ScrollView>
     </ThemedView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
