@@ -106,11 +106,11 @@ export default function TopsScreen() {
       
       <View style={styles.reportStats}>
         <View style={styles.stat}>
-          <IconSymbol name="quote.bubble" size={16} color="#666" />
+          <IconSymbol name="doc.text" size={16} color="#666" />
           <ThemedText style={styles.statText}>{item.citations} citations</ThemedText>
         </View>
         <View style={styles.stat}>
-          <IconSymbol name="heart.fill" size={16} color="#e74c3c" />
+          <IconSymbol name="heart" size={16} color="#e74c3c" />
           <ThemedText style={styles.statText}>{item.likes} likes</ThemedText>
         </View>
       </View>
@@ -143,19 +143,10 @@ export default function TopsScreen() {
     <ThemedView style={styles.container}>
       <Stack.Screen options={{ 
         title: 'Top Papers',
-        headerRight: () => (
-          <View style={{ flexDirection: 'row' }}>
-            <TouchableOpacity style={{ marginRight: 15 }}>
-              <IconSymbol name="bell" size={24} color="#333" />
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={{ marginRight: 15 }}
-              onPress={() => router.push('/(tabs)/profile')}
-            >
-              <IconSymbol name="person.circle" size={24} color="#333" />
-            </TouchableOpacity>
-          </View>
-        )
+        headerStyle: {
+          backgroundColor: 'transparent',
+        },
+        headerShadowVisible: false,
       }} />
 
       <View style={styles.categoryContainer}>

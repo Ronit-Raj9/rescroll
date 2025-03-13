@@ -1,269 +1,410 @@
-import React from 'react';
-import { StyleSheet, FlatList, View, TouchableOpacity, Image, Dimensions } from 'react-native';
+import React, { useState, useRef, useCallback } from 'react';
+import {
+  StyleSheet,
+  View,
+  FlatList,
+  Dimensions,
+  Image,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Stack, useRouter } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { Stack, useRouter } from 'expo-router';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import Carousel from 'react-native-reanimated-carousel';
+import { useColorScheme } from '@/hooks/useColorScheme';
+import { Colors } from '@/constants/Colors';
 
-// Sample data for featured articles
-const FEATURED_ARTICLES = [
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const ITEM_HEIGHT = SCREEN_HEIGHT - 120; // Allow space for tab bar and header
+
+interface Paper {
+  id: string;
+  title: string;
+  authors: string;
+  achievement: string;
+  summary: string;
+  imageUrl: string;
+  likes: number;
+  saves: number;
+  comments: number;
+  isLiked: boolean;
+  isSaved: boolean;
+}
+
+const INITIAL_PAPERS: Paper[] = [
   {
     id: '1',
-    title: 'Breakthrough in Quantum Computing',
-    snippet: 'New research demonstrates practical quantum advantage in solving complex optimization problems.',
-    imageUrl: 'https://example.com/quantum.jpg',
+    title: 'Novel Approaches to Deep Learning for Natural Language Processing',
+    authors: 'Johnson, K. and Smith, L.',
+    achievement: 'Increased accuracy by 15% over previous state-of-the-art models',
+    summary:
+      'This research introduces a novel transformer architecture that significantly enhances natural language understanding tasks through improved attention mechanisms and optimized training procedures.',
+    imageUrl: 'https://via.placeholder.com/400x600',
+    likes: 342,
+    saves: 89,
+    comments: 27,
+    isLiked: false,
+    isSaved: false,
   },
   {
     id: '2',
-    title: 'AI Models Show Human-Like Learning',
-    snippet: 'Latest research reveals neural networks that learn with significantly less training data.',
-    imageUrl: 'https://example.com/ai.jpg',
+    title: 'Climate Change Impacts on Marine Ecosystems',
+    authors: 'Rivera, M. and Chen, H.',
+    achievement: 'First comprehensive study of polar ecosystem changes',
+    summary:
+      'This paper documents significant shifts in marine biodiversity patterns across polar regions as a result of climate change, with implications for global fisheries and conservation efforts.',
+    imageUrl: 'https://via.placeholder.com/400x600',
+    likes: 287,
+    saves: 122,
+    comments: 19,
+    isLiked: false,
+    isSaved: false,
   },
   {
     id: '3',
-    title: 'Climate Change: Ocean Acidification',
-    snippet: 'New findings show accelerated acidification rates in key marine ecosystems.',
-    imageUrl: 'https://example.com/ocean.jpg',
+    title: 'Advances in Quantum Computing Algorithms',
+    authors: 'Patel, A. and Wong, S.',
+    achievement: 'Demonstrated 200x speedup for specific optimization problems',
+    summary:
+      'This work presents a new class of quantum algorithms that provide exponential speedup for certain optimization problems, potentially revolutionizing computational approaches to drug discovery and materials science.',
+    imageUrl: 'https://via.placeholder.com/400x600',
+    likes: 412,
+    saves: 156,
+    comments: 42,
+    isLiked: false,
+    isSaved: false,
   },
 ];
-
-// Sample data for feed posts
-const FEED_POSTS = [
-  {
-    id: '1',
-    title: 'Understanding Deep Neural Networks',
-    authors: 'Dr. Adam Chen, Prof. Sarah Williams',
-    date: '2023-11-15',
-    snippet: 'This paper explains the advanced architecture of deep neural networks and their applications in modern computing environments.',
-    imageUrl: 'https://example.com/dnn.jpg',
-  },
-  {
-    id: '2',
-    title: 'CRISPR Applications in Agriculture',
-    authors: 'Dr. Jennifer Miller, Dr. Robert Davis',
-    date: '2023-11-12',
-    snippet: 'An exploration of how CRISPR gene editing technology is being used to develop more resilient and nutritious crops.',
-    imageUrl: 'https://example.com/crispr-ag.jpg',
-  },
-  {
-    id: '3',
-    title: 'Novel Approaches to Renewable Energy Storage',
-    authors: 'Prof. Michael Thompson, Dr. Emily Wilson',
-    date: '2023-11-08',
-    snippet: 'This research presents innovative solutions for energy storage that could overcome current limitations in renewable energy adoption.',
-    imageUrl: 'https://example.com/energy.jpg',
-  },
-  {
-    id: '4',
-    title: 'Advancements in Cancer Immunotherapy',
-    authors: 'Dr. Lisa Johnson, Prof. David Kim',
-    date: '2023-11-05',
-    snippet: 'This study reveals promising new immunotherapy techniques that show improved outcomes for treatment-resistant cancers.',
-    imageUrl: 'https://example.com/immunotherapy.jpg',
-  },
-];
-
-const { width: screenWidth } = Dimensions.get('window');
 
 export default function HomeScreen() {
+  const [papers, setPapers] = useState<Paper[]>(INITIAL_PAPERS);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasMoreData, setHasMoreData] = useState(true);
+  const [viewIndex, setViewIndex] = useState(0);
+  const colorScheme = useColorScheme();
+  const colors = Colors.light; // Always use light theme
+  const flatListRef = useRef<FlatList>(null);
   const router = useRouter();
 
-  const handleNavigateToReport = (id: string) => {
-    router.push(`/report/${id}`);
-  };
+  const loadMorePapers = useCallback(() => {
+    if (isLoading || !hasMoreData) return;
+    setIsLoading(true);
 
-  const renderFeaturedItem = ({ item }: { item: any }) => (
-    <TouchableOpacity 
-      style={styles.carouselItem}
-      onPress={() => handleNavigateToReport(item.id)}
-    >
-      <View style={styles.carouselImageContainer}>
-        <View style={styles.carouselImagePlaceholder}>
-          <IconSymbol name="doc.text.image" size={40} color="#999" />
-        </View>
-      </View>
-      <View style={styles.carouselTextContainer}>
-        <ThemedText style={styles.carouselTitle}>{item.title}</ThemedText>
-        <ThemedText style={styles.carouselSnippet}>{item.snippet}</ThemedText>
-      </View>
-    </TouchableOpacity>
+    // Simulate API call
+    setTimeout(() => {
+      const newPapers = papers.map((paper, index) => ({
+        ...paper,
+        id: `${papers.length + index + 1}`,
+      }));
+      setPapers([...papers, ...newPapers]);
+      setIsLoading(false);
+
+      if (papers.length > 15) {
+        setHasMoreData(false);
+      }
+    }, 1500);
+  }, [papers, isLoading, hasMoreData]);
+
+  const handleViewableItemsChanged = useCallback(
+    ({ viewableItems }: { viewableItems: any[] }) => {
+      if (viewableItems.length > 0) {
+        setViewIndex(viewableItems[0].index);
+      }
+    },
+    []
   );
 
-  const renderPostItem = ({ item }: { item: any }) => (
-    <TouchableOpacity 
-      style={styles.postCard}
-      onPress={() => handleNavigateToReport(item.id)}
-    >
-      <View style={styles.postHeader}>
-        <ThemedText style={styles.postTitle}>{item.title}</ThemedText>
-        <ThemedText style={styles.postMeta}>
-          By {item.authors} • {item.date}
-        </ThemedText>
-      </View>
-      
-      <View style={styles.postImageContainer}>
-        <View style={styles.postImagePlaceholder}>
-          <IconSymbol name="doc.text.image" size={30} color="#999" />
+  const viewabilityConfig = {
+    itemVisiblePercentThreshold: 90,
+  };
+
+  const handleLike = (paperId: string) => {
+    setPapers((prevPapers) =>
+      prevPapers.map((paper) =>
+        paper.id === paperId
+          ? {
+              ...paper,
+              isLiked: !paper.isLiked,
+              likes: paper.isLiked ? paper.likes - 1 : paper.likes + 1,
+            }
+          : paper
+      )
+    );
+  };
+
+  const handleSave = (paperId: string) => {
+    setPapers((prevPapers) =>
+      prevPapers.map((paper) =>
+        paper.id === paperId
+          ? {
+              ...paper,
+              isSaved: !paper.isSaved,
+              saves: paper.isSaved ? paper.saves - 1 : paper.saves + 1,
+            }
+          : paper
+      )
+    );
+  };
+
+  const navigateToNotifications = () => {
+    router.push('/notifications');
+  };
+
+  const navigateToProfile = () => {
+    router.push('/profile-settings');
+  };
+
+  const renderPaperCard = ({ item, index }: { item: Paper; index: number }) => {
+    return (
+      <View style={[styles.cardContainer, { height: ITEM_HEIGHT }]}>
+        <View style={styles.cardContent}>
+          <Image source={{ uri: item.imageUrl }} style={styles.cardImage} resizeMode="cover" />
+          <View style={styles.overlay}>
+            <View style={styles.paperDetails}>
+              <View style={styles.achievementContainer}>
+                <IconSymbol name="star.fill" size={16} color={colors.primary} />
+                <ThemedText style={styles.achievementText}>{item.achievement}</ThemedText>
+              </View>
+
+              <ThemedText style={styles.paperTitle} numberOfLines={3}>
+                {item.title}
+              </ThemedText>
+              {/* Author name on the left, more opaque */}
+              <ThemedText style={styles.paperAuthors} numberOfLines={1}>
+                {item.authors}
+              </ThemedText>
+
+              <ThemedText style={styles.paperSummary} numberOfLines={6}>
+                {item.summary}
+              </ThemedText>
+            </View>
+
+            <View style={styles.actionButtonsContainer}>
+              <TouchableOpacity style={styles.actionButton} onPress={() => handleLike(item.id)}>
+                <IconSymbol
+                  name="heart"
+                  size={22}
+                  color={item.isLiked ? colors.primary : '#555'}
+                />
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.actionButton} onPress={() => handleSave(item.id)}>
+                <IconSymbol
+                  name="bookmark.fill"
+                  size={22}
+                  color={item.isSaved ? colors.primary : '#555'}
+                />
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.actionButton}>
+                <IconSymbol name="square.and.arrow.up" size={22} color="#555" />
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
       </View>
-      
-      <ThemedText style={styles.postSnippet}>{item.snippet}</ThemedText>
-      
-      <View style={styles.postActions}>
-        <TouchableOpacity style={styles.actionButton}>
-          <IconSymbol name="heart" size={20} color="#666" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton}>
-          <IconSymbol name="quote.bubble" size={20} color="#666" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton}>
-          <IconSymbol name="bookmark" size={20} color="#666" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton}>
-          <IconSymbol name="play.circle" size={20} color="#666" />
-        </TouchableOpacity>
+    );
+  };
+
+  const renderFooter = () => {
+    if (!isLoading) return null;
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <ThemedText style={styles.loadingText}>Loading more papers...</ThemedText>
       </View>
-    </TouchableOpacity>
+    );
+  };
+
+  const renderEmptyList = () => (
+    <View style={styles.emptyContainer}>
+      <IconSymbol name="doc.text" size={60} color={colors.lightGray} />
+      <ThemedText style={styles.emptyText}>No papers available</ThemedText>
+      <ThemedText style={styles.emptySubtext}>Check back later for new research</ThemedText>
+    </View>
   );
 
   return (
-    <ThemedView style={styles.container}>
-      <Stack.Screen options={{ 
-        title: 'ReScroll',
-        headerRight: () => (
-          <View style={{ flexDirection: 'row' }}>
-            <TouchableOpacity style={{ marginRight: 15 }}>
-              <IconSymbol name="bell" size={24} color="#333" />
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={{ marginRight: 15 }}
-              onPress={() => router.push('/(tabs)/profile')}
-            >
-              <IconSymbol name="person.circle" size={24} color="#333" />
-            </TouchableOpacity>
-          </View>
-        )
-      }} />
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      <ThemedView style={styles.container}>
+        <Stack.Screen options={{ headerShown: false }} />
 
-      <FlatList
-        data={FEED_POSTS}
-        renderItem={renderPostItem}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.feedContainer}
-        ListHeaderComponent={() => (
-          <View style={styles.section}>
-            <ThemedText style={styles.sectionTitle}>Featured on ReScroll</ThemedText>
-            <Carousel
-              loop
-              width={screenWidth - 30}
-              height={180}
-              autoPlay={true}
-              data={FEATURED_ARTICLES}
-              scrollAnimationDuration={1000}
-              renderItem={renderFeaturedItem}
-            />
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <ThemedText style={styles.screenTitle}>ReScroll</ThemedText>
+            <View style={styles.headerIcons}>
+              <TouchableOpacity 
+                style={styles.iconButton}
+                onPress={navigateToNotifications}
+              >
+                <IconSymbol name="bell" size={24} color={colors.text} />
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.iconButton}
+                onPress={navigateToProfile}
+              >
+                <IconSymbol name="person.circle" size={24} color={colors.text} />
+              </TouchableOpacity>
+            </View>
           </View>
-        )}
-      />
-    </ThemedView>
+        </View>
+
+        <FlatList
+          ref={flatListRef}
+          data={papers}
+          renderItem={renderPaperCard}
+          keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
+          snapToInterval={ITEM_HEIGHT}
+          snapToAlignment="start"
+          decelerationRate="fast"
+          onEndReached={loadMorePapers}
+          onEndReachedThreshold={0.1}
+          ListFooterComponent={renderFooter}
+          ListEmptyComponent={renderEmptyList}
+          onViewableItemsChanged={handleViewableItemsChanged}
+          viewabilityConfig={viewabilityConfig}
+        />
+      </ThemedView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  feedContainer: {
-    padding: 15,
-  },
-  section: {
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 15,
-  },
-  carouselItem: {
     backgroundColor: '#fff',
-    borderRadius: 10,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
-    height: 180,
   },
-  carouselImageContainer: {
-    height: 100,
-    backgroundColor: '#f0f0f0',
-  },
-  carouselImagePlaceholder: {
-    height: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  carouselTextContainer: {
-    padding: 12,
-  },
-  carouselTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 5,
-  },
-  carouselSnippet: {
-    fontSize: 12,
-    color: '#666',
-  },
-  postCard: {
+  header: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
     backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
   },
-  postHeader: {
-    marginBottom: 10,
-  },
-  postTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 5,
-  },
-  postMeta: {
-    fontSize: 12,
-    color: '#888',
-  },
-  postImageContainer: {
-    height: 150,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 8,
-    marginBottom: 10,
-  },
-  postImagePlaceholder: {
-    height: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  postSnippet: {
-    fontSize: 14,
-    color: '#555',
-    marginBottom: 15,
-  },
-  postActions: {
+  headerContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-    paddingTop: 10,
+    alignItems: 'center',
+  },
+  screenTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  headerIcons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  iconButton: {
+    padding: 8,
+    marginLeft: 8,
+  },
+  cardContainer: {
+    width: SCREEN_WIDTH,
+    backgroundColor: '#fff',
+  },
+  cardContent: {
+    flex: 1,
+    position: 'relative',
+    backgroundColor: '#fff',
+  },
+  cardImage: {
+    width: '75%',
+    height: '75%',
+    position: 'absolute',
+    left: '12.5%',
+    top: '12.5%',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#eee',
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    padding: 20,
+    justifyContent: 'space-between',
+    borderRadius: 16,
+  },
+  paperDetails: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    paddingBottom: 60,
+  },
+  achievementContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 90, 96, 0.1)',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    alignSelf: 'flex-start',
+    marginBottom: 12,
+  },
+  achievementText: {
+    color: '#333',
+    fontSize: 14,
+    marginLeft: 6,
+  },
+  paperTitle: {
+    color: '#333',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    lineHeight: 30,
+  },
+  paperAuthors: {
+    color: '#666',
+    fontSize: 13,
+    marginBottom: 16,
+    textAlign: 'left',
+  },
+  paperSummary: {
+    color: '#444',
+    fontSize: 15,
+    lineHeight: 22,
+    marginBottom: 16,
+  },
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    position: 'absolute',
+    bottom: 5,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 40,
   },
   actionButton: {
-    padding: 5,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(240, 240, 240, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loaderContainer: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#888',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#888',
+    textAlign: 'center',
   },
 });

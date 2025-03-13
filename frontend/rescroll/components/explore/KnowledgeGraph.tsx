@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { StyleSheet, View, Animated, Dimensions, TouchableOpacity, Pressable } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import Svg, { Circle, Line, G } from 'react-native-svg';
-import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
+import { Animated } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
 // Define types for the nodes and links
 interface Node {
@@ -69,9 +70,6 @@ const ForceGraph: React.FC<ForceGraphProps> = ({ nodes, links, width, height }) 
   const [nodePositions, setNodePositions] = useState<Record<string, NodePosition>>({});
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [graphScale] = useState(new Animated.Value(0.8));
-  const colorScheme = useColorScheme();
-  const linkColor = colorScheme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)';
-  const textColor = colorScheme === 'dark' ? Colors.dark.text : Colors.light.text;
 
   // Initialize node positions
   useEffect(() => {
@@ -165,6 +163,10 @@ const ForceGraph: React.FC<ForceGraphProps> = ({ nodes, links, width, height }) 
   const handleNodePress = (node: Node) => {
     setSelectedNode(selectedNode?.id === node.id ? null : node);
   };
+
+  // Colors for the graph - always use light mode
+  const linkColor = 'rgba(0, 0, 0, 0.1)';
+  const textColor = Colors.light.text;
 
   return (
     <Animated.View style={[styles.graphContainer, { transform: [{ scale: graphScale }] }]}>
@@ -272,7 +274,7 @@ const ForceGraph: React.FC<ForceGraphProps> = ({ nodes, links, width, height }) 
   );
 };
 
-export const KnowledgeGraph = () => {
+export function KnowledgeGraph({ topics = [] }) {
   const [dimensions] = useState({
     width: Dimensions.get('window').width - 30,
     height: 360
@@ -288,7 +290,7 @@ export const KnowledgeGraph = () => {
       />
     </ThemedView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
