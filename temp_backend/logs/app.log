@@ -1,0 +1,493 @@
+2025-03-13 11:51:18 - app - INFO - Root endpoint accessed
+2025-03-13 11:56:12 - app - INFO - Root endpoint accessed
+2025-03-13 12:23:03 - app - INFO - Root endpoint accessed
+2025-03-13 13:41:00 - root - INFO - DEBUG - Authorization header: None
+2025-03-13 13:41:00 - root - INFO - DEBUG - Cookie: None
+2025-03-13 13:41:00 - root - INFO - DEBUG - OAuth2 token: None
+2025-03-13 13:41:00 - root - INFO - DEBUG - No token found
+2025-03-13 13:41:00 - root - INFO - DEBUG - Token in get_current_user: None
+2025-03-13 13:41:00 - root - INFO - DEBUG - No token provided, raising 401
+2025-03-13 13:41:00 - root - INFO - DEBUG - Authorization header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5Mzk4NjAsInN1YiI6IjExIiwidHlwZSI6ImFjY2VzcyJ9.cI5TiDpe7V-OePtSGiq2dAmUvBpcOTXt9KXvXkXtc7I
+2025-03-13 13:41:00 - root - INFO - DEBUG - Cookie: None
+2025-03-13 13:41:00 - root - INFO - DEBUG - OAuth2 token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5Mzk4NjAsInN1YiI6IjExIiwidHlwZSI6ImFjY2VzcyJ9.cI5TiDpe7V-OePtSGiq2dAmUvBpcOTXt9KXvXkXtc7I
+2025-03-13 13:41:00 - root - INFO - DEBUG - Using token from Authorization header: eyJhbGciOi...
+2025-03-13 13:41:00 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5Mzk4NjAsInN1YiI6IjExIiwidHlwZSI6ImFjY2VzcyJ9.cI5TiDpe7V-OePtSGiq2dAmUvBpcOTXt9KXvXkXtc7I
+2025-03-13 13:41:00 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 13:41:00 - root - INFO - DEBUG - Token payload: {'exp': 1741939860, 'sub': '11', 'type': 'access'}
+2025-03-13 13:41:00 - root - INFO - DEBUG - User found: testuser_1741853459@example.com
+2025-03-13 13:43:14 - root - INFO - DEBUG - Authorization header: None
+2025-03-13 13:43:14 - root - INFO - DEBUG - Cookie: None
+2025-03-13 13:43:14 - root - INFO - DEBUG - OAuth2 token: None
+2025-03-13 13:43:14 - root - INFO - DEBUG - No token found
+2025-03-13 13:43:14 - root - INFO - DEBUG - Token in get_current_user: None
+2025-03-13 13:43:14 - root - INFO - DEBUG - No token provided, raising 401
+2025-03-13 13:43:14 - root - INFO - DEBUG - Authorization header: None
+2025-03-13 13:43:14 - root - INFO - DEBUG - Cookie: None
+2025-03-13 13:43:14 - root - INFO - DEBUG - OAuth2 token: None
+2025-03-13 13:43:14 - root - INFO - DEBUG - No token found
+2025-03-13 13:43:14 - root - INFO - DEBUG - Token in get_current_user: None
+2025-03-13 13:43:14 - root - INFO - DEBUG - No token provided, raising 401
+2025-03-13 13:43:14 - root - INFO - DEBUG - Authorization header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5Mzk5OTQsInN1YiI6IjEyIiwidHlwZSI6ImFjY2VzcyJ9.PYCYYUGZL_IaNLmO6DODocb6-lg49Pkvu7wpuflKlnM
+2025-03-13 13:43:14 - root - INFO - DEBUG - Cookie: None
+2025-03-13 13:43:14 - root - INFO - DEBUG - OAuth2 token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5Mzk5OTQsInN1YiI6IjEyIiwidHlwZSI6ImFjY2VzcyJ9.PYCYYUGZL_IaNLmO6DODocb6-lg49Pkvu7wpuflKlnM
+2025-03-13 13:43:14 - root - INFO - DEBUG - Using token from Authorization header: eyJhbGciOi...
+2025-03-13 13:43:14 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5Mzk5OTQsInN1YiI6IjEyIiwidHlwZSI6ImFjY2VzcyJ9.PYCYYUGZL_IaNLmO6DODocb6-lg49Pkvu7wpuflKlnM
+2025-03-13 13:43:14 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 13:43:14 - root - INFO - DEBUG - Token payload: {'exp': 1741939994, 'sub': '12', 'type': 'access'}
+2025-03-13 13:43:14 - root - INFO - DEBUG - User found: testuser_1741853593@example.com
+2025-03-13 13:44:47 - root - INFO - DEBUG - Authorization header: None
+2025-03-13 13:44:47 - root - INFO - DEBUG - Cookie: None
+2025-03-13 13:44:47 - root - INFO - DEBUG - OAuth2 token: None
+2025-03-13 13:44:47 - root - INFO - DEBUG - No token found
+2025-03-13 13:44:47 - root - INFO - DEBUG - Token in get_current_user: None
+2025-03-13 13:44:47 - root - INFO - DEBUG - No token provided, raising 401
+2025-03-13 13:44:47 - root - INFO - DEBUG - Authorization header: None
+2025-03-13 13:44:47 - root - INFO - DEBUG - Cookie: None
+2025-03-13 13:44:47 - root - INFO - DEBUG - OAuth2 token: None
+2025-03-13 13:44:47 - root - INFO - DEBUG - No token found
+2025-03-13 13:44:47 - root - INFO - DEBUG - Token in get_current_user: None
+2025-03-13 13:44:47 - root - INFO - DEBUG - No token provided, raising 401
+2025-03-13 13:44:47 - root - INFO - DEBUG - Authorization header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDAwODcsInN1YiI6IjEzIiwidHlwZSI6ImFjY2VzcyJ9.2jqUdT2Ot8cajY_SSQdesJC_vIlhw4TtOuwJtAX7nbA
+2025-03-13 13:44:47 - root - INFO - DEBUG - Cookie: None
+2025-03-13 13:44:47 - root - INFO - DEBUG - OAuth2 token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDAwODcsInN1YiI6IjEzIiwidHlwZSI6ImFjY2VzcyJ9.2jqUdT2Ot8cajY_SSQdesJC_vIlhw4TtOuwJtAX7nbA
+2025-03-13 13:44:47 - root - INFO - DEBUG - Using token from Authorization header: eyJhbGciOi...
+2025-03-13 13:44:47 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDAwODcsInN1YiI6IjEzIiwidHlwZSI6ImFjY2VzcyJ9.2jqUdT2Ot8cajY_SSQdesJC_vIlhw4TtOuwJtAX7nbA
+2025-03-13 13:44:47 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 13:44:47 - root - INFO - DEBUG - Token payload: {'exp': 1741940087, 'sub': '13', 'type': 'access'}
+2025-03-13 13:44:47 - root - INFO - DEBUG - User found: testuser_1741853687@example.com
+2025-03-13 13:45:41 - root - INFO - DEBUG - Authorization header: None
+2025-03-13 13:45:41 - root - INFO - DEBUG - Cookie: None
+2025-03-13 13:45:41 - root - INFO - DEBUG - OAuth2 token: None
+2025-03-13 13:45:41 - root - INFO - DEBUG - No token found
+2025-03-13 13:45:41 - root - INFO - DEBUG - Token in get_current_user: None
+2025-03-13 13:45:41 - root - INFO - DEBUG - No token provided, raising 401
+2025-03-13 13:46:24 - root - INFO - DEBUG - Authorization header: None
+2025-03-13 13:46:24 - root - INFO - DEBUG - Cookie: None
+2025-03-13 13:46:24 - root - INFO - DEBUG - OAuth2 token: None
+2025-03-13 13:46:24 - root - INFO - DEBUG - No token found
+2025-03-13 13:46:24 - root - INFO - DEBUG - Token in get_current_user: None
+2025-03-13 13:46:24 - root - INFO - DEBUG - No token provided, raising 401
+2025-03-13 13:46:24 - root - INFO - DEBUG - Authorization header: None
+2025-03-13 13:46:24 - root - INFO - DEBUG - Cookie: None
+2025-03-13 13:46:24 - root - INFO - DEBUG - OAuth2 token: None
+2025-03-13 13:46:24 - root - INFO - DEBUG - No token found
+2025-03-13 13:46:24 - root - INFO - DEBUG - Token in get_current_user: None
+2025-03-13 13:46:24 - root - INFO - DEBUG - No token provided, raising 401
+2025-03-13 13:46:24 - root - INFO - DEBUG - Authorization header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDAxODQsInN1YiI6IjE1IiwidHlwZSI6ImFjY2VzcyJ9.w5zldVS3KgjpdMygyUzCrJnb6ekYclzFHIUt7uM7sdo
+2025-03-13 13:46:24 - root - INFO - DEBUG - Cookie: None
+2025-03-13 13:46:24 - root - INFO - DEBUG - OAuth2 token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDAxODQsInN1YiI6IjE1IiwidHlwZSI6ImFjY2VzcyJ9.w5zldVS3KgjpdMygyUzCrJnb6ekYclzFHIUt7uM7sdo
+2025-03-13 13:46:24 - root - INFO - DEBUG - Using token from Authorization header: eyJhbGciOi...
+2025-03-13 13:46:24 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDAxODQsInN1YiI6IjE1IiwidHlwZSI6ImFjY2VzcyJ9.w5zldVS3KgjpdMygyUzCrJnb6ekYclzFHIUt7uM7sdo
+2025-03-13 13:46:24 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 13:46:24 - root - INFO - DEBUG - Token payload: {'exp': 1741940184, 'sub': '15', 'type': 'access'}
+2025-03-13 13:46:24 - root - INFO - DEBUG - User found: testuser_1741853783@example.com
+2025-03-13 13:47:23 - root - INFO - DEBUG - Authorization header: None
+2025-03-13 13:47:23 - root - INFO - DEBUG - Cookie: None
+2025-03-13 13:47:23 - root - INFO - DEBUG - OAuth2 token: None
+2025-03-13 13:47:23 - root - INFO - DEBUG - Request cookies: {}
+2025-03-13 13:47:23 - root - INFO - DEBUG - No token found
+2025-03-13 13:47:23 - root - INFO - DEBUG - Token in get_current_user: None
+2025-03-13 13:47:23 - root - INFO - DEBUG - No token provided, raising 401
+2025-03-13 13:47:23 - root - INFO - DEBUG - Authorization header: None
+2025-03-13 13:47:23 - root - INFO - DEBUG - Cookie: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDAyNDMsInN1YiI6IjE2IiwidHlwZSI6ImFjY2VzcyJ9.-FxBnepoMsLr3j1cYS6bmtK3s9IjDKBWvU6aGbwmlbo
+2025-03-13 13:47:23 - root - INFO - DEBUG - OAuth2 token: None
+2025-03-13 13:47:23 - root - INFO - DEBUG - Request cookies: {'access_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDAyNDMsInN1YiI6IjE2IiwidHlwZSI6ImFjY2VzcyJ9.-FxBnepoMsLr3j1cYS6bmtK3s9IjDKBWvU6aGbwmlbo'}
+2025-03-13 13:47:23 - root - INFO - DEBUG - Using token from cookie: eyJhbGciOi...
+2025-03-13 13:47:23 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDAyNDMsInN1YiI6IjE2IiwidHlwZSI6ImFjY2VzcyJ9.-FxBnepoMsLr3j1cYS6bmtK3s9IjDKBWvU6aGbwmlbo
+2025-03-13 13:47:23 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 13:47:23 - root - INFO - DEBUG - Token payload: {'exp': 1741940243, 'sub': '16', 'type': 'access'}
+2025-03-13 13:47:23 - root - INFO - DEBUG - User found: testuser_1741853842@example.com
+2025-03-13 13:47:23 - root - INFO - DEBUG - Authorization header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDAyNDMsInN1YiI6IjE2IiwidHlwZSI6ImFjY2VzcyJ9.-FxBnepoMsLr3j1cYS6bmtK3s9IjDKBWvU6aGbwmlbo
+2025-03-13 13:47:23 - root - INFO - DEBUG - Cookie: None
+2025-03-13 13:47:23 - root - INFO - DEBUG - OAuth2 token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDAyNDMsInN1YiI6IjE2IiwidHlwZSI6ImFjY2VzcyJ9.-FxBnepoMsLr3j1cYS6bmtK3s9IjDKBWvU6aGbwmlbo
+2025-03-13 13:47:23 - root - INFO - DEBUG - Request cookies: {}
+2025-03-13 13:47:23 - root - INFO - DEBUG - Using token from Authorization header: eyJhbGciOi...
+2025-03-13 13:47:23 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDAyNDMsInN1YiI6IjE2IiwidHlwZSI6ImFjY2VzcyJ9.-FxBnepoMsLr3j1cYS6bmtK3s9IjDKBWvU6aGbwmlbo
+2025-03-13 13:47:23 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 13:47:23 - root - INFO - DEBUG - Token payload: {'exp': 1741940243, 'sub': '16', 'type': 'access'}
+2025-03-13 13:47:23 - root - INFO - DEBUG - User found: testuser_1741853842@example.com
+2025-03-13 13:48:04 - root - INFO - DEBUG - Authorization header: None
+2025-03-13 13:48:04 - root - INFO - DEBUG - Cookie: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDAyODQsInN1YiI6IjE3IiwidHlwZSI6ImFjY2VzcyJ9.OjJCOeDF4F3eiG2dmVGIU--1j9vNq0yTAXdU3S4Q2jE
+2025-03-13 13:48:04 - root - INFO - DEBUG - OAuth2 token: None
+2025-03-13 13:48:04 - root - INFO - DEBUG - Request cookies: {'access_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDAyODQsInN1YiI6IjE3IiwidHlwZSI6ImFjY2VzcyJ9.OjJCOeDF4F3eiG2dmVGIU--1j9vNq0yTAXdU3S4Q2jE', 'refresh_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ0NDU4ODQsInN1YiI6IjE3IiwidHlwZSI6InJlZnJlc2gifQ.Rg2wXodlgInM7jarl9R5Gz1Xaq5Kl5sRCHpr2LGobG4'}
+2025-03-13 13:48:04 - root - INFO - DEBUG - Using token from cookie: eyJhbGciOi...
+2025-03-13 13:48:04 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDAyODQsInN1YiI6IjE3IiwidHlwZSI6ImFjY2VzcyJ9.OjJCOeDF4F3eiG2dmVGIU--1j9vNq0yTAXdU3S4Q2jE
+2025-03-13 13:48:04 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 13:48:04 - root - INFO - DEBUG - Token payload: {'exp': 1741940284, 'sub': '17', 'type': 'access'}
+2025-03-13 13:48:04 - root - INFO - DEBUG - User found: testuser_1741853883@example.com
+2025-03-13 13:48:04 - root - INFO - DEBUG - Authorization header: None
+2025-03-13 13:48:04 - root - INFO - DEBUG - Cookie: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDAyODQsInN1YiI6IjE3IiwidHlwZSI6ImFjY2VzcyJ9.OjJCOeDF4F3eiG2dmVGIU--1j9vNq0yTAXdU3S4Q2jE
+2025-03-13 13:48:04 - root - INFO - DEBUG - OAuth2 token: None
+2025-03-13 13:48:04 - root - INFO - DEBUG - Request cookies: {'access_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDAyODQsInN1YiI6IjE3IiwidHlwZSI6ImFjY2VzcyJ9.OjJCOeDF4F3eiG2dmVGIU--1j9vNq0yTAXdU3S4Q2jE'}
+2025-03-13 13:48:04 - root - INFO - DEBUG - Using token from cookie: eyJhbGciOi...
+2025-03-13 13:48:04 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDAyODQsInN1YiI6IjE3IiwidHlwZSI6ImFjY2VzcyJ9.OjJCOeDF4F3eiG2dmVGIU--1j9vNq0yTAXdU3S4Q2jE
+2025-03-13 13:48:04 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 13:48:04 - root - INFO - DEBUG - Token payload: {'exp': 1741940284, 'sub': '17', 'type': 'access'}
+2025-03-13 13:48:04 - root - INFO - DEBUG - User found: testuser_1741853883@example.com
+2025-03-13 13:48:04 - root - INFO - DEBUG - Authorization header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDAyODQsInN1YiI6IjE3IiwidHlwZSI6ImFjY2VzcyJ9.OjJCOeDF4F3eiG2dmVGIU--1j9vNq0yTAXdU3S4Q2jE
+2025-03-13 13:48:04 - root - INFO - DEBUG - Cookie: None
+2025-03-13 13:48:04 - root - INFO - DEBUG - OAuth2 token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDAyODQsInN1YiI6IjE3IiwidHlwZSI6ImFjY2VzcyJ9.OjJCOeDF4F3eiG2dmVGIU--1j9vNq0yTAXdU3S4Q2jE
+2025-03-13 13:48:04 - root - INFO - DEBUG - Request cookies: {}
+2025-03-13 13:48:04 - root - INFO - DEBUG - Using token from Authorization header: eyJhbGciOi...
+2025-03-13 13:48:04 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDAyODQsInN1YiI6IjE3IiwidHlwZSI6ImFjY2VzcyJ9.OjJCOeDF4F3eiG2dmVGIU--1j9vNq0yTAXdU3S4Q2jE
+2025-03-13 13:48:04 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 13:48:04 - root - INFO - DEBUG - Token payload: {'exp': 1741940284, 'sub': '17', 'type': 'access'}
+2025-03-13 13:48:04 - root - INFO - DEBUG - User found: testuser_1741853883@example.com
+2025-03-13 13:48:44 - root - INFO - DEBUG - Authorization header: None
+2025-03-13 13:48:44 - root - INFO - DEBUG - Cookie: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDAzMjQsInN1YiI6IjE4IiwidHlwZSI6ImFjY2VzcyJ9.4zZnniqyBCt1dNAXlJqy3iaN7_luSJDM7zD8PFIZ3gY
+2025-03-13 13:48:44 - root - INFO - DEBUG - OAuth2 token: None
+2025-03-13 13:48:44 - root - INFO - DEBUG - Request cookies: {'access_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDAzMjQsInN1YiI6IjE4IiwidHlwZSI6ImFjY2VzcyJ9.4zZnniqyBCt1dNAXlJqy3iaN7_luSJDM7zD8PFIZ3gY', 'refresh_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ0NDU5MjQsInN1YiI6IjE4IiwidHlwZSI6InJlZnJlc2gifQ.iUwHV0cuojPuir2cx7F1-eno6LwAK7vBbmLiOzxh7DE'}
+2025-03-13 13:48:44 - root - INFO - DEBUG - Using token from cookie: eyJhbGciOi...
+2025-03-13 13:48:44 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDAzMjQsInN1YiI6IjE4IiwidHlwZSI6ImFjY2VzcyJ9.4zZnniqyBCt1dNAXlJqy3iaN7_luSJDM7zD8PFIZ3gY
+2025-03-13 13:48:44 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 13:48:44 - root - INFO - DEBUG - Token payload: {'exp': 1741940324, 'sub': '18', 'type': 'access'}
+2025-03-13 13:48:44 - root - INFO - DEBUG - User found: testuser_1741853923@example.com
+2025-03-13 13:48:44 - root - INFO - DEBUG - Authorization header: None
+2025-03-13 13:48:44 - root - INFO - DEBUG - Cookie: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDAzMjQsInN1YiI6IjE4IiwidHlwZSI6ImFjY2VzcyJ9.4zZnniqyBCt1dNAXlJqy3iaN7_luSJDM7zD8PFIZ3gY
+2025-03-13 13:48:44 - root - INFO - DEBUG - OAuth2 token: None
+2025-03-13 13:48:44 - root - INFO - DEBUG - Request cookies: {'access_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDAzMjQsInN1YiI6IjE4IiwidHlwZSI6ImFjY2VzcyJ9.4zZnniqyBCt1dNAXlJqy3iaN7_luSJDM7zD8PFIZ3gY'}
+2025-03-13 13:48:44 - root - INFO - DEBUG - Using token from cookie: eyJhbGciOi...
+2025-03-13 13:48:44 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDAzMjQsInN1YiI6IjE4IiwidHlwZSI6ImFjY2VzcyJ9.4zZnniqyBCt1dNAXlJqy3iaN7_luSJDM7zD8PFIZ3gY
+2025-03-13 13:48:44 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 13:48:44 - root - INFO - DEBUG - Token payload: {'exp': 1741940324, 'sub': '18', 'type': 'access'}
+2025-03-13 13:48:44 - root - INFO - DEBUG - User found: testuser_1741853923@example.com
+2025-03-13 13:48:44 - root - INFO - DEBUG - Authorization header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDAzMjQsInN1YiI6IjE4IiwidHlwZSI6ImFjY2VzcyJ9.4zZnniqyBCt1dNAXlJqy3iaN7_luSJDM7zD8PFIZ3gY
+2025-03-13 13:48:44 - root - INFO - DEBUG - Cookie: None
+2025-03-13 13:48:44 - root - INFO - DEBUG - OAuth2 token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDAzMjQsInN1YiI6IjE4IiwidHlwZSI6ImFjY2VzcyJ9.4zZnniqyBCt1dNAXlJqy3iaN7_luSJDM7zD8PFIZ3gY
+2025-03-13 13:48:44 - root - INFO - DEBUG - Request cookies: {}
+2025-03-13 13:48:44 - root - INFO - DEBUG - Using token from Authorization header: eyJhbGciOi...
+2025-03-13 13:48:44 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDAzMjQsInN1YiI6IjE4IiwidHlwZSI6ImFjY2VzcyJ9.4zZnniqyBCt1dNAXlJqy3iaN7_luSJDM7zD8PFIZ3gY
+2025-03-13 13:48:44 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 13:48:44 - root - INFO - DEBUG - Token payload: {'exp': 1741940324, 'sub': '18', 'type': 'access'}
+2025-03-13 13:48:44 - root - INFO - DEBUG - User found: testuser_1741853923@example.com
+2025-03-13 13:48:44 - root - INFO - DEBUG - Authorization header: None
+2025-03-13 13:48:44 - root - INFO - DEBUG - Cookie: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDAzMjQsInN1YiI6IjE4IiwidHlwZSI6ImFjY2VzcyJ9.4zZnniqyBCt1dNAXlJqy3iaN7_luSJDM7zD8PFIZ3gY
+2025-03-13 13:48:44 - root - INFO - DEBUG - OAuth2 token: None
+2025-03-13 13:48:44 - root - INFO - DEBUG - Request cookies: {'access_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDAzMjQsInN1YiI6IjE4IiwidHlwZSI6ImFjY2VzcyJ9.4zZnniqyBCt1dNAXlJqy3iaN7_luSJDM7zD8PFIZ3gY', 'refresh_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ0NDU5MjQsInN1YiI6IjE4IiwidHlwZSI6InJlZnJlc2gifQ.iUwHV0cuojPuir2cx7F1-eno6LwAK7vBbmLiOzxh7DE'}
+2025-03-13 13:48:44 - root - INFO - DEBUG - Using token from cookie: eyJhbGciOi...
+2025-03-13 13:48:44 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDAzMjQsInN1YiI6IjE4IiwidHlwZSI6ImFjY2VzcyJ9.4zZnniqyBCt1dNAXlJqy3iaN7_luSJDM7zD8PFIZ3gY
+2025-03-13 13:48:44 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 13:48:44 - root - INFO - DEBUG - Token payload: {'exp': 1741940324, 'sub': '18', 'type': 'access'}
+2025-03-13 13:48:44 - root - INFO - DEBUG - User found: testuser_1741853923@example.com
+2025-03-13 13:48:44 - root - INFO - DEBUG - Authorization header: None
+2025-03-13 13:48:44 - root - INFO - DEBUG - Cookie: None
+2025-03-13 13:48:44 - root - INFO - DEBUG - OAuth2 token: None
+2025-03-13 13:48:44 - root - INFO - DEBUG - Request cookies: {}
+2025-03-13 13:48:44 - root - INFO - DEBUG - No token found
+2025-03-13 13:48:44 - root - INFO - DEBUG - Token in get_current_user: None
+2025-03-13 13:48:44 - root - INFO - DEBUG - No token provided, raising 401
+2025-03-13 13:53:05 - root - INFO - DEBUG - Authorization header: None
+2025-03-13 13:53:05 - root - INFO - DEBUG - Cookie: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDA1ODUsInN1YiI6IjIwIiwidHlwZSI6ImFjY2VzcyJ9.ejenMysfU0UzzN4zhVrK7ziuqxlG4mgzqQ70oVYww-s
+2025-03-13 13:53:05 - root - INFO - DEBUG - OAuth2 token: None
+2025-03-13 13:53:05 - root - INFO - DEBUG - Request cookies: {'access_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDA1ODUsInN1YiI6IjIwIiwidHlwZSI6ImFjY2VzcyJ9.ejenMysfU0UzzN4zhVrK7ziuqxlG4mgzqQ70oVYww-s', 'refresh_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ0NDYxODUsInN1YiI6IjIwIiwidHlwZSI6InJlZnJlc2gifQ.0PlkzIQprUYFYk5Y-Zb10UYBgoLp5RPhHoL0CluQr98'}
+2025-03-13 13:53:05 - root - INFO - DEBUG - Using token from cookie: eyJhbGciOi...
+2025-03-13 13:53:05 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDA1ODUsInN1YiI6IjIwIiwidHlwZSI6ImFjY2VzcyJ9.ejenMysfU0UzzN4zhVrK7ziuqxlG4mgzqQ70oVYww-s
+2025-03-13 13:53:05 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 13:53:05 - root - INFO - DEBUG - Token payload: {'exp': 1741940585, 'sub': '20', 'type': 'access'}
+2025-03-13 13:53:05 - root - INFO - DEBUG - User found: testuser_1741854184@example.com
+2025-03-13 13:53:05 - root - INFO - DEBUG - Authorization header: None
+2025-03-13 13:53:05 - root - INFO - DEBUG - Cookie: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDA1ODUsInN1YiI6IjIwIiwidHlwZSI6ImFjY2VzcyJ9.ejenMysfU0UzzN4zhVrK7ziuqxlG4mgzqQ70oVYww-s
+2025-03-13 13:53:05 - root - INFO - DEBUG - OAuth2 token: None
+2025-03-13 13:53:05 - root - INFO - DEBUG - Request cookies: {'access_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDA1ODUsInN1YiI6IjIwIiwidHlwZSI6ImFjY2VzcyJ9.ejenMysfU0UzzN4zhVrK7ziuqxlG4mgzqQ70oVYww-s'}
+2025-03-13 13:53:05 - root - INFO - DEBUG - Using token from cookie: eyJhbGciOi...
+2025-03-13 13:53:05 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDA1ODUsInN1YiI6IjIwIiwidHlwZSI6ImFjY2VzcyJ9.ejenMysfU0UzzN4zhVrK7ziuqxlG4mgzqQ70oVYww-s
+2025-03-13 13:53:05 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 13:53:05 - root - INFO - DEBUG - Token payload: {'exp': 1741940585, 'sub': '20', 'type': 'access'}
+2025-03-13 13:53:05 - root - INFO - DEBUG - User found: testuser_1741854184@example.com
+2025-03-13 13:53:05 - root - INFO - DEBUG - Authorization header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDA1ODUsInN1YiI6IjIwIiwidHlwZSI6ImFjY2VzcyJ9.ejenMysfU0UzzN4zhVrK7ziuqxlG4mgzqQ70oVYww-s
+2025-03-13 13:53:05 - root - INFO - DEBUG - Cookie: None
+2025-03-13 13:53:05 - root - INFO - DEBUG - OAuth2 token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDA1ODUsInN1YiI6IjIwIiwidHlwZSI6ImFjY2VzcyJ9.ejenMysfU0UzzN4zhVrK7ziuqxlG4mgzqQ70oVYww-s
+2025-03-13 13:53:05 - root - INFO - DEBUG - Request cookies: {}
+2025-03-13 13:53:05 - root - INFO - DEBUG - Using token from Authorization header: eyJhbGciOi...
+2025-03-13 13:53:05 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDA1ODUsInN1YiI6IjIwIiwidHlwZSI6ImFjY2VzcyJ9.ejenMysfU0UzzN4zhVrK7ziuqxlG4mgzqQ70oVYww-s
+2025-03-13 13:53:05 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 13:53:05 - root - INFO - DEBUG - Token payload: {'exp': 1741940585, 'sub': '20', 'type': 'access'}
+2025-03-13 13:53:05 - root - INFO - DEBUG - User found: testuser_1741854184@example.com
+2025-03-13 13:53:05 - root - INFO - DEBUG - Authorization header: None
+2025-03-13 13:53:05 - root - INFO - DEBUG - Cookie: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDA1ODUsInN1YiI6IjIwIiwidHlwZSI6ImFjY2VzcyJ9.ejenMysfU0UzzN4zhVrK7ziuqxlG4mgzqQ70oVYww-s
+2025-03-13 13:53:05 - root - INFO - DEBUG - OAuth2 token: None
+2025-03-13 13:53:05 - root - INFO - DEBUG - Request cookies: {'access_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDA1ODUsInN1YiI6IjIwIiwidHlwZSI6ImFjY2VzcyJ9.ejenMysfU0UzzN4zhVrK7ziuqxlG4mgzqQ70oVYww-s', 'refresh_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ0NDYxODUsInN1YiI6IjIwIiwidHlwZSI6InJlZnJlc2gifQ.0PlkzIQprUYFYk5Y-Zb10UYBgoLp5RPhHoL0CluQr98'}
+2025-03-13 13:53:05 - root - INFO - DEBUG - Using token from cookie: eyJhbGciOi...
+2025-03-13 13:53:05 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDA1ODUsInN1YiI6IjIwIiwidHlwZSI6ImFjY2VzcyJ9.ejenMysfU0UzzN4zhVrK7ziuqxlG4mgzqQ70oVYww-s
+2025-03-13 13:53:05 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 13:53:05 - root - INFO - DEBUG - Token payload: {'exp': 1741940585, 'sub': '20', 'type': 'access'}
+2025-03-13 13:53:05 - root - INFO - DEBUG - User found: testuser_1741854184@example.com
+2025-03-13 13:53:05 - root - INFO - DEBUG - Authorization header: None
+2025-03-13 13:53:05 - root - INFO - DEBUG - Cookie: None
+2025-03-13 13:53:05 - root - INFO - DEBUG - OAuth2 token: None
+2025-03-13 13:53:05 - root - INFO - DEBUG - Request cookies: {}
+2025-03-13 13:53:05 - root - INFO - DEBUG - No token found
+2025-03-13 13:53:05 - root - INFO - DEBUG - Token in get_current_user: None
+2025-03-13 13:53:05 - root - INFO - DEBUG - No token provided, raising 401
+2025-03-13 13:55:23 - root - INFO - DEBUG - Authorization header: None
+2025-03-13 13:55:23 - root - INFO - DEBUG - Cookie: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDA3MjMsInN1YiI6IjIxIiwidHlwZSI6ImFjY2VzcyJ9.D3jFolpMlthDUwA6OEAocGR9UFQiP8U7dZk-4uBlpWY
+2025-03-13 13:55:23 - root - INFO - DEBUG - OAuth2 token: None
+2025-03-13 13:55:23 - root - INFO - DEBUG - Request cookies: {'access_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDA3MjMsInN1YiI6IjIxIiwidHlwZSI6ImFjY2VzcyJ9.D3jFolpMlthDUwA6OEAocGR9UFQiP8U7dZk-4uBlpWY', 'refresh_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ0NDYzMjMsInN1YiI6IjIxIiwidHlwZSI6InJlZnJlc2gifQ.L0mxS2zORr0Wn7bb0Ip44MzGGnRjvfBPT4Yd_EjpsXg'}
+2025-03-13 13:55:23 - root - INFO - DEBUG - Using token from cookie: eyJhbGciOi...
+2025-03-13 13:55:23 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDA3MjMsInN1YiI6IjIxIiwidHlwZSI6ImFjY2VzcyJ9.D3jFolpMlthDUwA6OEAocGR9UFQiP8U7dZk-4uBlpWY
+2025-03-13 13:55:23 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 13:55:23 - root - INFO - DEBUG - Token payload: {'exp': 1741940723, 'sub': '21', 'type': 'access'}
+2025-03-13 13:55:23 - root - INFO - DEBUG - User found: testuser_1741854322@example.com
+2025-03-13 13:57:32 - root - INFO - DEBUG - Authorization header: None
+2025-03-13 13:57:32 - root - INFO - DEBUG - Cookie: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDA4NTAsInN1YiI6IjIyIiwidHlwZSI6ImFjY2VzcyJ9.2qQcEqRP3aE1_6wudmR_o-CpyO4Ux8KXId_WwuCSYw4
+2025-03-13 13:57:32 - root - INFO - DEBUG - OAuth2 token: None
+2025-03-13 13:57:32 - root - INFO - DEBUG - Request cookies: {'token': 'your_token_here', 'accessToken': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2N2I1NmM3YTQxNGY2YTVlMzIyMDYzMjYiLCJlbWFpbCI6InJvbml0QGdtYWlsLmNvbSIsInVzZXJuYW1lIjoicmFqIiwiZnVsbE5hbWUiOiJyb25pdHJhaiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0MTY3OTU2OSwiZXhwIjoxNzQxNzY1OTY5fQ.1CCUKce1iGK9EQcGZh_9y3r7evNm6vme_nLAwlhB7Rk', 'refreshToken': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2N2I1NmM3YTQxNGY2YTVlMzIyMDYzMjYiLCJpYXQiOjE3NDE2Nzk1NjksImV4cCI6MTc0MjU0MzU2OX0.V3FUX7AAiAbfHlPBXuXWlxZbUn_T94KlEipanDQFvcg', 'access_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDA4NTAsInN1YiI6IjIyIiwidHlwZSI6ImFjY2VzcyJ9.2qQcEqRP3aE1_6wudmR_o-CpyO4Ux8KXId_WwuCSYw4', 'refresh_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ0NDY0NTAsInN1YiI6IjIyIiwidHlwZSI6InJlZnJlc2gifQ.gRgkU5dzi0wxy3KUnf0KBtUo4ZLBZpKRPR7urSPkFjo'}
+2025-03-13 13:57:32 - root - INFO - DEBUG - Using token from cookie: eyJhbGciOi...
+2025-03-13 13:57:32 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDA4NTAsInN1YiI6IjIyIiwidHlwZSI6ImFjY2VzcyJ9.2qQcEqRP3aE1_6wudmR_o-CpyO4Ux8KXId_WwuCSYw4
+2025-03-13 13:57:32 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 13:57:32 - root - INFO - DEBUG - Token payload: {'exp': 1741940850, 'sub': '22', 'type': 'access'}
+2025-03-13 13:57:32 - root - INFO - DEBUG - User found: testuser_1741854440@example.com
+2025-03-13 13:59:12 - root - INFO - DEBUG - Authorization header: None
+2025-03-13 13:59:12 - root - INFO - DEBUG - Cookie: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDA5NTAsInN1YiI6IjIzIiwidHlwZSI6ImFjY2VzcyJ9.EnRPWebzRVlD_6lIRa3bY402CtQIgfvtPhUCscUDrzg
+2025-03-13 13:59:12 - root - INFO - DEBUG - OAuth2 token: None
+2025-03-13 13:59:12 - root - INFO - DEBUG - Request cookies: {'token': 'your_token_here', 'accessToken': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2N2I1NmM3YTQxNGY2YTVlMzIyMDYzMjYiLCJlbWFpbCI6InJvbml0QGdtYWlsLmNvbSIsInVzZXJuYW1lIjoicmFqIiwiZnVsbE5hbWUiOiJyb25pdHJhaiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0MTY3OTU2OSwiZXhwIjoxNzQxNzY1OTY5fQ.1CCUKce1iGK9EQcGZh_9y3r7evNm6vme_nLAwlhB7Rk', 'refreshToken': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2N2I1NmM3YTQxNGY2YTVlMzIyMDYzMjYiLCJpYXQiOjE3NDE2Nzk1NjksImV4cCI6MTc0MjU0MzU2OX0.V3FUX7AAiAbfHlPBXuXWlxZbUn_T94KlEipanDQFvcg', 'access_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDA5NTAsInN1YiI6IjIzIiwidHlwZSI6ImFjY2VzcyJ9.EnRPWebzRVlD_6lIRa3bY402CtQIgfvtPhUCscUDrzg', 'refresh_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ0NDY1NTAsInN1YiI6IjIzIiwidHlwZSI6InJlZnJlc2gifQ.vxT1FFT98pOitCCXTHScC8kKrURMucqG5TVzozKzZpk'}
+2025-03-13 13:59:12 - root - INFO - DEBUG - Using token from cookie: eyJhbGciOi...
+2025-03-13 13:59:12 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDA5NTAsInN1YiI6IjIzIiwidHlwZSI6ImFjY2VzcyJ9.EnRPWebzRVlD_6lIRa3bY402CtQIgfvtPhUCscUDrzg
+2025-03-13 13:59:12 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 13:59:12 - root - INFO - DEBUG - Token payload: {'exp': 1741940950, 'sub': '23', 'type': 'access'}
+2025-03-13 13:59:12 - root - INFO - DEBUG - User found: testuser_1741854539@example.com
+2025-03-13 13:59:38 - root - INFO - DEBUG - Authorization header: None
+2025-03-13 13:59:38 - root - INFO - DEBUG - Cookie: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDA5NzYsInN1YiI6IjIzIiwidHlwZSI6ImFjY2VzcyJ9.dgormGul3rKMUdLxLn2gtsCknG7YyUhULwd7pn_AR1o
+2025-03-13 13:59:38 - root - INFO - DEBUG - OAuth2 token: None
+2025-03-13 13:59:38 - root - INFO - DEBUG - Request cookies: {'token': 'your_token_here', 'accessToken': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2N2I1NmM3YTQxNGY2YTVlMzIyMDYzMjYiLCJlbWFpbCI6InJvbml0QGdtYWlsLmNvbSIsInVzZXJuYW1lIjoicmFqIiwiZnVsbE5hbWUiOiJyb25pdHJhaiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0MTY3OTU2OSwiZXhwIjoxNzQxNzY1OTY5fQ.1CCUKce1iGK9EQcGZh_9y3r7evNm6vme_nLAwlhB7Rk', 'refreshToken': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2N2I1NmM3YTQxNGY2YTVlMzIyMDYzMjYiLCJpYXQiOjE3NDE2Nzk1NjksImV4cCI6MTc0MjU0MzU2OX0.V3FUX7AAiAbfHlPBXuXWlxZbUn_T94KlEipanDQFvcg', 'access_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDA5NzYsInN1YiI6IjIzIiwidHlwZSI6ImFjY2VzcyJ9.dgormGul3rKMUdLxLn2gtsCknG7YyUhULwd7pn_AR1o', 'refresh_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ0NDY1NzYsInN1YiI6IjIzIiwidHlwZSI6InJlZnJlc2gifQ.zb05pPkfdrbaWe4LGrWZ9eYQ26LdtklH5-tJpL4j0cs'}
+2025-03-13 13:59:38 - root - INFO - DEBUG - Using token from cookie: eyJhbGciOi...
+2025-03-13 13:59:38 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDA5NzYsInN1YiI6IjIzIiwidHlwZSI6ImFjY2VzcyJ9.dgormGul3rKMUdLxLn2gtsCknG7YyUhULwd7pn_AR1o
+2025-03-13 13:59:38 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 13:59:38 - root - INFO - DEBUG - Token payload: {'exp': 1741940976, 'sub': '23', 'type': 'access'}
+2025-03-13 13:59:38 - root - INFO - DEBUG - User found: testuser_1741854539@example.com
+2025-03-13 14:01:29 - root - INFO - DEBUG - Authorization header: None
+2025-03-13 14:01:29 - root - INFO - DEBUG - Cookie: None
+2025-03-13 14:01:29 - root - INFO - DEBUG - OAuth2 token: None
+2025-03-13 14:01:29 - root - INFO - DEBUG - Request cookies: {'token': 'your_token_here', 'accessToken': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2N2I1NmM3YTQxNGY2YTVlMzIyMDYzMjYiLCJlbWFpbCI6InJvbml0QGdtYWlsLmNvbSIsInVzZXJuYW1lIjoicmFqIiwiZnVsbE5hbWUiOiJyb25pdHJhaiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0MTY3OTU2OSwiZXhwIjoxNzQxNzY1OTY5fQ.1CCUKce1iGK9EQcGZh_9y3r7evNm6vme_nLAwlhB7Rk', 'refreshToken': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2N2I1NmM3YTQxNGY2YTVlMzIyMDYzMjYiLCJpYXQiOjE3NDE2Nzk1NjksImV4cCI6MTc0MjU0MzU2OX0.V3FUX7AAiAbfHlPBXuXWlxZbUn_T94KlEipanDQFvcg'}
+2025-03-13 14:01:29 - root - INFO - DEBUG - No token found
+2025-03-13 14:01:29 - root - INFO - DEBUG - Token in get_current_user: None
+2025-03-13 14:01:29 - root - INFO - DEBUG - No token provided, raising 401
+2025-03-13 14:05:56 - root - INFO - DEBUG - Authorization header: None
+2025-03-13 14:05:56 - root - INFO - DEBUG - Cookie: None
+2025-03-13 14:05:56 - root - INFO - DEBUG - OAuth2 token: None
+2025-03-13 14:05:56 - root - INFO - DEBUG - Request cookies: {'token': 'your_token_here', 'accessToken': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2N2I1NmM3YTQxNGY2YTVlMzIyMDYzMjYiLCJlbWFpbCI6InJvbml0QGdtYWlsLmNvbSIsInVzZXJuYW1lIjoicmFqIiwiZnVsbE5hbWUiOiJyb25pdHJhaiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0MTY3OTU2OSwiZXhwIjoxNzQxNzY1OTY5fQ.1CCUKce1iGK9EQcGZh_9y3r7evNm6vme_nLAwlhB7Rk', 'refreshToken': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2N2I1NmM3YTQxNGY2YTVlMzIyMDYzMjYiLCJpYXQiOjE3NDE2Nzk1NjksImV4cCI6MTc0MjU0MzU2OX0.V3FUX7AAiAbfHlPBXuXWlxZbUn_T94KlEipanDQFvcg'}
+2025-03-13 14:05:56 - root - INFO - DEBUG - No token found
+2025-03-13 14:05:56 - root - INFO - DEBUG - Token in get_current_user: None
+2025-03-13 14:05:56 - root - INFO - DEBUG - No token provided, raising 401
+2025-03-13 14:06:01 - root - INFO - DEBUG - Authorization header: None
+2025-03-13 14:06:01 - root - INFO - DEBUG - Cookie: None
+2025-03-13 14:06:01 - root - INFO - DEBUG - OAuth2 token: None
+2025-03-13 14:06:01 - root - INFO - DEBUG - Request cookies: {'token': 'your_token_here', 'accessToken': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2N2I1NmM3YTQxNGY2YTVlMzIyMDYzMjYiLCJlbWFpbCI6InJvbml0QGdtYWlsLmNvbSIsInVzZXJuYW1lIjoicmFqIiwiZnVsbE5hbWUiOiJyb25pdHJhaiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0MTY3OTU2OSwiZXhwIjoxNzQxNzY1OTY5fQ.1CCUKce1iGK9EQcGZh_9y3r7evNm6vme_nLAwlhB7Rk', 'refreshToken': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2N2I1NmM3YTQxNGY2YTVlMzIyMDYzMjYiLCJpYXQiOjE3NDE2Nzk1NjksImV4cCI6MTc0MjU0MzU2OX0.V3FUX7AAiAbfHlPBXuXWlxZbUn_T94KlEipanDQFvcg'}
+2025-03-13 14:06:01 - root - INFO - DEBUG - No token found
+2025-03-13 14:06:01 - root - INFO - DEBUG - Token in get_current_user: None
+2025-03-13 14:06:01 - root - INFO - DEBUG - No token provided, raising 401
+2025-03-13 14:15:22 - root - INFO - DEBUG - Authorization header: None
+2025-03-13 14:15:22 - root - INFO - DEBUG - Cookie: None
+2025-03-13 14:15:22 - root - INFO - DEBUG - OAuth2 token: None
+2025-03-13 14:15:22 - root - INFO - DEBUG - Request cookies: {}
+2025-03-13 14:15:22 - root - INFO - DEBUG - No token found
+2025-03-13 14:15:22 - root - INFO - DEBUG - Token in get_current_user: None
+2025-03-13 14:15:22 - root - INFO - DEBUG - No token provided, raising 401
+2025-03-13 14:18:31 - root - INFO - DEBUG - Authorization header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDIxMTEsInN1YiI6IjI2IiwidHlwZSI6ImFjY2VzcyJ9.BvKllXFUBrldJ6_oLsXwFC8yoRZeKzk6apCcTmdbS1Y
+2025-03-13 14:18:31 - root - INFO - DEBUG - Cookie: None
+2025-03-13 14:18:31 - root - INFO - DEBUG - OAuth2 token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDIxMTEsInN1YiI6IjI2IiwidHlwZSI6ImFjY2VzcyJ9.BvKllXFUBrldJ6_oLsXwFC8yoRZeKzk6apCcTmdbS1Y
+2025-03-13 14:18:31 - root - INFO - DEBUG - Request cookies: {}
+2025-03-13 14:18:31 - root - INFO - DEBUG - Using token from Authorization header: eyJhbGciOi...
+2025-03-13 14:18:31 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDIxMTEsInN1YiI6IjI2IiwidHlwZSI6ImFjY2VzcyJ9.BvKllXFUBrldJ6_oLsXwFC8yoRZeKzk6apCcTmdbS1Y
+2025-03-13 14:18:31 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 14:18:31 - root - INFO - DEBUG - Token payload: {'exp': 1741942111, 'sub': '26', 'type': 'access'}
+2025-03-13 14:18:31 - root - INFO - DEBUG - User found: testuser_1741855711@example.com
+2025-03-13 14:18:31 - root - INFO - DEBUG - Authorization header: None
+2025-03-13 14:18:31 - root - INFO - DEBUG - Cookie: None
+2025-03-13 14:18:31 - root - INFO - DEBUG - OAuth2 token: None
+2025-03-13 14:18:31 - root - INFO - DEBUG - Request cookies: {}
+2025-03-13 14:18:31 - root - INFO - DEBUG - No token found
+2025-03-13 14:18:31 - root - INFO - DEBUG - Token in get_current_user: None
+2025-03-13 14:18:31 - root - INFO - DEBUG - No token provided, raising 401
+2025-03-13 14:19:22 - root - INFO - DEBUG - Authorization header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDIxNjIsInN1YiI6IjI3IiwidHlwZSI6ImFjY2VzcyJ9.TgHkVghKOPl4EQbvQgV8oELhPPSQjEo4UlbR4OXe_FA
+2025-03-13 14:19:22 - root - INFO - DEBUG - Cookie: None
+2025-03-13 14:19:22 - root - INFO - DEBUG - OAuth2 token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDIxNjIsInN1YiI6IjI3IiwidHlwZSI6ImFjY2VzcyJ9.TgHkVghKOPl4EQbvQgV8oELhPPSQjEo4UlbR4OXe_FA
+2025-03-13 14:19:22 - root - INFO - DEBUG - Request cookies: {}
+2025-03-13 14:19:22 - root - INFO - DEBUG - Using token from Authorization header: eyJhbGciOi...
+2025-03-13 14:19:22 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDIxNjIsInN1YiI6IjI3IiwidHlwZSI6ImFjY2VzcyJ9.TgHkVghKOPl4EQbvQgV8oELhPPSQjEo4UlbR4OXe_FA
+2025-03-13 14:19:22 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 14:19:22 - root - INFO - DEBUG - Token payload: {'exp': 1741942162, 'sub': '27', 'type': 'access'}
+2025-03-13 14:19:22 - root - INFO - DEBUG - User found: testuser_1741855762@example.com
+2025-03-13 14:19:22 - root - INFO - DEBUG - Authorization header: None
+2025-03-13 14:19:22 - root - INFO - DEBUG - Cookie: None
+2025-03-13 14:19:22 - root - INFO - DEBUG - OAuth2 token: None
+2025-03-13 14:19:22 - root - INFO - DEBUG - Request cookies: {}
+2025-03-13 14:19:22 - root - INFO - DEBUG - No token found
+2025-03-13 14:19:22 - root - INFO - DEBUG - Token in get_current_user: None
+2025-03-13 14:19:22 - root - INFO - DEBUG - No token provided, raising 401
+2025-03-13 14:20:56 - root - INFO - DEBUG - Authorization header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDIyNTYsInN1YiI6IjI4IiwidHlwZSI6ImFjY2VzcyJ9.CBMy_khtSX8xbMGRKn7dUHDgTgflm_d-gdTRCS5PUys
+2025-03-13 14:20:56 - root - INFO - DEBUG - Cookie: None
+2025-03-13 14:20:56 - root - INFO - DEBUG - OAuth2 token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDIyNTYsInN1YiI6IjI4IiwidHlwZSI6ImFjY2VzcyJ9.CBMy_khtSX8xbMGRKn7dUHDgTgflm_d-gdTRCS5PUys
+2025-03-13 14:20:56 - root - INFO - DEBUG - Request cookies: {}
+2025-03-13 14:20:56 - root - INFO - DEBUG - Using token from Authorization header: eyJhbGciOi...
+2025-03-13 14:20:56 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDIyNTYsInN1YiI6IjI4IiwidHlwZSI6ImFjY2VzcyJ9.CBMy_khtSX8xbMGRKn7dUHDgTgflm_d-gdTRCS5PUys
+2025-03-13 14:20:56 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 14:20:56 - root - INFO - DEBUG - Token payload: {'exp': 1741942256, 'sub': '28', 'type': 'access'}
+2025-03-13 14:20:56 - root - INFO - DEBUG - User found: testuser_1741855856@example.com
+2025-03-13 14:20:56 - root - INFO - DEBUG - Authorization header: None
+2025-03-13 14:20:56 - root - INFO - DEBUG - Cookie: None
+2025-03-13 14:20:56 - root - INFO - DEBUG - OAuth2 token: None
+2025-03-13 14:20:56 - root - INFO - DEBUG - Request cookies: {}
+2025-03-13 14:20:56 - root - INFO - DEBUG - No token found
+2025-03-13 14:20:56 - root - INFO - DEBUG - Token in get_current_user: None
+2025-03-13 14:20:56 - root - INFO - DEBUG - No token provided, raising 401
+2025-03-13 14:22:26 - root - INFO - DEBUG - Authorization header: None
+2025-03-13 14:22:26 - root - INFO - DEBUG - Cookie: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDIzNDMsInN1YiI6IjI5IiwidHlwZSI6ImFjY2VzcyJ9.mw2aEhMyE7MzpLaYsnQOnkw3FQcnl6SjIHW-xocFc3s
+2025-03-13 14:22:26 - root - INFO - DEBUG - OAuth2 token: None
+2025-03-13 14:22:26 - root - INFO - DEBUG - Request cookies: {'access_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDIzNDMsInN1YiI6IjI5IiwidHlwZSI6ImFjY2VzcyJ9.mw2aEhMyE7MzpLaYsnQOnkw3FQcnl6SjIHW-xocFc3s', 'refresh_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ0NDc5NDMsInN1YiI6IjI5IiwidHlwZSI6InJlZnJlc2gifQ.MWgORhoKmoYE_hqBZxDWZBBovZNXlGRo4VE--I_EsCo'}
+2025-03-13 14:22:26 - root - INFO - DEBUG - Using token from cookie: eyJhbGciOi...
+2025-03-13 14:22:26 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDIzNDMsInN1YiI6IjI5IiwidHlwZSI6ImFjY2VzcyJ9.mw2aEhMyE7MzpLaYsnQOnkw3FQcnl6SjIHW-xocFc3s
+2025-03-13 14:22:26 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 14:22:26 - root - INFO - DEBUG - Token payload: {'exp': 1741942343, 'sub': '29', 'type': 'access'}
+2025-03-13 14:22:26 - root - INFO - DEBUG - User found: testuser_1741855936@example.com
+2025-03-13 14:22:48 - root - INFO - DEBUG - Authorization header: None
+2025-03-13 14:22:48 - root - INFO - DEBUG - Cookie: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDIzNjcsInN1YiI6IjI5IiwidHlwZSI6ImFjY2VzcyJ9.QxUVAJL4MMekIPrsjBVWK2TcwgJnpaHcd2umaUgl2AA
+2025-03-13 14:22:48 - root - INFO - DEBUG - OAuth2 token: None
+2025-03-13 14:22:48 - root - INFO - DEBUG - Request cookies: {'access_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDIzNjcsInN1YiI6IjI5IiwidHlwZSI6ImFjY2VzcyJ9.QxUVAJL4MMekIPrsjBVWK2TcwgJnpaHcd2umaUgl2AA', 'refresh_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ0NDc5NjcsInN1YiI6IjI5IiwidHlwZSI6InJlZnJlc2gifQ.VAQoreaVCcJPgLJyC6yCrewUPUsswzSAwU-taNEXKpM'}
+2025-03-13 14:22:48 - root - INFO - DEBUG - Using token from cookie: eyJhbGciOi...
+2025-03-13 14:22:48 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDIzNjcsInN1YiI6IjI5IiwidHlwZSI6ImFjY2VzcyJ9.QxUVAJL4MMekIPrsjBVWK2TcwgJnpaHcd2umaUgl2AA
+2025-03-13 14:22:48 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 14:22:48 - root - INFO - DEBUG - Token payload: {'exp': 1741942367, 'sub': '29', 'type': 'access'}
+2025-03-13 14:22:48 - root - INFO - DEBUG - User found: testuser_1741855936@example.com
+2025-03-13 14:23:48 - root - INFO - DEBUG - Authorization header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI0MjgsInN1YiI6IjMwIiwidHlwZSI6ImFjY2VzcyJ9.4UI4yKMMAMb7An7I4ULIX4pnzMUIi_AdQkwKg_S1adw
+2025-03-13 14:23:49 - root - INFO - DEBUG - Cookie: None
+2025-03-13 14:23:49 - root - INFO - DEBUG - OAuth2 token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI0MjgsInN1YiI6IjMwIiwidHlwZSI6ImFjY2VzcyJ9.4UI4yKMMAMb7An7I4ULIX4pnzMUIi_AdQkwKg_S1adw
+2025-03-13 14:23:49 - root - INFO - DEBUG - Request cookies: {}
+2025-03-13 14:23:49 - root - INFO - DEBUG - Using token from Authorization header: eyJhbGciOi...
+2025-03-13 14:23:49 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI0MjgsInN1YiI6IjMwIiwidHlwZSI6ImFjY2VzcyJ9.4UI4yKMMAMb7An7I4ULIX4pnzMUIi_AdQkwKg_S1adw
+2025-03-13 14:23:49 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 14:23:49 - root - INFO - DEBUG - Token payload: {'exp': 1741942428, 'sub': '30', 'type': 'access'}
+2025-03-13 14:23:49 - root - INFO - DEBUG - User found: testuser_1741856028@example.com
+2025-03-13 14:23:49 - root - INFO - DEBUG - Authorization header: None
+2025-03-13 14:23:49 - root - INFO - DEBUG - Cookie: None
+2025-03-13 14:23:49 - root - INFO - DEBUG - OAuth2 token: None
+2025-03-13 14:23:49 - root - INFO - DEBUG - Request cookies: {}
+2025-03-13 14:23:49 - root - INFO - DEBUG - No token found
+2025-03-13 14:23:49 - root - INFO - DEBUG - Token in get_current_user: None
+2025-03-13 14:23:49 - root - INFO - DEBUG - No token provided, raising 401
+2025-03-13 14:28:13 - root - INFO - DEBUG - Authorization header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI2ODcsInN1YiI6IjI1IiwidHlwZSI6ImFjY2VzcyJ9.Z9VTictENNAx4oK6bPxtYlcSzUUlcCZxlGBjTa9lDD4
+2025-03-13 14:28:13 - root - INFO - DEBUG - Cookie: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI2ODcsInN1YiI6IjI1IiwidHlwZSI6ImFjY2VzcyJ9.Z9VTictENNAx4oK6bPxtYlcSzUUlcCZxlGBjTa9lDD4
+2025-03-13 14:28:13 - root - INFO - DEBUG - OAuth2 token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI2ODcsInN1YiI6IjI1IiwidHlwZSI6ImFjY2VzcyJ9.Z9VTictENNAx4oK6bPxtYlcSzUUlcCZxlGBjTa9lDD4
+2025-03-13 14:28:13 - root - INFO - DEBUG - Request cookies: {'access_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI2ODcsInN1YiI6IjI1IiwidHlwZSI6ImFjY2VzcyJ9.Z9VTictENNAx4oK6bPxtYlcSzUUlcCZxlGBjTa9lDD4', 'refresh_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ0NDgyODcsInN1YiI6IjI1IiwidHlwZSI6InJlZnJlc2gifQ.0vobssimXvaf8V9NAsgtCguvRjJcoSLtUKCzdGg8sts'}
+2025-03-13 14:28:13 - root - INFO - DEBUG - Using token from Authorization header: eyJhbGciOi...
+2025-03-13 14:28:13 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI2ODcsInN1YiI6IjI1IiwidHlwZSI6ImFjY2VzcyJ9.Z9VTictENNAx4oK6bPxtYlcSzUUlcCZxlGBjTa9lDD4
+2025-03-13 14:28:13 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 14:28:13 - root - INFO - DEBUG - Token payload: {'exp': 1741942687, 'sub': '25', 'type': 'access'}
+2025-03-13 14:28:13 - root - INFO - DEBUG - User found: user@example.com
+2025-03-13 14:28:27 - root - INFO - DEBUG - Authorization header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI2ODcsInN1YiI6IjI1IiwidHlwZSI6ImFjY2VzcyJ9.Z9VTictENNAx4oK6bPxtYlcSzUUlcCZxlGBjTa9lDD4
+2025-03-13 14:28:27 - root - INFO - DEBUG - Cookie: None
+2025-03-13 14:28:27 - root - INFO - DEBUG - OAuth2 token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI2ODcsInN1YiI6IjI1IiwidHlwZSI6ImFjY2VzcyJ9.Z9VTictENNAx4oK6bPxtYlcSzUUlcCZxlGBjTa9lDD4
+2025-03-13 14:28:27 - root - INFO - DEBUG - Request cookies: {}
+2025-03-13 14:28:27 - root - INFO - DEBUG - Using token from Authorization header: eyJhbGciOi...
+2025-03-13 14:28:27 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI2ODcsInN1YiI6IjI1IiwidHlwZSI6ImFjY2VzcyJ9.Z9VTictENNAx4oK6bPxtYlcSzUUlcCZxlGBjTa9lDD4
+2025-03-13 14:28:27 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 14:28:27 - root - INFO - DEBUG - Token payload: {'exp': 1741942687, 'sub': '25', 'type': 'access'}
+2025-03-13 14:28:27 - root - INFO - DEBUG - User found: user@example.com
+2025-03-13 14:30:52 - root - INFO - DEBUG - Authorization header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI3NjEsInN1YiI6IjI1IiwidHlwZSI6ImFjY2VzcyJ9.GFuoWWR8TAsmfPhKnExNp2oat1Bd5Cs1pj7JGnhrlyk
+2025-03-13 14:30:52 - root - INFO - DEBUG - Cookie: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI3NjEsInN1YiI6IjI1IiwidHlwZSI6ImFjY2VzcyJ9.GFuoWWR8TAsmfPhKnExNp2oat1Bd5Cs1pj7JGnhrlyk
+2025-03-13 14:30:52 - root - INFO - DEBUG - OAuth2 token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI3NjEsInN1YiI6IjI1IiwidHlwZSI6ImFjY2VzcyJ9.GFuoWWR8TAsmfPhKnExNp2oat1Bd5Cs1pj7JGnhrlyk
+2025-03-13 14:30:52 - root - INFO - DEBUG - Request cookies: {'access_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI3NjEsInN1YiI6IjI1IiwidHlwZSI6ImFjY2VzcyJ9.GFuoWWR8TAsmfPhKnExNp2oat1Bd5Cs1pj7JGnhrlyk', 'refresh_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ0NDgzNjEsInN1YiI6IjI1IiwidHlwZSI6InJlZnJlc2gifQ.AK4U0xMx5ZEgTj-WPnUsTMa-G6zKjFefsvtdNBoXxLE'}
+2025-03-13 14:30:52 - root - INFO - DEBUG - Using token from Authorization header: eyJhbGciOi...
+2025-03-13 14:30:52 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI3NjEsInN1YiI6IjI1IiwidHlwZSI6ImFjY2VzcyJ9.GFuoWWR8TAsmfPhKnExNp2oat1Bd5Cs1pj7JGnhrlyk
+2025-03-13 14:30:52 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 14:30:52 - root - INFO - DEBUG - Token payload: {'exp': 1741942761, 'sub': '25', 'type': 'access'}
+2025-03-13 14:30:52 - root - INFO - DEBUG - User found: user@example.com
+2025-03-13 14:31:05 - root - INFO - DEBUG - Authorization header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI3NjEsInN1YiI6IjI1IiwidHlwZSI6ImFjY2VzcyJ9.GFuoWWR8TAsmfPhKnExNp2oat1Bd5Cs1pj7JGnhrlyk
+2025-03-13 14:31:05 - root - INFO - DEBUG - Cookie: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI3NjEsInN1YiI6IjI1IiwidHlwZSI6ImFjY2VzcyJ9.GFuoWWR8TAsmfPhKnExNp2oat1Bd5Cs1pj7JGnhrlyk
+2025-03-13 14:31:05 - root - INFO - DEBUG - OAuth2 token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI3NjEsInN1YiI6IjI1IiwidHlwZSI6ImFjY2VzcyJ9.GFuoWWR8TAsmfPhKnExNp2oat1Bd5Cs1pj7JGnhrlyk
+2025-03-13 14:31:05 - root - INFO - DEBUG - Request cookies: {'access_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI3NjEsInN1YiI6IjI1IiwidHlwZSI6ImFjY2VzcyJ9.GFuoWWR8TAsmfPhKnExNp2oat1Bd5Cs1pj7JGnhrlyk', 'refresh_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ0NDgzNjEsInN1YiI6IjI1IiwidHlwZSI6InJlZnJlc2gifQ.AK4U0xMx5ZEgTj-WPnUsTMa-G6zKjFefsvtdNBoXxLE'}
+2025-03-13 14:31:05 - root - INFO - DEBUG - Using token from Authorization header: eyJhbGciOi...
+2025-03-13 14:31:05 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI3NjEsInN1YiI6IjI1IiwidHlwZSI6ImFjY2VzcyJ9.GFuoWWR8TAsmfPhKnExNp2oat1Bd5Cs1pj7JGnhrlyk
+2025-03-13 14:31:05 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 14:31:05 - root - INFO - DEBUG - Token payload: {'exp': 1741942761, 'sub': '25', 'type': 'access'}
+2025-03-13 14:31:05 - root - INFO - DEBUG - User found: user@example.com
+2025-03-13 14:31:22 - root - INFO - DEBUG - Authorization header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI3NjEsInN1YiI6IjI1IiwidHlwZSI6ImFjY2VzcyJ9.GFuoWWR8TAsmfPhKnExNp2oat1Bd5Cs1pj7JGnhrlyk
+2025-03-13 14:31:22 - root - INFO - DEBUG - Cookie: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI3NjEsInN1YiI6IjI1IiwidHlwZSI6ImFjY2VzcyJ9.GFuoWWR8TAsmfPhKnExNp2oat1Bd5Cs1pj7JGnhrlyk
+2025-03-13 14:31:22 - root - INFO - DEBUG - OAuth2 token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI3NjEsInN1YiI6IjI1IiwidHlwZSI6ImFjY2VzcyJ9.GFuoWWR8TAsmfPhKnExNp2oat1Bd5Cs1pj7JGnhrlyk
+2025-03-13 14:31:22 - root - INFO - DEBUG - Request cookies: {'access_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI3NjEsInN1YiI6IjI1IiwidHlwZSI6ImFjY2VzcyJ9.GFuoWWR8TAsmfPhKnExNp2oat1Bd5Cs1pj7JGnhrlyk', 'refresh_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ0NDgzNjEsInN1YiI6IjI1IiwidHlwZSI6InJlZnJlc2gifQ.AK4U0xMx5ZEgTj-WPnUsTMa-G6zKjFefsvtdNBoXxLE'}
+2025-03-13 14:31:22 - root - INFO - DEBUG - Using token from Authorization header: eyJhbGciOi...
+2025-03-13 14:31:22 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI3NjEsInN1YiI6IjI1IiwidHlwZSI6ImFjY2VzcyJ9.GFuoWWR8TAsmfPhKnExNp2oat1Bd5Cs1pj7JGnhrlyk
+2025-03-13 14:31:22 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 14:31:22 - root - INFO - DEBUG - Token payload: {'exp': 1741942761, 'sub': '25', 'type': 'access'}
+2025-03-13 14:31:22 - root - INFO - DEBUG - User found: user@example.com
+2025-03-13 14:31:43 - root - INFO - DEBUG - Authorization header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI3NjEsInN1YiI6IjI1IiwidHlwZSI6ImFjY2VzcyJ9.GFuoWWR8TAsmfPhKnExNp2oat1Bd5Cs1pj7JGnhrlyk
+2025-03-13 14:31:43 - root - INFO - DEBUG - Cookie: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI3NjEsInN1YiI6IjI1IiwidHlwZSI6ImFjY2VzcyJ9.GFuoWWR8TAsmfPhKnExNp2oat1Bd5Cs1pj7JGnhrlyk
+2025-03-13 14:31:43 - root - INFO - DEBUG - OAuth2 token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI3NjEsInN1YiI6IjI1IiwidHlwZSI6ImFjY2VzcyJ9.GFuoWWR8TAsmfPhKnExNp2oat1Bd5Cs1pj7JGnhrlyk
+2025-03-13 14:31:43 - root - INFO - DEBUG - Request cookies: {'access_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI3NjEsInN1YiI6IjI1IiwidHlwZSI6ImFjY2VzcyJ9.GFuoWWR8TAsmfPhKnExNp2oat1Bd5Cs1pj7JGnhrlyk', 'refresh_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ0NDgzNjEsInN1YiI6IjI1IiwidHlwZSI6InJlZnJlc2gifQ.AK4U0xMx5ZEgTj-WPnUsTMa-G6zKjFefsvtdNBoXxLE'}
+2025-03-13 14:31:43 - root - INFO - DEBUG - Using token from Authorization header: eyJhbGciOi...
+2025-03-13 14:31:43 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI3NjEsInN1YiI6IjI1IiwidHlwZSI6ImFjY2VzcyJ9.GFuoWWR8TAsmfPhKnExNp2oat1Bd5Cs1pj7JGnhrlyk
+2025-03-13 14:31:43 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 14:31:43 - root - INFO - DEBUG - Token payload: {'exp': 1741942761, 'sub': '25', 'type': 'access'}
+2025-03-13 14:31:43 - root - INFO - DEBUG - User found: user@example.com
+2025-03-13 14:32:00 - root - INFO - DEBUG - Authorization header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI3NjEsInN1YiI6IjI1IiwidHlwZSI6ImFjY2VzcyJ9.GFuoWWR8TAsmfPhKnExNp2oat1Bd5Cs1pj7JGnhrlyk
+2025-03-13 14:32:00 - root - INFO - DEBUG - Cookie: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI3NjEsInN1YiI6IjI1IiwidHlwZSI6ImFjY2VzcyJ9.GFuoWWR8TAsmfPhKnExNp2oat1Bd5Cs1pj7JGnhrlyk
+2025-03-13 14:32:00 - root - INFO - DEBUG - OAuth2 token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI3NjEsInN1YiI6IjI1IiwidHlwZSI6ImFjY2VzcyJ9.GFuoWWR8TAsmfPhKnExNp2oat1Bd5Cs1pj7JGnhrlyk
+2025-03-13 14:32:00 - root - INFO - DEBUG - Request cookies: {'access_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI3NjEsInN1YiI6IjI1IiwidHlwZSI6ImFjY2VzcyJ9.GFuoWWR8TAsmfPhKnExNp2oat1Bd5Cs1pj7JGnhrlyk', 'refresh_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ0NDgzNjEsInN1YiI6IjI1IiwidHlwZSI6InJlZnJlc2gifQ.AK4U0xMx5ZEgTj-WPnUsTMa-G6zKjFefsvtdNBoXxLE'}
+2025-03-13 14:32:00 - root - INFO - DEBUG - Using token from Authorization header: eyJhbGciOi...
+2025-03-13 14:32:00 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI3NjEsInN1YiI6IjI1IiwidHlwZSI6ImFjY2VzcyJ9.GFuoWWR8TAsmfPhKnExNp2oat1Bd5Cs1pj7JGnhrlyk
+2025-03-13 14:32:00 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 14:32:00 - root - INFO - DEBUG - Token payload: {'exp': 1741942761, 'sub': '25', 'type': 'access'}
+2025-03-13 14:32:00 - root - INFO - DEBUG - User found: updated@example.com
+2025-03-13 14:32:04 - root - INFO - DEBUG - Authorization header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI3NjEsInN1YiI6IjI1IiwidHlwZSI6ImFjY2VzcyJ9.GFuoWWR8TAsmfPhKnExNp2oat1Bd5Cs1pj7JGnhrlyk
+2025-03-13 14:32:04 - root - INFO - DEBUG - Cookie: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI3NjEsInN1YiI6IjI1IiwidHlwZSI6ImFjY2VzcyJ9.GFuoWWR8TAsmfPhKnExNp2oat1Bd5Cs1pj7JGnhrlyk
+2025-03-13 14:32:04 - root - INFO - DEBUG - OAuth2 token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI3NjEsInN1YiI6IjI1IiwidHlwZSI6ImFjY2VzcyJ9.GFuoWWR8TAsmfPhKnExNp2oat1Bd5Cs1pj7JGnhrlyk
+2025-03-13 14:32:04 - root - INFO - DEBUG - Request cookies: {'access_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI3NjEsInN1YiI6IjI1IiwidHlwZSI6ImFjY2VzcyJ9.GFuoWWR8TAsmfPhKnExNp2oat1Bd5Cs1pj7JGnhrlyk', 'refresh_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ0NDgzNjEsInN1YiI6IjI1IiwidHlwZSI6InJlZnJlc2gifQ.AK4U0xMx5ZEgTj-WPnUsTMa-G6zKjFefsvtdNBoXxLE'}
+2025-03-13 14:32:04 - root - INFO - DEBUG - Using token from Authorization header: eyJhbGciOi...
+2025-03-13 14:32:04 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI3NjEsInN1YiI6IjI1IiwidHlwZSI6ImFjY2VzcyJ9.GFuoWWR8TAsmfPhKnExNp2oat1Bd5Cs1pj7JGnhrlyk
+2025-03-13 14:32:04 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 14:32:04 - root - INFO - DEBUG - Token payload: {'exp': 1741942761, 'sub': '25', 'type': 'access'}
+2025-03-13 14:32:04 - root - INFO - DEBUG - User found: updated@example.com
+2025-03-13 14:32:25 - root - INFO - DEBUG - Authorization header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI5NDUsInN1YiI6IjMxIiwidHlwZSI6ImFjY2VzcyJ9.0c17yXxrPbizfCNXcqkH-h4bky-K01Y9snuBx_MdzOE
+2025-03-13 14:32:25 - root - INFO - DEBUG - Cookie: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI5NDUsInN1YiI6IjMxIiwidHlwZSI6ImFjY2VzcyJ9.0c17yXxrPbizfCNXcqkH-h4bky-K01Y9snuBx_MdzOE
+2025-03-13 14:32:25 - root - INFO - DEBUG - OAuth2 token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI5NDUsInN1YiI6IjMxIiwidHlwZSI6ImFjY2VzcyJ9.0c17yXxrPbizfCNXcqkH-h4bky-K01Y9snuBx_MdzOE
+2025-03-13 14:32:25 - root - INFO - DEBUG - Request cookies: {'access_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI5NDUsInN1YiI6IjMxIiwidHlwZSI6ImFjY2VzcyJ9.0c17yXxrPbizfCNXcqkH-h4bky-K01Y9snuBx_MdzOE', 'refresh_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ0NDg1NDUsInN1YiI6IjMxIiwidHlwZSI6InJlZnJlc2gifQ.-hYzJcLHXhs7cWrl5pNk5Q7Ec2IKMR80ueC8K_3eNmc'}
+2025-03-13 14:32:25 - root - INFO - DEBUG - Using token from Authorization header: eyJhbGciOi...
+2025-03-13 14:32:25 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI5NDUsInN1YiI6IjMxIiwidHlwZSI6ImFjY2VzcyJ9.0c17yXxrPbizfCNXcqkH-h4bky-K01Y9snuBx_MdzOE
+2025-03-13 14:32:25 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 14:32:25 - root - INFO - DEBUG - Token payload: {'exp': 1741942945, 'sub': '31', 'type': 'access'}
+2025-03-13 14:32:25 - root - INFO - DEBUG - User found: user@example.com
+2025-03-13 14:32:25 - root - INFO - DEBUG - Authorization header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI5NDUsInN1YiI6IjMxIiwidHlwZSI6ImFjY2VzcyJ9.0c17yXxrPbizfCNXcqkH-h4bky-K01Y9snuBx_MdzOE
+2025-03-13 14:32:25 - root - INFO - DEBUG - Cookie: None
+2025-03-13 14:32:25 - root - INFO - DEBUG - OAuth2 token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI5NDUsInN1YiI6IjMxIiwidHlwZSI6ImFjY2VzcyJ9.0c17yXxrPbizfCNXcqkH-h4bky-K01Y9snuBx_MdzOE
+2025-03-13 14:32:25 - root - INFO - DEBUG - Request cookies: {}
+2025-03-13 14:32:25 - root - INFO - DEBUG - Using token from Authorization header: eyJhbGciOi...
+2025-03-13 14:32:25 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI5NDUsInN1YiI6IjMxIiwidHlwZSI6ImFjY2VzcyJ9.0c17yXxrPbizfCNXcqkH-h4bky-K01Y9snuBx_MdzOE
+2025-03-13 14:32:25 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 14:32:25 - root - INFO - DEBUG - Token payload: {'exp': 1741942945, 'sub': '31', 'type': 'access'}
+2025-03-13 14:32:25 - root - INFO - DEBUG - User found: user@example.com
+2025-03-13 14:32:25 - root - INFO - DEBUG - Authorization header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI5NDUsInN1YiI6IjMxIiwidHlwZSI6ImFjY2VzcyJ9.0c17yXxrPbizfCNXcqkH-h4bky-K01Y9snuBx_MdzOE
+2025-03-13 14:32:25 - root - INFO - DEBUG - Cookie: None
+2025-03-13 14:32:25 - root - INFO - DEBUG - OAuth2 token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI5NDUsInN1YiI6IjMxIiwidHlwZSI6ImFjY2VzcyJ9.0c17yXxrPbizfCNXcqkH-h4bky-K01Y9snuBx_MdzOE
+2025-03-13 14:32:25 - root - INFO - DEBUG - Request cookies: {}
+2025-03-13 14:32:25 - root - INFO - DEBUG - Using token from Authorization header: eyJhbGciOi...
+2025-03-13 14:32:25 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI5NDUsInN1YiI6IjMxIiwidHlwZSI6ImFjY2VzcyJ9.0c17yXxrPbizfCNXcqkH-h4bky-K01Y9snuBx_MdzOE
+2025-03-13 14:32:25 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 14:32:25 - root - INFO - DEBUG - Token payload: {'exp': 1741942945, 'sub': '31', 'type': 'access'}
+2025-03-13 14:32:25 - root - INFO - DEBUG - User found: user@example.com
+2025-03-13 14:32:25 - root - INFO - DEBUG - Authorization header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI5NDUsInN1YiI6IjMxIiwidHlwZSI6ImFjY2VzcyJ9.0c17yXxrPbizfCNXcqkH-h4bky-K01Y9snuBx_MdzOE
+2025-03-13 14:32:25 - root - INFO - DEBUG - Cookie: None
+2025-03-13 14:32:25 - root - INFO - DEBUG - OAuth2 token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI5NDUsInN1YiI6IjMxIiwidHlwZSI6ImFjY2VzcyJ9.0c17yXxrPbizfCNXcqkH-h4bky-K01Y9snuBx_MdzOE
+2025-03-13 14:32:25 - root - INFO - DEBUG - Request cookies: {}
+2025-03-13 14:32:25 - root - INFO - DEBUG - Using token from Authorization header: eyJhbGciOi...
+2025-03-13 14:32:25 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI5NDUsInN1YiI6IjMxIiwidHlwZSI6ImFjY2VzcyJ9.0c17yXxrPbizfCNXcqkH-h4bky-K01Y9snuBx_MdzOE
+2025-03-13 14:32:25 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 14:32:25 - root - INFO - DEBUG - Token payload: {'exp': 1741942945, 'sub': '31', 'type': 'access'}
+2025-03-13 14:32:25 - root - INFO - DEBUG - User found: user@example.com
+2025-03-13 14:32:25 - root - INFO - DEBUG - Authorization header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI5NDUsInN1YiI6IjMxIiwidHlwZSI6ImFjY2VzcyJ9.0c17yXxrPbizfCNXcqkH-h4bky-K01Y9snuBx_MdzOE
+2025-03-13 14:32:25 - root - INFO - DEBUG - Cookie: None
+2025-03-13 14:32:25 - root - INFO - DEBUG - OAuth2 token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI5NDUsInN1YiI6IjMxIiwidHlwZSI6ImFjY2VzcyJ9.0c17yXxrPbizfCNXcqkH-h4bky-K01Y9snuBx_MdzOE
+2025-03-13 14:32:25 - root - INFO - DEBUG - Request cookies: {}
+2025-03-13 14:32:25 - root - INFO - DEBUG - Using token from Authorization header: eyJhbGciOi...
+2025-03-13 14:32:25 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI5NDUsInN1YiI6IjMxIiwidHlwZSI6ImFjY2VzcyJ9.0c17yXxrPbizfCNXcqkH-h4bky-K01Y9snuBx_MdzOE
+2025-03-13 14:32:25 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 14:32:25 - root - INFO - DEBUG - Token payload: {'exp': 1741942945, 'sub': '31', 'type': 'access'}
+2025-03-13 14:32:25 - root - INFO - DEBUG - User found: user@example.com
+2025-03-13 14:32:25 - root - INFO - DEBUG - Authorization header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI5NDUsInN1YiI6IjMxIiwidHlwZSI6ImFjY2VzcyJ9.0c17yXxrPbizfCNXcqkH-h4bky-K01Y9snuBx_MdzOE
+2025-03-13 14:32:25 - root - INFO - DEBUG - Cookie: None
+2025-03-13 14:32:25 - root - INFO - DEBUG - OAuth2 token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI5NDUsInN1YiI6IjMxIiwidHlwZSI6ImFjY2VzcyJ9.0c17yXxrPbizfCNXcqkH-h4bky-K01Y9snuBx_MdzOE
+2025-03-13 14:32:25 - root - INFO - DEBUG - Request cookies: {}
+2025-03-13 14:32:25 - root - INFO - DEBUG - Using token from Authorization header: eyJhbGciOi...
+2025-03-13 14:32:25 - root - INFO - DEBUG - Token in get_current_user: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDE5NDI5NDUsInN1YiI6IjMxIiwidHlwZSI6ImFjY2VzcyJ9.0c17yXxrPbizfCNXcqkH-h4bky-K01Y9snuBx_MdzOE
+2025-03-13 14:32:25 - root - INFO - DEBUG - Decoding token: eyJhbGciOi...
+2025-03-13 14:32:25 - root - INFO - DEBUG - Token payload: {'exp': 1741942945, 'sub': '31', 'type': 'access'}
+2025-03-13 14:32:25 - root - INFO - DEBUG - User found: user@example.com
