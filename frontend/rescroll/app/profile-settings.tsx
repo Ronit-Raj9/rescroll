@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useContext } from 'react';
+import React, { useState, useEffect, useRef, useContext, useCallback } from 'react';
 import { StyleSheet, View, TouchableOpacity, Image, TextInput, Alert, ScrollView, Platform, Modal, Dimensions, StatusBar, Switch, KeyboardAvoidingView } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -9,6 +9,13 @@ import { Colors } from '@/constants/Colors';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppContext } from './_layout';
+import { Container } from '@/components/Container';
+import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Spacing, BorderRadius, Shadows, FontSizes, Glows } from '@/constants/Colors';
+import { Feather } from '@expo/vector-icons';
+import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSequence } from 'react-native-reanimated';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -487,6 +494,66 @@ export default function ProfileSettingsScreen() {
     }
   }, [chatMessages]);
 
+  // Replace the animation code
+  const setupTypingAnimation = () => {
+    // Use shared values for animation
+    const opacity1 = useSharedValue(0.3);
+    const opacity2 = useSharedValue(0.3);
+    const opacity3 = useSharedValue(0.3);
+    
+    // Create animated styles for each dot
+    const animatedStyle1 = useAnimatedStyle(() => {
+      return { opacity: opacity1.value };
+    });
+    
+    const animatedStyle2 = useAnimatedStyle(() => {
+      return { opacity: opacity2.value };
+    });
+    
+    const animatedStyle3 = useAnimatedStyle(() => {
+      return { opacity: opacity3.value };
+    });
+    
+    // Start animation when isTyping changes
+    useEffect(() => {
+      if (isTyping) {
+        opacity1.value = withRepeat(
+          withSequence(
+            withTiming(1, { duration: 300 }),
+            withTiming(0.3, { duration: 300 })
+          ),
+          -1,
+          false
+        );
+        
+        opacity2.value = withRepeat(
+          withSequence(
+            withTiming(0.3, { duration: 150 }), // Delay effect
+            withTiming(1, { duration: 300 }),
+            withTiming(0.3, { duration: 300 })
+          ),
+          -1, 
+          false
+        );
+        
+        opacity3.value = withRepeat(
+          withSequence(
+            withTiming(0.3, { duration: 300 }), // Delay effect
+            withTiming(1, { duration: 300 }),
+            withTiming(0.3, { duration: 300 })
+          ),
+          -1,
+          false
+        );
+      }
+    }, [isTyping, opacity1, opacity2, opacity3]);
+    
+    return { animatedStyle1, animatedStyle2, animatedStyle3 };
+  };
+
+  // ... in the function component
+  const { animatedStyle1, animatedStyle2, animatedStyle3 } = setupTypingAnimation();
+
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <ThemedView style={styles.container}>
@@ -813,81 +880,72 @@ export default function ProfileSettingsScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.modalContainer}
         >
-          <View style={styles.chatModalContent}>
+          <View style={styles.chatContainer}>
             <View style={styles.chatHeader}>
-              <ThemedText style={styles.chatHeaderTitle}>Help Center</ThemedText>
-              <TouchableOpacity 
-                style={styles.chatCloseButton} 
-                onPress={() => setShowHelpCenterModal(false)}
-              >
-                <ThemedText style={styles.chatCloseButtonText}>✕</ThemedText>
+              <ThemedText style={styles.chatHeaderTitle}>ReScroll Help Assistant</ThemedText>
+              <TouchableOpacity onPress={() => setShowHelpCenterModal(false)}>
+                <Feather name="x" size={20} color={Colors.light.icon} />
               </TouchableOpacity>
             </View>
             
             <ScrollView 
+              style={styles.chatScrollView}
               ref={chatScrollViewRef}
-              style={styles.chatScrollView} 
-              contentContainerStyle={styles.chatContentContainer}
-              showsVerticalScrollIndicator={false}
+              onContentSizeChange={() => chatScrollViewRef.current?.scrollToEnd({ animated: true })}
             >
               {chatMessages.map((message) => (
-                <View 
-                  key={message.id} 
+                <View
+                  key={message.id}
                   style={[
-                    styles.chatMessageContainer, 
-                    message.sender === 'user' ? styles.userMessageContainer : styles.botMessageContainer
+                    styles.chatBubble,
+                    message.sender === 'user' && styles.userChatBubble,
                   ]}
                 >
-                  <View 
+                  <ThemedText
                     style={[
-                      styles.chatBubble, 
-                      message.sender === 'user' ? styles.userChatBubble : styles.botChatBubble
+                      styles.chatBubbleText,
+                      message.sender === 'user' && styles.userChatBubbleText,
                     ]}
                   >
-                    <ThemedText 
-                      style={[
-                        styles.chatMessageText,
-                        message.sender === 'user' ? styles.userMessageText : styles.botMessageText
-                      ]}
-                    >
-                      {message.text}
-                    </ThemedText>
-                  </View>
-                  <ThemedText style={styles.chatTimestamp}>
+                    {message.text}
+                  </ThemedText>
+                  <ThemedText style={styles.timestampText}>
                     {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </ThemedText>
                 </View>
               ))}
               
               {isTyping && (
-                <View style={[styles.chatMessageContainer, styles.botMessageContainer]}>
-                  <View style={[styles.chatBubble, styles.botChatBubble, styles.typingBubble]}>
-                    <ThemedText style={styles.typingText}>...</ThemedText>
-                  </View>
+                <View style={styles.typingIndicator}>
+                  <Animated.View style={[styles.typingDot, animatedStyle1]} />
+                  <Animated.View style={[styles.typingDot, animatedStyle2]} />
+                  <Animated.View style={[styles.typingDot, animatedStyle3]} />
                 </View>
               )}
             </ScrollView>
             
             <View style={styles.chatInputContainer}>
               <TextInput
-                style={styles.chatInput}
+                style={[
+                  styles.chatInput,
+                  messageInput.trim() === '' && styles.chatInputFocused,
+                ]}
+                placeholder="Ask a question..."
+                placeholderTextColor={Colors.light.textTertiary}
                 value={messageInput}
                 onChangeText={setMessageInput}
-                placeholder="Type your question here..."
-                placeholderTextColor="#9CA3AF"
-                multiline={false}
-                onSubmitEditing={handleSendMessage}
-                returnKeyType="send"
+                onFocus={() => setIsTyping(true)}
+                onBlur={() => setIsTyping(false)}
               />
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[
-                  styles.sendButton, 
-                  messageInput.trim() === '' ? styles.sendButtonDisabled : null
-                ]} 
+                  styles.sendButton,
+                  (!messageInput.trim() || isTyping) && styles.disabledSendButton,
+                ]}
                 onPress={handleSendMessage}
-                disabled={messageInput.trim() === ''}
+                disabled={!messageInput.trim() || isTyping}
               >
-                <ThemedText style={styles.sendButtonText}>Send</ThemedText>
+                <Feather name="send" size={18} color={Colors.light.textInverse} />
               </TouchableOpacity>
             </View>
           </View>
@@ -900,11 +958,10 @@ export default function ProfileSettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 16,
   },
   backButton: {
-    padding: 8,
-    marginLeft: 8,
+    padding: Spacing.sm,
+    marginLeft: Spacing.sm,
   },
   backButtonText: {
     fontSize: 24,
@@ -917,26 +974,28 @@ const styles = StyleSheet.create({
   },
   profileImageContainer: {
     position: 'relative',
-    marginBottom: 16,
+    marginBottom: Spacing.md,
   },
   profileImage: {
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: '#E1E1E1',
+    backgroundColor: Colors.light.lightGray,
+    ...Shadows.md,
   },
   editIconContainer: {
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: '#2563EB',
+    backgroundColor: Colors.light.primary,
     width: 32,
     height: 32,
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#FFFFFF',
+    borderColor: Colors.light.background,
+    ...Shadows.sm,
   },
   editIconText: {
     color: '#FFFFFF',
@@ -958,7 +1017,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   editButton: {
-    padding: 4,
+    padding: Spacing.xs,
   },
   editButtonText: {
     fontSize: 20,
@@ -1027,59 +1086,32 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.9)',
-    justifyContent: 'center',
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    backgroundColor: Colors.light.background,
+    borderTopLeftRadius: BorderRadius.lg,
+    borderTopRightRadius: BorderRadius.lg,
+    paddingBottom: Platform.OS === 'ios' ? 34 : 24, // Extra padding for home indicator
+    maxHeight: '80%',
+    ...Shadows.lg,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    padding: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.light.border,
   },
-  modalCloseButton: {
-    position: 'absolute',
-    top: 40,
-    right: 20,
-    zIndex: 1,
-    padding: 10,
-  },
-  modalCloseButtonText: {
-    color: '#FFF',
-    fontSize: 24,
-    fontWeight: '300',
-  },
-  modalImageContainer: {
-    width: SCREEN_WIDTH,
-    height: SCREEN_HEIGHT - 200,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalImage: {
-    width: SCREEN_WIDTH - 40,
-    height: SCREEN_HEIGHT - 200,
-    borderRadius: 12,
-  },
-  editProfilePhotoButton: {
-    position: 'absolute',
-    bottom: 50,
-    backgroundColor: '#2563EB',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 30,
-  },
-  editProfilePhotoButtonText: {
-    color: '#FFF',
-    fontSize: 16,
+  modalTitle: {
+    fontSize: 18,
     fontWeight: '600',
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  settingValueContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  settingValue: {
-    fontSize: 16,
-    color: '#6B7280',
-    marginRight: 8,
+  closeButton: {
+    fontSize: 24,
+    fontWeight: '300',
   },
   languageModalContainer: {
     flex: 1,
@@ -1104,22 +1136,10 @@ const styles = StyleSheet.create({
     elevation: 5,
     position: 'relative',
   },
-  closeButton: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-    zIndex: 1,
-  },
-  closeButtonText: {
-    fontSize: 16,
+  languageModalTitle: {
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#555',
+    marginBottom: 20,
   },
   languageScrollView: {
     width: '100%',
@@ -1127,37 +1147,23 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     maxHeight: SCREEN_HEIGHT * 0.6,
   },
-  languageModalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
-  languageOption: {
-    width: '100%',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
+  languageItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 6,
+    padding: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: Colors.light.border,
   },
-  selectedLanguageOption: {
-    backgroundColor: '#EBF5FF',
+  selectedLanguageItem: {
+    backgroundColor: Colors.light.primaryLight,
   },
-  languageOptionText: {
+  languageText: {
     fontSize: 16,
   },
-  nativeLanguageName: {
-    fontSize: 12,
-    color: '#6B7280',
-    marginTop: 2,
-  },
   selectedLanguageText: {
-    color: '#2563EB',
-    fontWeight: '500',
+    fontWeight: '600',
+    color: Colors.light.primary,
   },
   cancelButton: {
     marginTop: 10,
@@ -1306,132 +1312,174 @@ const styles = StyleSheet.create({
     color: '#2563EB',
     marginTop: 8,
   },
-  chatModalContent: {
-    width: '90%',
-    height: SCREEN_HEIGHT * 0.7,
-    backgroundColor: 'white',
-    borderRadius: 16,
+  chatContainer: {
+    flex: 1,
+    backgroundColor: Colors.light.background,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
+    ...Shadows.md,
   },
   chatHeader: {
-    width: '100%',
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 15,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-    position: 'relative',
-    backgroundColor: '#2563EB',
+    borderBottomColor: Colors.light.border,
+    backgroundColor: Colors.light.card,
   },
   chatHeaderTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  chatCloseButton: {
-    position: 'absolute',
-    right: 15,
-    padding: 5,
-  },
-  chatCloseButtonText: {
-    fontSize: 20,
-    color: '#FFFFFF',
+    fontSize: FontSizes.md,
+    fontWeight: '600',
+    color: Colors.light.text,
   },
   chatScrollView: {
     flex: 1,
-    padding: 10,
-  },
-  chatContentContainer: {
-    paddingBottom: 10,
-  },
-  chatMessageContainer: {
-    marginBottom: 12,
-    maxWidth: '80%',
-  },
-  userMessageContainer: {
-    alignSelf: 'flex-end',
-  },
-  botMessageContainer: {
-    alignSelf: 'flex-start',
-  },
-  chatBubble: {
-    padding: 12,
-    borderRadius: 18,
-    marginBottom: 2,
-  },
-  userChatBubble: {
-    backgroundColor: '#2563EB',
-    borderTopRightRadius: 2,
-  },
-  botChatBubble: {
-    backgroundColor: '#F3F4F6',
-    borderTopLeftRadius: 2,
-  },
-  chatMessageText: {
-    fontSize: 16,
-    lineHeight: 22,
-  },
-  userMessageText: {
-    color: '#FFFFFF',
-  },
-  botMessageText: {
-    color: '#1F2937',
-  },
-  chatTimestamp: {
-    fontSize: 11,
-    color: '#9CA3AF',
-    marginLeft: 5,
-  },
-  typingBubble: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-  },
-  typingText: {
-    fontSize: 18,
-    letterSpacing: 2,
+    padding: Spacing.md,
+    backgroundColor: Colors.light.backgroundSecondary,
   },
   chatInputContainer: {
     flexDirection: 'row',
-    padding: 10,
+    alignItems: 'center',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-    backgroundColor: '#FFFFFF',
+    borderTopColor: Colors.light.border,
+    backgroundColor: Colors.light.card,
   },
   chatInput: {
     flex: 1,
+    height: 40,
+    borderRadius: BorderRadius.md,
     borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 20,
-    paddingVertical: 8,
-    paddingHorizontal: 15,
-    fontSize: 16,
-    backgroundColor: '#F9FAFB',
-    color: '#1F2937',
+    borderColor: Colors.light.border,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    backgroundColor: Colors.light.backgroundSecondary,
+    marginRight: Spacing.sm,
+    color: Colors.light.text,
+    fontSize: FontSizes.md,
+  },
+  chatInputFocused: {
+    borderColor: Colors.light.primary,
+    ...Glows.subtle,
   },
   sendButton: {
-    marginLeft: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 15,
-    backgroundColor: '#2563EB',
-    borderRadius: 20,
+    width: 40,
+    height: 40,
     justifyContent: 'center',
     alignItems: 'center',
+    borderRadius: BorderRadius.round,
+    backgroundColor: Colors.light.primary,
+    ...Glows.subtle,
   },
-  sendButtonDisabled: {
-    backgroundColor: '#93C5FD',
+  disabledSendButton: {
+    backgroundColor: Colors.light.backgroundTertiary,
+    opacity: 0.7,
   },
   sendButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
+    color: Colors.light.textInverse,
+    fontSize: FontSizes.lg,
+  },
+  chatBubble: {
+    maxWidth: '80%',
+    padding: Spacing.sm,
+    borderRadius: BorderRadius.md,
+    marginVertical: Spacing.xs,
+    backgroundColor: Colors.light.backgroundTertiary,
+    alignSelf: 'flex-start',
+    ...Shadows.sm,
+  },
+  userChatBubble: {
+    backgroundColor: Colors.light.primary,
+    alignSelf: 'flex-end',
+    ...Glows.subtle,
+  },
+  chatBubbleText: {
+    fontSize: FontSizes.md,
+    color: Colors.light.text,
+  },
+  userChatBubbleText: {
+    color: Colors.light.textInverse,
+  },
+  timestampText: {
+    fontSize: FontSizes.xs,
+    color: Colors.light.textSecondary,
+    marginTop: Spacing.xs,
+    alignSelf: 'flex-end',
+  },
+  userTimestampText: {
+    color: Colors.light.textInverse,
+    opacity: 0.8,
+  },
+  loadingContainer: {
+    padding: Spacing.sm,
+    alignItems: 'center',
+  },
+  typingIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Spacing.xs,
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.light.backgroundTertiary,
+    alignSelf: 'flex-start',
+    marginVertical: Spacing.xs,
+  },
+  typingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Colors.light.textSecondary,
+    marginHorizontal: 2,
+  },
+  modalCloseButton: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 50 : 20,
+    right: 20,
+    zIndex: 10,
+    padding: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 20,
+  },
+  modalCloseButtonText: {
+    color: 'white',
+    fontSize: 20,
+    fontWeight: '300',
+  },
+  modalImageContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    height: '100%',
+  },
+  modalImage: {
+    width: SCREEN_WIDTH,
+    height: SCREEN_WIDTH,
+    resizeMode: 'contain',
+  },
+  editProfilePhotoButton: {
+    position: 'absolute',
+    bottom: Platform.OS === 'ios' ? 50 : 30,
+    padding: 15,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    borderRadius: 10,
+  },
+  editProfilePhotoButtonText: {
+    color: 'white',
     fontSize: 16,
+    fontWeight: '500',
+  },
+  settingValueContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  settingValue: {
+    fontSize: 16,
+    color: '#6B7280',
+    marginRight: 8,
   },
 }); 

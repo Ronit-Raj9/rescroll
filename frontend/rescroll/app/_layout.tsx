@@ -4,13 +4,17 @@ import { useFonts } from 'expo-font';
 import { Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { LogBox } from 'react-native';
+
+// Prevent warning logs for the demo
+LogBox.ignoreLogs(['Warning: ...']);
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 // Define the type for the app context
 type AppContextType = {
-  navigateTo: (_route: string) => void;
+  navigateTo: (route: string) => void;
 };
 
 // Create the context with a default value
@@ -25,14 +29,12 @@ export default function RootLayout() {
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
-  // Simple navigation function
+  // Improved navigation function with better error handling
   const navigateTo = (route: string) => {
     try {
-      if (route === '/profile-settings') {
-        router.push(route as any);
-      } else {
-        router.push(route as any);
-      }
+      // Make sure the route is properly formatted
+      const formattedRoute = route.startsWith('/') ? route : `/${route}`;
+      router.push(formattedRoute as any);
     } catch (error) {
       console.error("Navigation error:", error);
     }
@@ -45,7 +47,10 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (loaded) {
-      SplashScreen.hideAsync();
+      // Hide splash screen once fonts are loaded
+      SplashScreen.hideAsync().catch(error => {
+        console.warn("Could not hide splash screen:", error);
+      });
     }
   }, [loaded]);
 
@@ -56,17 +61,33 @@ export default function RootLayout() {
   return (
     <AppContext.Provider value={contextValue}>
       <ThemeProvider value={DefaultTheme}>
-        <Stack>
+        <Stack screenOptions={{ 
+          headerShown: false,
+          animation: 'slide_from_right',
+        }}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="paper-details" options={{ headerShown: false }} />
           <Stack.Screen 
             name="profile-settings" 
             options={{ 
-              headerShown: true, 
-              presentation: 'modal' 
+              headerShown: true,
+              title: "Profile Settings",
+              presentation: 'modal',
+              animation: 'slide_from_bottom',
             }} 
           />
-          <Stack.Screen name="notifications" options={{ headerShown: false }} />
+          <Stack.Screen 
+            name="notifications" 
+            options={{ headerShown: false }} 
+          />
+          <Stack.Screen 
+            name="design-demo" 
+            options={{ 
+              headerShown: true,
+              title: "Design System",
+              animation: 'slide_from_right',
+            }} 
+          />
         </Stack>
       </ThemeProvider>
     </AppContext.Provider>

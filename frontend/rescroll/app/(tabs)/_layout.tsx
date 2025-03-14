@@ -2,12 +2,12 @@ import { Tabs, useRouter, usePathname, useSegments, useNavigation } from 'expo-r
 import React, { useEffect, useRef, useContext } from 'react';
 import { Platform, TouchableOpacity, View, StyleSheet, Dimensions } from 'react-native';
 
-import { HapticTab } from '@/components/HapticTab';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Colors } from '@/constants/Colors';
 import { ThemedText } from '@/components/ThemedText';
-import { CustomTabBar } from '@/components/CustomTabBar';
+import CustomTabBar from '@/components/CustomTabBar';
 import { AppContext } from '../_layout';
+import { Feather } from '@expo/vector-icons';
 
 // Define the allowed tabs explicitly
 const ALLOWED_TABS = ['index', 'search', 'tops', 'library', 'explore'];
@@ -64,6 +64,7 @@ export default function TabLayout() {
               !ALLOWED_TABS.includes(route.name) && 
               route.name !== '(tabs)' && 
               route.name !== 'profile-settings' && 
+              route.name !== 'design-demo' &&
               !route.name.startsWith('/')) {
             console.warn(`Attempted to navigate to disallowed tab: ${route.name}`);
             // Use setTimeout to avoid navigation race conditions
@@ -87,18 +88,21 @@ export default function TabLayout() {
       // Use our custom tab bar instead of the default one
       tabBar={props => <CustomTabBar {...props} />}
       screenOptions={{
-        tabBarActiveTintColor: colors.tint,
-        tabBarInactiveTintColor: colors.tabIconDefault,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.icon,
         headerTitleStyle: {
           fontWeight: '600',
           textAlign: 'center',
+          color: colors.text,
         },
         headerStyle: {
-          backgroundColor: colors.background,
+          backgroundColor: colors.card,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.border,
         },
         headerShadowVisible: false,
         headerTitle: () => (
-          <ThemedText style={{ fontSize: 18, fontWeight: 'bold' }}>ReScroll</ThemedText>
+          <ThemedText style={styles.headerTitle}>ReScroll</ThemedText>
         ),
       }}>
       {/* Only include the explicitly allowed tabs */}
@@ -107,15 +111,31 @@ export default function TabLayout() {
         options={{
           title: 'Home',
           tabBarIcon: ({ color }) => <IconSymbol name="house.fill" size={26} color={color} />,
-          headerShown: false,
+          headerRight: () => (
+            <View style={styles.headerRightContainer}>
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => navigateTo('/design-demo')}
+              >
+                <Feather name="layout" size={22} color={colors.icon} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => navigateTo('/profile-settings')}
+              >
+                <Feather name="user" size={22} color={colors.icon} />
+              </TouchableOpacity>
+            </View>
+          ),
+          headerShown: true,
         }}
       />
       <Tabs.Screen
         name="search"
         options={{
           title: 'Search',
-          tabBarIcon: ({ color }) => <IconSymbol name="magnifyingglass" size={26} color={color} />,
-          headerShown: false,
+          tabBarIcon: ({ color }) => <Feather name="search" size={24} color={color} />,
+          headerShown: true,
         }}
       />
       <Tabs.Screen
@@ -131,15 +151,15 @@ export default function TabLayout() {
         options={{
           title: 'Bookmarks',
           tabBarIcon: ({ color }) => <IconSymbol name="bookmark.fill" size={26} color={color} />,
-          headerShown: false,
+          headerShown: true,
         }}
       />
       <Tabs.Screen
         name="explore"
         options={{
           title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol name="safari" size={26} color={color} />,
-          headerShown: false,
+          tabBarIcon: ({ color }) => <Feather name="compass" size={24} color={color} />,
+          headerShown: true,
         }}
       />
     </Tabs>
@@ -154,5 +174,10 @@ const styles = StyleSheet.create({
   iconButton: {
     marginLeft: 16,
     padding: 4,
+  },
+  headerTitle: {
+    fontSize: 18, 
+    fontWeight: 'bold',
+    color: Colors.light.text,
   }
 });

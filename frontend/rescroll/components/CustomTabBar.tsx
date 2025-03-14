@@ -1,74 +1,66 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Text, Dimensions } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import { IconSymbol } from './ui/IconSymbol';
-import { ThemedText } from './ThemedText';
-import { Colors } from '@/constants/Colors';
+import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import { Colors, BorderRadius, Spacing, Shadows, Glows } from '@/constants/Colors';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-// Type for our iconName
-type IconName = "house.fill" | "magnifyingglass" | "bookmark.fill" | "star.fill" | "safari" | "bell" | "person.circle" | "arrow.right" | "heart" | "bookmark" | "square.and.arrow.up" | "doc.text";
+// Get screen width for animations
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-// Explicitly define the allowed tab names to ensure no other tabs appear
-const ALLOWED_TABS = ['index', 'search', 'tops', 'library', 'explore'];
-
-// Custom tab bar component that only renders visible tabs
-export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
-  const colors = Colors.light;
+export default function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+  // Get safe area insets for proper padding
+  const insets = useSafeAreaInsets();
   
-  // Get screen width to calculate tab sizes
-  const screenWidth = Dimensions.get('window').width;
-  
-  // We need to get the actual visible routes (routes that don't have tabBarButton: () => null)
-  const visibleRoutes = state.routes.filter(route => {
-    const { options } = descriptors[route.key];
-    // Only show tabs that don't have a custom tabBarButton
-    // Exclude the profile route from the tab bar and ensure only allowed tabs are shown
-    return descriptors[route.key] && 
-           !options.tabBarButton && 
-           route.name !== 'profile' &&
-           ALLOWED_TABS.includes(route.name);
+  // Tab size calculations
+  const TAB_WIDTH = SCREEN_WIDTH / state.routes.length;
+  const INDICATOR_SIZE = TAB_WIDTH * 0.5;
+
+  // Indicator position animation
+  const indicatorAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          translateX: withSpring(
+            state.index * TAB_WIDTH + (TAB_WIDTH - INDICATOR_SIZE) / 2,
+            {
+              stiffness: 150,
+              damping: 20,
+            }
+          ),
+        },
+      ],
+    };
   });
-  
-  const tabWidth = screenWidth / visibleRoutes.length;
-  
-  console.log(`CustomTabBar rendering ${visibleRoutes.length} tabs, each with width ${tabWidth}px`);
-  console.log('Visible routes:', visibleRoutes.map(r => r.name));
-  
+
+  // Get label for tab
+  const getLabel = (options: any, route: any) => {
+    if (options.tabBarLabel !== undefined) {
+      return options.tabBarLabel;
+    } else if (options.title !== undefined) {
+      return options.title;
+    } else {
+      return route.name.charAt(0).toUpperCase() + route.name.slice(1);
+    }
+  };
+
   return (
-    <View style={[
-      styles.tabBar, 
-      { 
-        backgroundColor: colors.background,
-        borderTopColor: '#EFEFEF'
-      }
-    ]}>
-      {visibleRoutes.map((route, index) => {
+    <View style={[styles.tabBar, { paddingBottom: insets.bottom || Spacing.sm }]}>
+      {/* Background indicator for active tab */}
+      <Animated.View
+        style={[
+          styles.activeTabIndicator,
+          { width: INDICATOR_SIZE },
+          indicatorAnimatedStyle,
+        ]}
+      />
+      
+      {/* Tab buttons */}
+      {state.routes.map((route, index) => {
         const { options } = descriptors[route.key];
-        const label = options.tabBarLabel || options.title || route.name;
-        
         const isFocused = state.index === index;
-        
-        // Get icon for this tab
-        let iconName: IconName = 'house.fill'; // Default
-        switch (route.name) {
-          case 'index':
-            iconName = 'house.fill';
-            break;
-          case 'search':
-            iconName = 'magnifyingglass';
-            break;
-          case 'tops':
-            iconName = 'star.fill';
-            break;
-          case 'library':
-            iconName = 'bookmark.fill';
-            break;
-          case 'explore':
-            iconName = 'safari';
-            break;
-          // No default case for any other tab names
-        }
-        
+        const label = getLabel(options, route);
+
         const onPress = () => {
           const event = navigation.emit({
             type: 'tabPress',
@@ -81,6 +73,13 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
           }
         };
 
+        const onLongPress = () => {
+          navigation.emit({
+            type: 'tabLongPress',
+            target: route.key,
+          });
+        };
+
         return (
           <TouchableOpacity
             key={route.key}
@@ -88,21 +87,30 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
             accessibilityState={isFocused ? { selected: true } : {}}
             accessibilityLabel={options.tabBarAccessibilityLabel}
             onPress={onPress}
-            style={[styles.tabItem, { width: tabWidth }]}
+            onLongPress={onLongPress}
+            style={styles.tabButton}
+            activeOpacity={0.7}
           >
-            <IconSymbol 
-              name={iconName} 
-              size={26} 
-              color={isFocused ? colors.tint : colors.tabIconDefault} 
-            />
-            <ThemedText 
+            {/* Use the tabBarIcon from the options if available */}
+            {options.tabBarIcon ? 
+              options.tabBarIcon({ 
+                focused: isFocused, 
+                color: isFocused ? Colors.light.tabIconSelected : Colors.light.tabIconDefault,
+                size: 24 
+              }) : null}
+            <Text
               style={[
-                styles.tabLabel, 
-                { color: isFocused ? colors.tint : colors.tabIconDefault }
+                styles.tabLabel,
+                {
+                  color: isFocused
+                    ? Colors.light.tabIconSelected
+                    : Colors.light.tabIconDefault,
+                  opacity: isFocused ? 1 : 0.8,
+                },
               ]}
             >
-              {typeof label === 'string' ? label : ''}
-            </ThemedText>
+              {label}
+            </Text>
           </TouchableOpacity>
         );
       })}
@@ -113,20 +121,30 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
 const styles = StyleSheet.create({
   tabBar: {
     flexDirection: 'row',
+    backgroundColor: Colors.light.card,
     borderTopWidth: 1,
-    height: 60,
-    paddingTop: 8,
-    width: '100%',
+    borderTopColor: Colors.light.border,
+    position: 'relative',
+    ...Shadows.md,
   },
-  tabItem: {
+  tabButton: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'flex-start',
+    justifyContent: 'center',
+    paddingVertical: Spacing.sm,
   },
   tabLabel: {
     fontSize: 12,
-    fontWeight: '500',
     marginTop: 2,
-    marginBottom: 8,
+    fontWeight: '500',
+  },
+  activeTabIndicator: {
+    height: 4,
+    backgroundColor: Colors.light.primary,
+    position: 'absolute',
+    top: 0,
+    borderBottomLeftRadius: BorderRadius.md,
+    borderBottomRightRadius: BorderRadius.md,
+    ...Glows.subtle,
   },
 }); 
