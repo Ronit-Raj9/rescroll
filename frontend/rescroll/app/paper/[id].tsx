@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { PaperDetail, PaperDetailProps } from '@/components/papers/PaperDetail';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
@@ -47,6 +47,7 @@ export default function PaperDetailScreen() {
   const [paperDetails, setPaperDetails] = useState<Partial<PaperDetailProps> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const loadPaperDetails = async () => {
@@ -88,7 +89,10 @@ export default function PaperDetailScreen() {
           <ThemedText style={styles.errorText}>Error: {error}</ThemedText>
         </View>
       ) : paperDetails ? (
-        <PaperDetail {...paperDetails} />
+        <PaperDetail 
+          paper={paperDetails as PaperDetailProps} 
+          onGoBack={() => router.back()} 
+        />
       ) : (
         <View style={styles.errorContainer}>
           <ThemedText style={styles.errorText}>No paper details found</ThemedText>

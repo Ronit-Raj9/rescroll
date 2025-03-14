@@ -18,6 +18,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Types for search results
 interface Author {
@@ -43,7 +44,8 @@ const SEARCH_SUGGESTIONS = [
   "Machine learning in healthcare",
   "Climate change mitigation",
   "Quantum computing advances",
-  "Neural network architectures"
+  "Neural network architectures",
+  "Renewable energy storage solutions"
 ];
 
 // Mock data function - in a real app, this would connect to an API
@@ -60,7 +62,7 @@ const searchResults = (query: string): Promise<SearchResult[]> => {
           citationCount: 45,
           abstract: 'This study explores novel neural network architectures...',
           keywords: ['neural networks', 'deep learning', 'architecture'],
-          imageUrl: 'https://via.placeholder.com/300x200',
+          imageUrl: 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?ixlib=rb-4.0.3&auto=format&fit=crop&w=1080&q=80',
         },
         {
           id: '2',
@@ -71,7 +73,7 @@ const searchResults = (query: string): Promise<SearchResult[]> => {
           citationCount: 32,
           abstract: 'We analyze various climate change mitigation strategies...',
           keywords: ['climate', 'mitigation', 'policy'],
-          imageUrl: 'https://via.placeholder.com/300x200',
+          imageUrl: 'https://images.unsplash.com/photo-1559827291-72ee739d0d9a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1080&q=80',
         },
         {
           id: '3',
@@ -82,7 +84,7 @@ const searchResults = (query: string): Promise<SearchResult[]> => {
           citationCount: 18,
           abstract: 'This paper reviews the current state of quantum computing...',
           keywords: ['quantum', 'computing', 'qubits'],
-          imageUrl: 'https://via.placeholder.com/300x200',
+          imageUrl: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1080&q=80',
         },
       ]);
     }, 1000);
@@ -96,7 +98,7 @@ export default function SearchScreen() {
   const [recentSearches, setRecentSearches] = useState<string[]>([...SEARCH_SUGGESTIONS]);
   const router = useRouter();
   const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme || 'light'];
+  const colors = Colors.light; // Always use light theme to match home page
   
   const numColumns = 2;
   const screenWidth = Dimensions.get('window').width;
@@ -142,112 +144,165 @@ export default function SearchScreen() {
   );
 
   return (
-    <ThemedView style={styles.container}>
-      <Stack.Screen options={{ headerShown: false }} />
-      
-      <View style={styles.searchContainer}>
-        <View style={styles.searchBar}>
-          <IconSymbol name="magnifyingglass" size={20} color={colors.darkGray} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search research papers..."
-            placeholderTextColor={colors.darkGray}
-            value={query}
-            onChangeText={setQuery}
-            onSubmitEditing={handleSearch}
-            returnKeyType="search"
-            autoCapitalize="none"
-          />
-          {query ? (
-            <TouchableOpacity onPress={() => setQuery('')}>
-              <IconSymbol name="bookmark" size={16} color={colors.darkGray} />
-            </TouchableOpacity>
-          ) : null}
-        </View>
-      </View>
-
-      {!results.length && !searching ? (
-        <ScrollView style={styles.suggestionsContainer}>
-          <ThemedText style={styles.sectionTitle}>Recent Searches</ThemedText>
-          {recentSearches.map((suggestion, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.suggestionItem}
-              onPress={() => {
-                setQuery(suggestion);
-                handleSearch();
-              }}
-            >
-              <ThemedText style={styles.suggestionText}>{suggestion}</ThemedText>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      ) : (
-        <>
-          {searching ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={colors.primary} />
-              <ThemedText style={styles.loadingText}>Searching...</ThemedText>
-            </View>
-          ) : (
-            <>
-              <ThemedText style={styles.resultsHeader}>Articles</ThemedText>
-              <FlatList
-                data={results}
-                renderItem={renderResultItem}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={styles.resultsContainer}
-                numColumns={numColumns}
-                showsVerticalScrollIndicator={false}
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      <ThemedView style={styles.container}>
+        <Stack.Screen options={{ headerShown: false }} />
+        
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <ThemedText style={styles.screenTitle}>Search</ThemedText>
+          </View>
+          
+          {/* Search Bar with grey shade styling matching home page */}
+          <View style={styles.searchContainer}>
+            <View style={styles.searchBar}>
+              <IconSymbol name="magnifyingglass" size={16} color="#777" />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search papers, topics, or authors..."
+                placeholderTextColor="#777"
+                value={query}
+                onChangeText={setQuery}
+                onSubmitEditing={handleSearch}
+                returnKeyType="search"
+                autoCapitalize="none"
               />
-            </>
-          )}
-        </>
-      )}
-    </ThemedView>
+              {query.length > 0 && (
+                <TouchableOpacity onPress={() => setQuery('')}>
+                  <IconSymbol name="xmark.circle.fill" size={16} color="#777" />
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        </View>
+
+        {!results.length && !searching ? (
+          <ScrollView style={styles.contentContainer} showsVerticalScrollIndicator={false}>
+            {/* Recent Searches Section */}
+            <View style={styles.sectionContainer}>
+              <ThemedText style={styles.sectionTitle}>Recent Searches</ThemedText>
+              {recentSearches.map((suggestion, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.suggestionItem}
+                  onPress={() => {
+                    setQuery(suggestion);
+                    handleSearch();
+                  }}
+                >
+                  <IconSymbol name="magnifyingglass" size={16} color="#777" style={styles.suggestionIcon} />
+                  <ThemedText style={styles.suggestionText}>{suggestion}</ThemedText>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </ScrollView>
+        ) : (
+          <>
+            {searching ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={colors.primary} />
+                <ThemedText style={styles.loadingText}>Searching...</ThemedText>
+              </View>
+            ) : (
+              <>
+                <ThemedText style={styles.resultsHeader}>Articles</ThemedText>
+                <FlatList
+                  data={results}
+                  renderItem={renderResultItem}
+                  keyExtractor={(item) => item.id}
+                  contentContainerStyle={styles.resultsContainer}
+                  numColumns={numColumns}
+                  showsVerticalScrollIndicator={false}
+                />
+              </>
+            )}
+          </>
+        )}
+      </ThemedView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
+    backgroundColor: '#fff',
+  },
+  header: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    backgroundColor: '#fff',
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  screenTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
   },
   searchContainer: {
-    marginBottom: 16,
-    marginTop: 16,
+    marginTop: 10,
+    paddingHorizontal: 6,
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
-    borderRadius: 10,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 12,
     paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingVertical: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   searchInput: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 14,
     marginLeft: 8,
+    color: '#333',
     paddingVertical: 6,
   },
-  suggestionsContainer: {
+  contentContainer: {
     flex: 1,
+    paddingHorizontal: 16,
+  },
+  sectionContainer: {
+    marginBottom: 24,
+    marginTop: 10,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 16,
-    marginTop: 8,
+  },
+  seeAllText: {
+    fontSize: 14,
+    color: Colors.light.primary,
   },
   suggestionItem: {
-    paddingVertical: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#E0E0E0',
   },
+  suggestionIcon: {
+    marginRight: 12,
+  },
   suggestionText: {
     fontSize: 16,
-    color: '#555',
+    color: '#333',
   },
   loadingContainer: {
     flex: 1,
@@ -260,46 +315,47 @@ const styles = StyleSheet.create({
     color: '#555',
   },
   resultsHeader: {
-    fontSize: 22,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '600',
     marginBottom: 16,
-    marginTop: 8,
+    paddingHorizontal: 16,
   },
   resultsContainer: {
+    paddingHorizontal: 16,
     paddingBottom: 16,
   },
   resultCard: {
-    marginBottom: 16,
-    marginHorizontal: 8,
-    borderRadius: 8,
-    overflow: 'hidden',
     backgroundColor: '#fff',
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginRight: 8,
+    marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   resultImage: {
     width: '100%',
     height: 120,
-    resizeMode: 'cover',
+    backgroundColor: '#f0f0f0',
   },
   resultContent: {
     padding: 12,
   },
   resultTitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     marginBottom: 4,
   },
   resultAuthors: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#555',
     marginBottom: 4,
   },
   resultMeta: {
-    fontSize: 12,
-    color: '#888',
+    fontSize: 11,
+    color: '#777',
   },
 }); 

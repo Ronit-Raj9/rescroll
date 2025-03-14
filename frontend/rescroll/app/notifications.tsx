@@ -52,18 +52,28 @@ const NOTIFICATIONS = [
 export default function NotificationsScreen() {
   const router = useRouter();
 
+  const handleBack = () => {
+    try {
+      router.back();
+    } catch (error) {
+      console.error('Error navigating back:', error);
+      // Fallback to main tabs if back navigation fails
+      router.replace('/(tabs)');
+    }
+  };
+
   const getNotificationIcon = (type: string) => {
     switch(type) {
       case 'new_paper':
-        return <IconSymbol name="doc.badge.plus" size={24} color="#3498db" />;
+        return <IconSymbol name="doc.text" size={24} color="#3498db" />;
       case 'citation':
-        return <IconSymbol name="quote.bubble" size={24} color="#2ecc71" />;
+        return <IconSymbol name="bookmark.fill" size={24} color="#2ecc71" />;
       case 'comment':
-        return <IconSymbol name="text.bubble" size={24} color="#9b59b6" />;
+        return <IconSymbol name="bell" size={24} color="#9b59b6" />;
       case 'recommendation':
-        return <IconSymbol name="star" size={24} color="#f39c12" />;
+        return <IconSymbol name="star.fill" size={24} color="#f39c12" />;
       case 'event':
-        return <IconSymbol name="calendar" size={24} color="#e74c3c" />;
+        return <IconSymbol name="safari" size={24} color="#e74c3c" />;
       default:
         return <IconSymbol name="bell" size={24} color="#7f8c8d" />;
     }
@@ -95,6 +105,14 @@ export default function NotificationsScreen() {
       <Stack.Screen 
         options={{ 
           title: 'Notifications',
+          headerLeft: () => (
+            <TouchableOpacity 
+              style={{ marginLeft: 15 }}
+              onPress={handleBack}
+            >
+              <IconSymbol name="arrow.right" size={24} color="#007AFF" style={{ transform: [{ scaleX: -1 }] }} />
+            </TouchableOpacity>
+          ),
           headerRight: () => (
             <TouchableOpacity 
               style={{ marginRight: 15 }}

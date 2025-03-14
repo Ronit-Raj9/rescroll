@@ -5,7 +5,6 @@ import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import Svg, { Circle, Line, G } from 'react-native-svg';
 import { Colors } from '@/constants/Colors';
-import { Animated } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
 // Define types for the nodes and links
