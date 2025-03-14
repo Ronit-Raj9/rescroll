@@ -1,10 +1,14 @@
-from app.schemas.auth import (  # noqa: F401
+from app.schemas.user import (  # noqa: F401
     User,
     UserCreate,
     UserUpdate,
+    UserLogin,
     Token,
     TokenPayload,
     Msg,
-    ProfileImage,
     RefreshToken,
+    UserProfileUpdate,
+    UserStats,
+    UserInDB,
+    ProfileImage
 )

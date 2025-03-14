@@ -62,17 +62,50 @@ async def upload_profile_image(
     """
     Upload a profile image for the current user.
     """
-    # Delete old image if it exists
-    if current_user.profile_image:
-        delete_image(current_user.profile_image)
-    
-    # Upload new image to Cloudinary
-    image_url = await upload_image(file, folder="profile_images")
-    
-    # Update user profile with new image URL
-    crud.user.update_user_profile_image(db, db_user=current_user, image_url=image_url)
-    
-    return {"image_url": image_url}
+    try:
+        if not file or not file.filename:
+            raise HTTPException(
+                status_code=400,
+                detail="No file provided or empty filename"
+            )
+        
+        # Log file information    
+        print(f"Received file: {file.filename}, content type: {file.content_type}, size: {file.size}")
+            
+        # Check file type
+        if not file.content_type.startswith("image/"):
+            raise HTTPException(
+                status_code=400,
+                detail=f"File must be an image. Got content type: {file.content_type}"
+            )
+            
+        # Reset file position to beginning
+        await file.seek(0)
+            
+        # Delete old image if it exists
+        if current_user.profile_image:
+            print(f"Deleting existing profile image: {current_user.profile_image}")
+            delete_image(current_user.profile_image)
+        
+        # Upload new image to Cloudinary
+        print(f"Uploading new profile image to Cloudinary")
+        image_url = await upload_image(file, folder="profile_images")
+        
+        # Update user profile with new image URL
+        print(f"Updating user profile with new image URL: {image_url}")
+        user = crud.user.update_user_profile_image(db, db_user=current_user, image_url=image_url)
+        
+        return {"image_url": image_url}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error in upload_profile_image: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=400,
+            detail=f"Error uploading image: {str(e)}"
+        )
 
 @router.delete("/me/profile-image", response_model=schemas.User)
 def delete_profile_image(
@@ -83,25 +116,41 @@ def delete_profile_image(
     """
     Delete the profile image of the current user.
     """
-    # Check if user has a profile image
-    if not current_user.profile_image:
+    try:
+        # Check if user has a profile image
+        if not current_user.profile_image:
+            raise HTTPException(
+                status_code=400,
+                detail="No profile image to delete.",
+            )
+        
+        print(f"Deleting profile image for user {current_user.id}: {current_user.profile_image}")
+        
+        # Delete the image from Cloudinary
+        delete_result = delete_image(current_user.profile_image)
+        
+        if not delete_result:
+            # Even if Cloudinary deletion fails, we should still remove the reference
+            # from the user's profile, but log the issue
+            print(f"Warning: Failed to delete image from Cloudinary: {current_user.profile_image}")
+        else:
+            print(f"Successfully deleted image from Cloudinary")
+        
+        # Update user profile to remove image URL
+        print(f"Removing profile image reference from user {current_user.id}")
+        user = crud.user.remove_profile_image(db, db_user=current_user)
+        
+        return user
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error in delete_profile_image: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(
-            status_code=400,
-            detail="No profile image to delete.",
+            status_code=500,
+            detail=f"Error deleting profile image: {str(e)}"
         )
-    
-    # Delete the image from Cloudinary
-    delete_result = delete_image(current_user.profile_image)
-    
-    if not delete_result:
-        # Even if Cloudinary deletion fails, we should still remove the reference
-        # from the user's profile, but log the issue
-        print(f"Warning: Failed to delete image from Cloudinary: {current_user.profile_image}")
-    
-    # Update user profile to remove image URL
-    user = crud.user.remove_profile_image(db, db_user=current_user)
-    
-    return user
 
 @router.get("/me", response_model=schemas.User)
 def read_user_me(

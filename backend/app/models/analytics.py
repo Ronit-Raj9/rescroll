@@ -1,11 +1,13 @@
 from typing import Optional
 from sqlalchemy import Column, Integer, String, Float, JSON, ForeignKey, DateTime, Boolean
 from sqlalchemy.orm import relationship
-from app.models.base import Base
+from app.db.base_class import Base
 
 class ReadingHistory(Base):
+    __tablename__ = "reading_history"
+    
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.id"))
+    user_id = Column(Integer, ForeignKey("users.id"))
     paper_id = Column(Integer, ForeignKey("researchpaper.id"))
     report_id = Column(Integer, ForeignKey("newsreport.id"))
     start_time = Column(DateTime)
@@ -20,8 +22,10 @@ class ReadingHistory(Base):
     report = relationship("NewsReport", back_populates="reading_history")
 
 class QuizResult(Base):
+    __tablename__ = "quiz_results"
+    
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.id"))
+    user_id = Column(Integer, ForeignKey("users.id"))
     paper_id = Column(Integer, ForeignKey("researchpaper.id"))
     score = Column(Float)  # 0-100%
     answers = Column(JSON)  # User's answers
@@ -32,8 +36,10 @@ class QuizResult(Base):
     user = relationship("User", back_populates="quiz_results")
 
 class UserPreference(Base):
+    __tablename__ = "user_preferences"
+    
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.id"), unique=True)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True)
     preferred_domains = Column(JSON)  # List of preferred research domains
     preferred_difficulty = Column(String)
     preferred_sources = Column(JSON)  # List of preferred paper sources
@@ -43,8 +49,10 @@ class UserPreference(Base):
     user = relationship("User", back_populates="user_preferences")
 
 class WeeklyProgress(Base):
+    __tablename__ = "weekly_progress"
+    
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.id"))
+    user_id = Column(Integer, ForeignKey("users.id"))
     week_start = Column(DateTime)
     week_end = Column(DateTime)
     articles_read = Column(Integer)
@@ -54,4 +62,4 @@ class WeeklyProgress(Base):
     streak_maintained = Column(Boolean)
     
     # Relationships
-    user = relationship("User") 
+    user = relationship("User", back_populates="weekly_progress") 

@@ -1,5 +1,5 @@
 from typing import Any, List, Optional, Union
-from pydantic import AnyHttpUrl, validator
+from pydantic import AnyHttpUrl, validator, Field
 from pydantic_settings import BaseSettings
 import secrets
 from functools import lru_cache
@@ -11,29 +11,27 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     
     # CORS
-    BACKEND_CORS_ORIGINS: List[str] = [
-        "http://localhost:3000",
-        "http://localhost:8000",
-        "https://ionia-next.vercel.app",
-        "https://www.ionia.sbs",
-        "https://ionia.sbs",
-        "https://ionia-next-production.up.railway.app"
-    ]
+    CORS_ORIGINS: list[str] = Field(default=["http://localhost:3000"])
 
-    @validator("BACKEND_CORS_ORIGINS", pre=True)
-    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
-        if isinstance(v, str) and not v.startswith("["):
-            return [i.strip() for i in v.split(",")]
-        elif isinstance(v, (list, str)):
-            return v
-        raise ValueError(v)
+    @validator("CORS_ORIGINS", pre=True)
+    @classmethod
+    def parse_cors_origins(cls, v):
+        if isinstance(v, str):
+            # Parse JSON string to list
+            import json
+            try:
+                return json.loads(v)
+            except json.JSONDecodeError:
+                # If it's a single origin without brackets
+                return [origin.strip() for origin in v.split(",")]
+        return v
 
     # Database
-    POSTGRES_SERVER: str
-    POSTGRES_USER: str
-    POSTGRES_PASSWORD: str
-    POSTGRES_DB: str
-    POSTGRES_PORT: str
+    POSTGRES_SERVER: str = "localhost"
+    POSTGRES_USER: str = "postgres"
+    POSTGRES_PASSWORD: str = "postgres"
+    POSTGRES_DB: str = "rescroll"
+    POSTGRES_PORT: str = "5432"
     SQLALCHEMY_DATABASE_URI: Optional[str] = None
 
     @validator("SQLALCHEMY_DATABASE_URI", pre=True)
@@ -54,34 +52,34 @@ class Settings(BaseSettings):
     COOKIE_SECURE: bool = False  # Set to True in production with HTTPS
 
     # MongoDB
-    MONGODB_URL: str
+    MONGODB_URL: str = "mongodb://localhost:27017"
     DB_NAME: str = "rescroll"
     
     # Redis
-    REDIS_HOST: str
-    REDIS_PORT: int
-    REDIS_DB: int
-    REDIS_URL: str
+    REDIS_HOST: str = "localhost"
+    REDIS_PORT: int = 6379
+    REDIS_DB: int = 0
+    REDIS_URL: str = "redis://localhost:6379/0"
     
     # AI/ML Settings
-    GEMINI_API_KEY: str
-    MODEL_NAME: str
-    MAX_TOKENS: int
+    GEMINI_API_KEY: str = ""
+    MODEL_NAME: str = "gemini-pro"
+    MAX_TOKENS: int = 1000
     
     # Research Paper APIs
-    ARXIV_API_URL: str
+    ARXIV_API_URL: str = "http://export.arxiv.org/api/query"
     
     # Analytics
-    ANALYTICS_DB_URL: str
+    ANALYTICS_DB_URL: str = ""
     
     # Background Tasks
-    CELERY_BROKER_URL: str
-    CELERY_RESULT_BACKEND: str
+    CELERY_BROKER_URL: str = "redis://localhost:6379/0"
+    CELERY_RESULT_BACKEND: str = "redis://localhost:6379/0"
     
     # Cloudinary
-    CLOUDINARY_CLOUD_NAME: str
-    CLOUDINARY_API_KEY: str
-    CLOUDINARY_API_SECRET: str
+    CLOUDINARY_CLOUD_NAME: str = ""
+    CLOUDINARY_API_KEY: str = ""
+    CLOUDINARY_API_SECRET: str = ""
 
     class Config:
         case_sensitive = True

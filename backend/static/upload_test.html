@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Profile Image Upload Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            display: none;
+        }
+        .error {
+            color: red;
+        }
+        .success {
+            color: green;
+        }
+        #preview {
+            max-width: 300px;
+            max-height: 300px;
+            margin-top: 10px;
+        }
+        .status-text {
+            margin-top: 10px;
+            font-style: italic;
+        }
+        .login-button {
+            background-color: #2196F3;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Profile Image Upload Test</h1>
+    
+    <div id="loginSection">
+        <p>First, you need to log in to use this feature:</p>
+        <button class="login-button" onclick="loginUser()">Login</button>
+        <p class="status-text" id="loginStatus"></p>
+    </div>
+    
+    <div id="uploadSection" style="display: none;">
+        <div class="form-group">
+            <label for="file">Select Image:</label>
+            <input type="file" id="file" name="file" accept="image/*">
+            <div>
+                <img id="preview" style="display: none;">
+            </div>
+        </div>
+        
+        <button onclick="uploadImage()">Upload Image</button>
+        
+        <div id="result" class="result">
+            <h3>Result:</h3>
+            <pre id="response"></pre>
+        </div>
+    </div>
+    
+    <script>
+        // Function to get cookie by name
+        function getCookie(name) {
+            const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+            return match ? match[2] : null;
+        }
+        
+        // Check if user is logged in on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkLoginStatus();
+        });
+        
+        // Login user
+        function loginUser() {
+            const loginStatusElem = document.getElementById('loginStatus');
+            loginStatusElem.textContent = "Logging in...";
+            
+            fetch('http://localhost:8000/api/v1/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    "email": "test@example.com",
+                    "password": "password123"
+                }),
+                credentials: 'include' // Important: This tells fetch to include cookies
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                loginStatusElem.textContent = "Login successful! You can now upload images.";
+                checkLoginStatus();
+            })
+            .catch(error => {
+                loginStatusElem.textContent = `Login failed: ${error.message}`;
+                console.error('Error:', error);
+            });
+        }
+        
+        // Check if user is logged in
+        function checkLoginStatus() {
+            const accessToken = getCookie('access_token');
+            
+            if (accessToken) {
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('uploadSection').style.display = 'block';
+            } else {
+                document.getElementById('loginSection').style.display = 'block';
+                document.getElementById('uploadSection').style.display = 'none';
+            }
+        }
+        
+        // Show image preview when file is selected
+        document.getElementById('file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('preview');
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        function uploadImage() {
+            const fileInput = document.getElementById('file');
+            const resultDiv = document.getElementById('result');
+            const responseElem = document.getElementById('response');
+            
+            if (!fileInput.files || fileInput.files.length === 0) {
+                resultDiv.style.display = 'block';
+                responseElem.innerHTML = '<span class="error">Please select a file</span>';
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            
+            // Show loading state
+            resultDiv.style.display = 'block';
+            responseElem.innerHTML = 'Uploading...';
+            
+            fetch('http://localhost:8000/api/v1/users/me/profile-image', {
+                method: 'POST',
+                credentials: 'include', // Include cookies in the request
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                responseElem.innerHTML = `<span class="success">Upload successful!</span><br>Image URL: <a href="${data.image_url}" target="_blank">${data.image_url}</a>`;
+            })
+            .catch(error => {
+                responseElem.innerHTML = `<span class="error">Error: ${error.message}</span>`;
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</body>
+</html> 

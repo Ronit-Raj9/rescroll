@@ -1,26 +1,23 @@
 import logging
 import logging.config
 from pathlib import Path
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request, Response, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from starlette.middleware.sessions import SessionMiddleware
-from motor.motor_asyncio import AsyncIOMotorClient
 
 from app.core.config import settings
 from app.core.logging_config import LOGGING_CONFIG
 from app.api.v1.api import api_router
 from app.utils.api_error import ApiError
 from app.utils.api_response import ApiResponse
+from app.db.session import engine
+from app.db.base import Base
 
 # Configure logging
 logging.config.dictConfig(LOGGING_CONFIG)
 logger = logging.getLogger("app")
-
-# Create static directory if it doesn't exist
-static_dir = Path("static")
-static_dir.mkdir(exist_ok=True)
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -55,19 +52,18 @@ else:
 app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
 
 # Mount static files
-app.mount("/static", StaticFiles(directory="static"), name="static")
+static_dir = Path("static")
+if static_dir.exists():
+    app.mount("/static", StaticFiles(directory="static"), name="static")
+else:
+    logger.warning(f"Static directory '{static_dir}' does not exist. Static files will not be served.")
 
-# MongoDB connection
+# Database initialization
 @app.on_event("startup")
-async def startup_db_client():
-    app.mongodb_client = AsyncIOMotorClient(settings.MONGODB_URL)
-    app.mongodb = app.mongodb_client[settings.DB_NAME]
-    logger.info("Connected to MongoDB")
-
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    app.mongodb_client.close()
-    logger.info("Disconnected from MongoDB")
+async def startup_db():
+    # Create tables
+    Base.metadata.create_all(bind=engine)
+    logger.info("Database tables created")
 
 # Error handlers
 @app.exception_handler(ApiError)
@@ -90,10 +86,12 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
 @app.get("/")
-async def root():
-    """Root endpoint to check API status."""
-    logger.info("Root endpoint accessed")
-    return ApiResponse(data={"status": "ok", "message": "Welcome to Rescroll API"})
+def root():
+    return {"message": "Welcome to the Rescroll API", "docs": "/docs"}
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
 
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):

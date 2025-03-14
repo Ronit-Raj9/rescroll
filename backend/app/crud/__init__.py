@@ -6,6 +6,7 @@ from app.crud.user import (  # noqa: F401
     create_user,
     update_user,
     update_user_profile_image,
+    remove_profile_image,
     authenticate_user,
     is_active,
     is_superuser,
