@@ -1,23 +1,27 @@
-import React, { useState, useEffect, useRef, useContext, useCallback } from 'react';
-import { StyleSheet, View, TouchableOpacity, Image, TextInput, Alert, ScrollView, Platform, Modal, Dimensions, StatusBar, Switch, KeyboardAvoidingView } from 'react-native';
+import React, { useState, useEffect, useContext, useCallback, useRef } from 'react';
+import { StyleSheet, View, TouchableOpacity, Image, TextInput, Alert, ScrollView, Platform, Modal, StatusBar, Switch, KeyboardAvoidingView, FlatList } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Colors } from '@/constants/Colors';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppContext } from './_layout';
-import { Container } from '@/components/Container';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Spacing, BorderRadius, Shadows, FontSizes, Glows } from '@/constants/Colors';
 import { Feather } from '@expo/vector-icons';
-import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSequence } from 'react-native-reanimated';
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withTiming, 
+  withSequence,
+  Easing,
+  interpolateColor,
+  withSpring,
+  FadeIn,
+  FadeOut
+} from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 // Keys for AsyncStorage
 const PROFILE_IMAGE_STORAGE_KEY = 'rescroll_profile_image';
@@ -25,6 +29,8 @@ const USERNAME_STORAGE_KEY = 'rescroll_username';
 const DARK_MODE_STORAGE_KEY = 'rescroll_dark_mode';
 const NOTIFICATIONS_ENABLED_KEY = 'rescroll_notifications_enabled';
 const NEWS_LANGUAGE_KEY = 'rescroll_news_language';
+const INTEREST_TAGS_KEY = 'rescroll_interest_tags';
+const BIO_STORAGE_KEY = 'rescroll_user_bio';
 
 // Language data structure for backend integration
 interface LanguageData {
@@ -38,36 +44,40 @@ interface LanguageData {
 const LanguageService = {
   languages: {
     en: { code: 'en', name: 'English', native: 'English' },
+    zh: { code: 'zh', name: 'Mandarin Chinese', native: '中文' },
+    hi: { code: 'hi', name: 'Hindi', native: 'हिन्दी' },
     es: { code: 'es', name: 'Spanish', native: 'Español' },
     fr: { code: 'fr', name: 'French', native: 'Français' },
-    de: { code: 'de', name: 'German', native: 'Deutsch' },
-    ja: { code: 'ja', name: 'Japanese', native: '日本語' },
-    hi: { code: 'hi', name: 'Hindi', native: 'हिन्दी' },
-    zh: { code: 'zh', name: 'Mandarin Chinese', native: '中文' },
-    ar: { code: 'ar', name: 'Arabic', native: 'العربية', rtl: true },
+    ar: { code: 'ar', name: 'Standard Arabic', native: 'العربية', rtl: true },
     bn: { code: 'bn', name: 'Bengali', native: 'বাংলা' },
-    pt: { code: 'pt', name: 'Portuguese', native: 'Português' },
     ru: { code: 'ru', name: 'Russian', native: 'Русский' },
+    pt: { code: 'pt', name: 'Portuguese', native: 'Português' },
     ur: { code: 'ur', name: 'Urdu', native: 'اردو', rtl: true },
     id: { code: 'id', name: 'Indonesian', native: 'Bahasa Indonesia' },
-    sw: { code: 'sw', name: 'Swahili', native: 'Kiswahili' },
+    de: { code: 'de', name: 'German', native: 'Deutsch' },
+    ja: { code: 'ja', name: 'Japanese', native: '日本語' },
+    ng: { code: 'ng', name: 'Nigerian Pidgin', native: 'Nigerian Pidgin' },
     mr: { code: 'mr', name: 'Marathi', native: 'मराठी' },
     te: { code: 'te', name: 'Telugu', native: 'తెలుగు' },
     tr: { code: 'tr', name: 'Turkish', native: 'Türkçe' },
     ta: { code: 'ta', name: 'Tamil', native: 'தமிழ்' },
+    yue: { code: 'yue', name: 'Yue Chinese (Cantonese)', native: '粵語' },
     vi: { code: 'vi', name: 'Vietnamese', native: 'Tiếng Việt' },
-    tl: { code: 'tl', name: 'Tagalog (Filipino)', native: 'Tagalog' },
-    it: { code: 'it', name: 'Italian', native: 'Italiano' },
     ko: { code: 'ko', name: 'Korean', native: '한국어' },
-    fa: { code: 'fa', name: 'Persian (Farsi)', native: 'فارسی', rtl: true },
     ha: { code: 'ha', name: 'Hausa', native: 'Hausa' },
+    jv: { code: 'jv', name: 'Javanese', native: 'Basa Jawa' },
+    it: { code: 'it', name: 'Italian', native: 'Italiano' },
+    arz: { code: 'arz', name: 'Egyptian Arabic', native: 'مصرى', rtl: true },
+    gu: { code: 'gu', name: 'Gujarati', native: 'ગુજરાતી' },
+    fa: { code: 'fa', name: 'Iranian Persian', native: 'فارسی', rtl: true },
+    bho: { code: 'bho', name: 'Bhojpuri', native: 'भोजपुरी' },
+    pa: { code: 'pa', name: 'Western Punjabi', native: 'پنجابی', rtl: true },
+    am: { code: 'am', name: 'Amharic', native: 'አማርኛ' },
+    // Keeping a few more from the previous list for completeness
+    sw: { code: 'sw', name: 'Swahili', native: 'Kiswahili' },
     th: { code: 'th', name: 'Thai', native: 'ไทย' },
     pl: { code: 'pl', name: 'Polish', native: 'Polski' },
-    yo: { code: 'yo', name: 'Yoruba', native: 'Yorùbá' },
-    uk: { code: 'uk', name: 'Ukrainian', native: 'Українська' },
-    gu: { code: 'gu', name: 'Gujarati', native: 'ગુજરાતી' },
-    ml: { code: 'ml', name: 'Malayalam', native: 'മലയാളം' },
-    kn: { code: 'kn', name: 'Kannada', native: 'ಕನ್ನಡ' }
+    uk: { code: 'uk', name: 'Ukrainian', native: 'Українська' }
   },
   
   // Get language data by code
@@ -93,6 +103,17 @@ const LanguageService = {
     return language?.code;
   },
   
+  // ADDING MISSING METHOD: Get language name from code
+  getNameFromCode: function(code: string): string {
+    console.log('[LanguageService] Getting name for code:', code);
+    const language = this.getLanguageByCode(code);
+    if (!language) {
+      console.warn('[LanguageService] Language not found for code:', code);
+      return 'English'; // Default fallback
+    }
+    return language.name;
+  },
+  
   // Check if language is RTL
   isRTL: function(name: string): boolean {
     const language = this.getLanguageByName(name);
@@ -106,43 +127,83 @@ const LanguageService = {
   }
 };
 
-// Add this new interface for chat messages
-interface ChatMessage {
+// Add interest tags data structure
+interface InterestTag {
   id: string;
-  text: string;
-  sender: 'user' | 'bot';
-  timestamp: Date;
+  name: string;
+  color: string;
+  textColor: string;
 }
+
+// Predefined interest tags with pastel colors
+const PREDEFINED_TAGS: InterestTag[] = [
+  { id: '1', name: 'Quantum Computing', color: '#F3E8FF', textColor: '#6C5CE7' },
+  { id: '2', name: 'Neuroscience', color: '#FFF3E0', textColor: '#FF9800' },
+  { id: '3', name: 'Genomics', color: '#FFE0E0', textColor: '#FF4D4F' },
+  { id: '4', name: 'Renewable Energy', color: '#E6FFFB', textColor: '#13C2C2' },
+  { id: '5', name: 'AI Ethics', color: '#FFF0F6', textColor: '#EB2F96' },
+  { id: '6', name: 'Climate Science', color: '#F0F9FF', textColor: '#1890FF' },
+  { id: '7', name: 'Robotics', color: '#F6FFED', textColor: '#52C41A' },
+  { id: '8', name: 'Astrophysics', color: '#FCFFE6', textColor: '#FAAD14' },
+  { id: '9', name: 'Biotechnology', color: '#F9F0FF', textColor: '#722ED1' },
+  { id: '10', name: 'Materials Science', color: '#E6F7FF', textColor: '#0050B3' },
+];
 
 export default function ProfileSettingsScreen() {
   const router = useRouter();
-  const colors = Colors.light;
-  const { navigateTo } = useContext(AppContext);
+  const appContext = useContext(AppContext);
+  const [isMounted, setIsMounted] = useState(false);
   
-  const [username, setUsername] = useState('John Doe');
-  const [isEditingUsername, setIsEditingUsername] = useState(false);
-  const [profileImage, setProfileImage] = useState('https://via.placeholder.com/150');
-  const [showImageViewer, setShowImageViewer] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [username, setUsername] = useState('John Researcher');
+  const [userBio, setUserBio] = useState('PhD Candidate in Quantum Physics. Passionate about making science accessible to everyone.');
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [notifications, setNotifications] = useState(true);
+  const [selectedLanguage, setSelectedLanguage] = useState('en');
+  const [showImageOptions, setShowImageOptions] = useState(false);
+  const [editingName, setEditingName] = useState(false);
+  const [editingBio, setEditingBio] = useState(false);
+  const [showInterestSelector, setShowInterestSelector] = useState(false);
+  const [selectedInterests, setSelectedInterests] = useState<InterestTag[]>([]);
+  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
+  const [showHelpCenter, setShowHelpCenter] = useState(false);
+  const [showLanguageSelector, setShowLanguageSelector] = useState(false);
+  const [chatMessages, setChatMessages] = useState<{id: string, text: string, isBot: boolean}[]>([
+    {id: '1', text: 'Hello! How can I help you today?', isBot: true}
+  ]);
+  const [chatInput, setChatInput] = useState('');
+  const chatScrollRef = useRef<ScrollView>(null);
   
-  // New state variables for the added settings
-  const [isDarkModeEnabled, setIsDarkModeEnabled] = useState(false);
-  const [isNotificationsEnabled, setIsNotificationsEnabled] = useState(true);
-  const [newsLanguage, setNewsLanguage] = useState('English');
-  const [showLanguageModal, setShowLanguageModal] = useState(false);
+  // Animation values
+  const nameUnderlineWidth = useSharedValue(0);
+  const bioUnderlineWidth = useSharedValue(0);
+  const avatarScale = useSharedValue(1);
+  const contentOpacity = useSharedValue(0);
+  const headerHeight = useSharedValue(60);
+  const switchProgress = useSharedValue(isDarkMode ? 1 : 0);
+  const scrollY = useSharedValue(0);
   
-  // Add state for privacy policy modal
-  const [showPrivacyPolicyModal, setShowPrivacyPolicyModal] = useState(false);
+  // Add new state variable for full-screen image view
+  const [showFullScreenImage, setShowFullScreenImage] = useState(false);
   
-  // Add chatbot state variables
-  const [showHelpCenterModal, setShowHelpCenterModal] = useState(false);
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [messageInput, setMessageInput] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const chatScrollViewRef = useRef<ScrollView>(null);
+  // Add state for tooltip visibility
+  const [showTooltip, setShowTooltip] = useState(false);
   
-  // Available languages from the service
-  const languages = LanguageService.getLanguageOptions();
+  // Set mounted state after component mounts
+  useEffect(() => {
+    console.log('[ProfileScreen] Component mounted');
+    setIsMounted(true);
+    
+    // Animate content in
+    contentOpacity.value = withTiming(1, { 
+      duration: 400,
+      easing: Easing.out(Easing.quad)
+    });
+    
+    return () => {
+      console.log('[ProfileScreen] Component unmounting');
+    };
+  }, []);
   
   // Load saved data and request permissions when component mounts
   useEffect(() => {
@@ -160,27 +221,59 @@ export default function ProfileSettingsScreen() {
           setUsername(savedUsername);
         }
         
+        // Load bio
+        const savedBio = await AsyncStorage.getItem(BIO_STORAGE_KEY);
+        if (savedBio) {
+          setUserBio(savedBio);
+        }
+        
         // Load dark mode setting
         const darkModeSetting = await AsyncStorage.getItem(DARK_MODE_STORAGE_KEY);
         if (darkModeSetting !== null) {
-          setIsDarkModeEnabled(darkModeSetting === 'true');
+          const isDark = darkModeSetting === 'true';
+          setIsDarkMode(isDark);
+          switchProgress.value = isDark ? 1 : 0;
         }
         
         // Load notifications setting
         const notificationsSetting = await AsyncStorage.getItem(NOTIFICATIONS_ENABLED_KEY);
         if (notificationsSetting !== null) {
-          setIsNotificationsEnabled(notificationsSetting === 'true');
+          setNotifications(notificationsSetting === 'true');
         }
         
         // Load news language setting
         const savedLanguage = await AsyncStorage.getItem(NEWS_LANGUAGE_KEY);
+        console.log('[ProfileScreen] Loaded language from storage:', savedLanguage);
+        
         if (savedLanguage) {
-          setNewsLanguage(savedLanguage);
+          // Validate language code before setting
+          const isValidLanguage = Object.keys(LanguageService.languages).includes(savedLanguage);
+          console.log('[ProfileScreen] Is valid language code?', isValidLanguage);
+          
+          if (isValidLanguage) {
+            setSelectedLanguage(savedLanguage);
+          } else {
+            console.warn('[ProfileScreen] Invalid language code in storage, using default');
+            setSelectedLanguage('en'); // Default to English
+            await AsyncStorage.setItem(NEWS_LANGUAGE_KEY, 'en');
+          }
+        } else {
+          console.log('[ProfileScreen] No language in storage, using default');
+          setSelectedLanguage('en');
+        }
+        
+        // Load interest tags
+        const savedTags = await AsyncStorage.getItem(INTEREST_TAGS_KEY);
+        if (savedTags) {
+          setSelectedInterests(JSON.parse(savedTags));
+        } else {
+          // Set default interests if none saved
+          const defaultInterests = [PREDEFINED_TAGS[0], PREDEFINED_TAGS[5], PREDEFINED_TAGS[8]];
+          setSelectedInterests(defaultInterests);
+          await AsyncStorage.setItem(INTEREST_TAGS_KEY, JSON.stringify(defaultInterests));
         }
       } catch (error) {
         console.error('Error loading saved data:', error);
-      } finally {
-        setIsLoading(false);
       }
     };
 
@@ -204,853 +297,1196 @@ export default function ProfileSettingsScreen() {
     requestPermissions();
   }, []);
   
-  const handleBack = () => {
+  // Add additional check when the component is about to render
+  useEffect(() => {
+    // Log current language state when it changes
+    console.log('[ProfileScreen] Current language code:', selectedLanguage);
+    console.log('[ProfileScreen] Language exists in service:', 
+      Object.keys(LanguageService.languages).includes(selectedLanguage));
+    
+    // Validate that we can get a name from the code
     try {
-      router.back();
+      const languageName = LanguageService.getNameFromCode(selectedLanguage);
+      console.log('[ProfileScreen] Language name resolved to:', languageName);
     } catch (error) {
-      console.error('Error navigating back:', error);
-      // Fallback to main tabs if back navigation fails
-      router.replace('/(tabs)');
+      console.error('[ProfileScreen] Error getting language name:', error);
     }
+  }, [selectedLanguage]);
+  
+  // Show tooltip when profile image is first loaded
+  useEffect(() => {
+    if (profileImage && !showTooltip) {
+      // Show tooltip briefly
+      setShowTooltip(true);
+      
+      // Hide tooltip after 3 seconds
+      const timer = setTimeout(() => {
+        setShowTooltip(false);
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [profileImage]);
+  
+  const handleBack = useCallback(() => {
+    // Only navigate if the component is mounted
+    if (isMounted) {
+      console.log('[ProfileScreen] Back button pressed, attempting navigation');
+      
+      // Animate content out before navigating
+      contentOpacity.value = withTiming(0, { 
+        duration: 200,
+        easing: Easing.in(Easing.quad)
+      }, () => {
+        // Wait until the end of the current event loop to navigate
+        setTimeout(() => {
+          console.log('[ProfileScreen] Delayed back navigation executing now');
+          try {
+            // Use a state-based approach for navigation to avoid the refresh
+            console.log('[ProfileScreen] Using router.replace with params for back');
+            router.replace({
+              pathname: '/(tabs)',
+              params: { 
+                t: Date.now(),
+                source: 'profileBack'
+              }
+            });
+          } catch (error) {
+            console.error('[ProfileScreen] Error navigating back:', error);
+            router.back();
+          }
+        }, 50);
+      });
+    } else {
+      console.log('[ProfileScreen] Back button pressed but component not mounted, ignoring');
+    }
+  }, [isMounted, router, contentOpacity]);
+  
+  const handleHelpCenter = () => {
+    setShowHelpCenter(true);
   };
   
   const handlePrivacyPolicy = () => {
-    // Show privacy policy modal
-    setShowPrivacyPolicyModal(true);
+    setShowPrivacyPolicy(true);
   };
   
-  const handleHelpCenter = () => {
-    // Show help center chatbot
-    setShowHelpCenterModal(true);
-    
-    // If this is the first time opening, add welcome message
-    if (chatMessages.length === 0) {
-      const welcomeMessage: ChatMessage = {
-        id: Date.now().toString(),
-        text: "Hello! I'm your ReScroll assistant. How can I help you today?",
-        sender: 'bot',
-        timestamp: new Date()
-      };
-      setChatMessages([welcomeMessage]);
-    }
+  const handleEditName = () => {
+    setEditingName(true);
+    nameUnderlineWidth.value = withTiming(100, { duration: 300, easing: Easing.out(Easing.cubic) });
   };
   
-  const handleSettings = () => {
-    // TODO: Navigate to detailed settings
-    Alert.alert('Settings', 'Additional settings would be displayed here.');
-  };
-  
-  const handleUpdateUsername = async () => {
-    if (username.trim().length === 0) {
-      Alert.alert('Invalid Username', 'Username cannot be empty.');
-      return;
-    }
+  const handleSaveName = async () => {
+    setEditingName(false);
+    nameUnderlineWidth.value = withTiming(0, { duration: 300, easing: Easing.in(Easing.cubic) });
     
     try {
-      // Save username to AsyncStorage
       await AsyncStorage.setItem(USERNAME_STORAGE_KEY, username);
-      setIsEditingUsername(false);
-      Alert.alert('Success', 'Username updated successfully.');
     } catch (error) {
       console.error('Error saving username:', error);
-      Alert.alert('Error', 'Failed to update username. Please try again.');
+    }
+  };
+  
+  const handleEditBio = () => {
+    setEditingBio(true);
+    bioUnderlineWidth.value = withTiming(100, { duration: 300, easing: Easing.out(Easing.cubic) });
+  };
+  
+  const handleSaveBio = async () => {
+    setEditingBio(false);
+    bioUnderlineWidth.value = withTiming(0, { duration: 300, easing: Easing.in(Easing.cubic) });
+    
+    try {
+      await AsyncStorage.setItem(BIO_STORAGE_KEY, userBio);
+    } catch (error) {
+      console.error('Error saving bio:', error);
+    }
+  };
+  
+  const handleAvatarPress = () => {
+    // Animate avatar scale with spring for a bouncy effect
+    avatarScale.value = withSequence(
+      withSpring(0.92, { 
+        damping: 4,
+        stiffness: 300
+      }),
+      withSpring(1, { 
+        damping: 10,
+        stiffness: 200
+      })
+    );
+    
+    // If there's a profile image, show it in full screen, otherwise show options
+    if (profileImage) {
+      setShowFullScreenImage(true);
+    } else {
+      setShowImageOptions(true);
+    }
+  };
+  
+  // Add a long press handler specifically for edit options
+  const handleAvatarLongPress = () => {
+    setShowImageOptions(true);
+  };
+  
+  // Add/remove interests
+  const toggleInterest = async (tag: InterestTag) => {
+    let updatedInterests;
+    
+    if (selectedInterests.some(interest => interest.id === tag.id)) {
+      // Remove interest if already selected
+      updatedInterests = selectedInterests.filter(interest => interest.id !== tag.id);
+    } else {
+      // Add interest if not already selected
+      updatedInterests = [...selectedInterests, tag];
+    }
+    
+    setSelectedInterests(updatedInterests);
+    
+    try {
+      await AsyncStorage.setItem(INTEREST_TAGS_KEY, JSON.stringify(updatedInterests));
+    } catch (error) {
+      console.error('Error saving interests:', error);
     }
   };
   
   const handleChangeProfilePicture = async () => {
-    // Show an action sheet for image selection options
-    Alert.alert(
-      'Change Profile Picture',
-      'Choose an option',
-      [
-        {
-          text: 'Take Photo',
-          onPress: takePicture,
-        },
-        {
-          text: 'Choose from Library',
-          onPress: pickImage,
-        },
-        {
-          text: 'Remove Current Photo',
-          onPress: removeProfilePicture,
-          style: 'destructive',
-        },
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-      ]
-    );
+    setShowImageOptions(false);
+    
+    if (Platform.OS !== 'web') {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'Sorry, we need camera roll permissions to make this work!');
+        return;
+      }
+    }
+    
+    pickImage();
   };
   
   const takePicture = async () => {
-    try {
-      const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.7,
-      });
+    setShowImageOptions(false);
+    
+    if (Platform.OS !== 'web') {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
       
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        const selectedImage = result.assets[0];
-        setProfileImage(selectedImage.uri);
-        saveProfileImage(selectedImage.uri);
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'Sorry, we need camera permissions to make this work!');
+        return;
       }
-    } catch (error) {
-      console.error('Error taking picture:', error);
-      Alert.alert('Error', 'Failed to take picture. Please try again.');
+    }
+    
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const imageUri = result.assets[0].uri;
+      setProfileImage(imageUri);
+      saveProfileImage(imageUri);
     }
   };
   
   const pickImage = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.7,
-      });
-      
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        const selectedImage = result.assets[0];
-        setProfileImage(selectedImage.uri);
-        saveProfileImage(selectedImage.uri);
-      }
-    } catch (error) {
-      console.error('Error picking image:', error);
-      Alert.alert('Error', 'Failed to pick image. Please try again.');
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const imageUri = result.assets[0].uri;
+      setProfileImage(imageUri);
+      saveProfileImage(imageUri);
     }
   };
   
   const removeProfilePicture = async () => {
-    Alert.alert(
-      'Remove Profile Picture',
-      'Are you sure you want to remove your profile picture?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Remove',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              // Set back to default image
-              setProfileImage('https://via.placeholder.com/150');
-              
-              // Remove from AsyncStorage
-              await AsyncStorage.removeItem(PROFILE_IMAGE_STORAGE_KEY);
-              
-              Alert.alert('Success', 'Profile picture removed successfully.');
-            } catch (error) {
-              console.error('Error removing profile picture:', error);
-              Alert.alert('Error', 'Failed to remove profile picture. Please try again.');
-            }
-          },
-        },
-      ]
-    );
+    setShowImageOptions(false);
+    setProfileImage(null);
+    
+    try {
+      await AsyncStorage.removeItem(PROFILE_IMAGE_STORAGE_KEY);
+    } catch (error) {
+      console.error('Error removing profile picture:', error);
+    }
   };
   
   const saveProfileImage = async (imageUri: string) => {
     try {
-      // Save image URI to AsyncStorage
       await AsyncStorage.setItem(PROFILE_IMAGE_STORAGE_KEY, imageUri);
-      Alert.alert('Success', 'Profile picture updated successfully.');
     } catch (error) {
       console.error('Error saving profile image:', error);
-      Alert.alert('Error', 'Failed to save profile picture. Please try again.');
     }
   };
-
-  const viewProfilePicture = () => {
-    setShowImageViewer(true);
-  };
-
-  const closeImageViewer = () => {
-    setShowImageViewer(false);
-  };
-
-  // New functions to handle the added settings
-  const handleDarkModeToggle = async (value: boolean) => {
-    setIsDarkModeEnabled(value);
-    try {
-      await AsyncStorage.setItem(DARK_MODE_STORAGE_KEY, value ? 'true' : 'false');
-      // In a real app, this would trigger a theme change
-      Alert.alert('Dark Mode', `Dark mode has been ${value ? 'enabled' : 'disabled'}. This will be fully implemented in a future update.`);
-    } catch (error) {
-      console.error('Error saving dark mode setting:', error);
-    }
-  };
-
-  const handleNotificationsToggle = async (value: boolean) => {
-    setIsNotificationsEnabled(value);
-    try {
-      await AsyncStorage.setItem(NOTIFICATIONS_ENABLED_KEY, value ? 'true' : 'false');
-      Alert.alert('Notifications', `Notifications have been ${value ? 'enabled' : 'disabled'}.`);
-    } catch (error) {
-      console.error('Error saving notifications setting:', error);
-    }
+  
+  // Available languages from the service
+  const languages = LanguageService.getLanguageOptions();
+  
+  const openLanguageModal = () => {
+    setShowLanguageSelector(true);
   };
 
   const openLanguageSelector = () => {
-    setShowLanguageModal(true);
+    openLanguageModal();
   };
-
-  const selectLanguage = async (language: string) => {
-    setNewsLanguage(language);
-    setShowLanguageModal(false);
-    try {
-      await AsyncStorage.setItem(NEWS_LANGUAGE_KEY, language);
-      
-      // Get language code for backend integration
-      const languageCode = LanguageService.getCodeFromName(language);
-      console.log(`Selected language: ${language}, Code: ${languageCode}`);
-      
-      // Here you would typically also send this to your backend
-      // Example: api.setUserLanguage(userId, languageCode);
-    } catch (error) {
-      console.error('Error saving language setting:', error);
-    }
-  };
-
-  // Add new functions for the chatbot
-  const handleSendMessage = () => {
-    if (messageInput.trim() === '') return;
+  
+  // Animation styles
+  const nameUnderlineStyle = useAnimatedStyle(() => {
+    return {
+      width: `${nameUnderlineWidth.value}%`,
+      height: 2,
+      backgroundColor: Colors.light.primary,
+      marginTop: 4,
+    };
+  });
+  
+  const bioUnderlineStyle = useAnimatedStyle(() => {
+    return {
+      width: `${bioUnderlineWidth.value}%`,
+      height: 2,
+      backgroundColor: Colors.light.primary,
+      marginTop: 4,
+    };
+  });
+  
+  const avatarScaleStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: avatarScale.value }]
+    };
+  });
+  
+  const contentAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      opacity: contentOpacity.value,
+      transform: [
+        { translateY: (1 - contentOpacity.value) * 20 }
+      ]
+    };
+  });
+  
+  const headerAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      height: headerHeight.value - Math.min(scrollY.value, 10),
+      opacity: 1 - (scrollY.value / 100)
+    };
+  });
+  
+  const handleScroll = useCallback((event: { nativeEvent: { contentOffset: { y: number } } }) => {
+    scrollY.value = event.nativeEvent.contentOffset.y;
+  }, [scrollY]);
+  
+  const handleDarkModeToggle = useCallback((value: boolean) => {
+    setIsDarkMode(value);
+    switchProgress.value = withTiming(value ? 1 : 0, { 
+      duration: 250,
+      easing: Easing.bezier(0.25, 0.1, 0.25, 1)
+    });
     
-    // Add user message to chat
-    const userMessage: ChatMessage = {
+    AsyncStorage.setItem(DARK_MODE_STORAGE_KEY, value ? 'true' : 'false');
+    // In a production app, we would update the app theme here
+  }, [switchProgress]);
+  
+  const backgroundStyle = useAnimatedStyle(() => {
+    const backgroundColor = interpolateColor(
+      switchProgress.value,
+      [0, 1],
+      ['#FFFFFF', '#121212']
+    );
+    
+    return {
+      backgroundColor
+    };
+  });
+  
+  const textColorStyle = useAnimatedStyle(() => {
+    const color = interpolateColor(
+      switchProgress.value,
+      [0, 1],
+      ['#000000', '#FFFFFF']
+    );
+    
+    return {
+      color
+    };
+  });
+
+  const handleSendMessage = () => {
+    if (chatInput.trim() === '') return;
+    
+    // Add user message
+    const userMessage = {
       id: Date.now().toString(),
-      text: messageInput,
-      sender: 'user',
-      timestamp: new Date()
+      text: chatInput.trim(),
+      isBot: false
     };
     
-    const updatedMessages = [...chatMessages, userMessage];
-    setChatMessages(updatedMessages);
-    setMessageInput('');
+    setChatMessages(prev => [...prev, userMessage]);
+    setChatInput('');
     
-    // Simulate bot typing
-    setIsTyping(true);
-    
-    // Simulate bot response after delay
-    // In a real implementation, this would make an API call to the backend
+    // Simulate bot response after a short delay
     setTimeout(() => {
-      const botResponse = generateBotResponse(messageInput);
-      const botMessage: ChatMessage = {
+      let botResponse;
+      const userText = chatInput.toLowerCase();
+      
+      if (userText.includes('account') || userText.includes('profile')) {
+        botResponse = "Your account settings can be managed from the profile page. You can change your username, bio, and profile picture.";
+      } else if (userText.includes('language') || userText.includes('translate')) {
+        botResponse = "You can change the app language in the Settings section. We support 30 different languages.";
+      } else if (userText.includes('dark mode') || userText.includes('theme')) {
+        botResponse = "You can toggle dark mode on or off in the Settings section. This will change the app's appearance.";
+      } else if (userText.includes('notification') || userText.includes('alert')) {
+        botResponse = "Notification settings can be managed in the Settings section. You can turn them on or off.";
+      } else if (userText.includes('privacy') || userText.includes('policy')) {
+        botResponse = "You can read our privacy policy from the Support section. It explains how we handle your data.";
+      } else {
+        botResponse = "I'm not sure I understand. Could you rephrase your question? You can ask about account settings, language options, dark mode, notifications, or privacy policy.";
+      }
+      
+      const botMessageObj = {
         id: (Date.now() + 1).toString(),
         text: botResponse,
-        sender: 'bot',
-        timestamp: new Date()
+        isBot: true
       };
       
-      setChatMessages([...updatedMessages, botMessage]);
-      setIsTyping(false);
-    }, 1000);
-  };
-  
-  // Simple bot response generator (placeholder for backend integration)
-  const generateBotResponse = (userInput: string): string => {
-    // This function would be replaced by actual backend API call
-    // BACKEND INTEGRATION POINT: Replace this with an API call to your NLP service
-    const userInputLower = userInput.toLowerCase();
-    
-    if (userInputLower.includes('language') || userInputLower.includes('languages')) {
-      return "You can change your preferred language in Profile Settings > News Language. We support over 30 languages including English, Spanish, French, and many more.";
-    }
-    
-    if (userInputLower.includes('dark mode') || userInputLower.includes('theme')) {
-      return "You can toggle Dark Mode in Profile Settings. This changes the app's appearance to a darker color scheme that's easier on the eyes in low-light conditions.";
-    }
-    
-    if (userInputLower.includes('profile') || userInputLower.includes('picture') || userInputLower.includes('photo')) {
-      return "To change your profile picture, go to your Profile and tap on your current photo. You can then choose to take a new photo or select one from your library.";
-    }
-    
-    if (userInputLower.includes('notification') || userInputLower.includes('alert')) {
-      return "Notifications can be enabled or disabled in Profile Settings. When enabled, you'll receive updates about new content and features.";
-    }
-    
-    if (userInputLower.includes('sign out') || userInputLower.includes('logout')) {
-      return "To sign out, go to Profile Settings and scroll to the bottom where you'll find the 'Sign Out' button.";
-    }
-    
-    if (userInputLower.includes('thank')) {
-      return "You're welcome! Is there anything else I can help you with?";
-    }
-    
-    return "I'm not sure I understand. Could you please rephrase your question? You can ask about features like language settings, dark mode, notifications, or profile management.";
-  };
-  
-  // Auto scroll to bottom when new messages arrive
-  useEffect(() => {
-    if (chatMessages.length > 0) {
+      setChatMessages(prev => [...prev, botMessageObj]);
+      
+      // Scroll to the bottom
       setTimeout(() => {
-        chatScrollViewRef.current?.scrollToEnd({ animated: true });
+        chatScrollRef.current?.scrollToEnd({ animated: true });
       }, 100);
-    }
-  }, [chatMessages]);
-
-  // Replace the animation code
-  const setupTypingAnimation = () => {
-    // Use shared values for animation
-    const opacity1 = useSharedValue(0.3);
-    const opacity2 = useSharedValue(0.3);
-    const opacity3 = useSharedValue(0.3);
+    }, 1000);
     
-    // Create animated styles for each dot
-    const animatedStyle1 = useAnimatedStyle(() => {
-      return { opacity: opacity1.value };
-    });
-    
-    const animatedStyle2 = useAnimatedStyle(() => {
-      return { opacity: opacity2.value };
-    });
-    
-    const animatedStyle3 = useAnimatedStyle(() => {
-      return { opacity: opacity3.value };
-    });
-    
-    // Start animation when isTyping changes
-    useEffect(() => {
-      if (isTyping) {
-        opacity1.value = withRepeat(
-          withSequence(
-            withTiming(1, { duration: 300 }),
-            withTiming(0.3, { duration: 300 })
-          ),
-          -1,
-          false
-        );
-        
-        opacity2.value = withRepeat(
-          withSequence(
-            withTiming(0.3, { duration: 150 }), // Delay effect
-            withTiming(1, { duration: 300 }),
-            withTiming(0.3, { duration: 300 })
-          ),
-          -1, 
-          false
-        );
-        
-        opacity3.value = withRepeat(
-          withSequence(
-            withTiming(0.3, { duration: 300 }), // Delay effect
-            withTiming(1, { duration: 300 }),
-            withTiming(0.3, { duration: 300 })
-          ),
-          -1,
-          false
-        );
-      }
-    }, [isTyping, opacity1, opacity2, opacity3]);
-    
-    return { animatedStyle1, animatedStyle2, animatedStyle3 };
+    // Scroll to bottom immediately after user message
+    setTimeout(() => {
+      chatScrollRef.current?.scrollToEnd({ animated: true });
+    }, 100);
   };
 
-  // ... in the function component
-  const { animatedStyle1, animatedStyle2, animatedStyle3 } = setupTypingAnimation();
+  const selectLanguage = async (languageCode: string) => {
+    setSelectedLanguage(languageCode);
+    try {
+      await AsyncStorage.setItem(NEWS_LANGUAGE_KEY, languageCode);
+      // Additional logic for language change if needed
+    } catch (error) {
+      console.error('Error saving language preference', error);
+    }
+  };
+
+  // Add new handler to view profile image in full screen
+  const handleViewProfileImage = () => {
+    if (profileImage) {
+      setShowFullScreenImage(true);
+    }
+  };
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <ThemedView style={styles.container}>
-        <Stack.Screen 
-          options={{ 
-            title: 'Profile', 
-            headerLeft: () => (
-              <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-                <ThemedText style={styles.backButtonText}>✕</ThemedText>
-              </TouchableOpacity>
-            ),
-          }} 
-        />
-        
-        {/* Profile Picture Viewer Modal */}
-        <Modal
-          visible={showImageViewer}
-          transparent={true}
-          animationType="fade"
-          onRequestClose={closeImageViewer}
-        >
-          <View style={styles.modalContainer}>
-            <TouchableOpacity 
-              style={styles.modalCloseButton} 
-              onPress={closeImageViewer}
-            >
-              <ThemedText style={styles.modalCloseButtonText}>✕</ThemedText>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaView style={{ flex: 1 }}>
+        <Animated.View style={[styles.container, backgroundStyle]}>
+          <Stack.Screen options={{ headerShown: false }} />
+          
+          {/* Header with back button */}
+          <View style={styles.header}>
+            <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+              <Feather name="chevron-left" size={24} color={isDarkMode ? "#FFF" : "#000"} />
             </TouchableOpacity>
-            <TouchableOpacity 
-              activeOpacity={1} 
-              style={styles.modalImageContainer}
-              onPress={closeImageViewer}
-            >
-              <Image 
-                source={{ uri: profileImage }} 
-                style={styles.modalImage}
-                resizeMode="contain"
-              />
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.editProfilePhotoButton} 
-              onPress={() => {
-                closeImageViewer();
-                setTimeout(() => {
-                  handleChangeProfilePicture();
-                }, 300);
-              }}
-            >
-              <ThemedText style={styles.editProfilePhotoButtonText}>
-                Change Profile Photo
-              </ThemedText>
-            </TouchableOpacity>
+            <Animated.Text style={[styles.headerTitle, textColorStyle]}>Profile</Animated.Text>
+            <View style={{ width: 32 }} />
           </View>
-        </Modal>
-        
-        <ScrollView showsVerticalScrollIndicator={false}>
-          {isLoading ? (
-            <View style={styles.loadingContainer}>
-              <ThemedText>Loading profile data...</ThemedText>
-            </View>
-          ) : (
-            <>
+          
+          <Animated.ScrollView 
+            style={styles.contentContainer}
+            showsVerticalScrollIndicator={false}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+          >
+            <Animated.View style={contentAnimatedStyle}>
+              {/* Profile Header Section */}
               <View style={styles.profileHeader}>
-                <View style={styles.profileImageContainer}>
-                  <TouchableOpacity onPress={viewProfilePicture}>
-                    <Image 
-                      source={{ uri: profileImage }} 
-                      style={styles.profileImage} 
-                      onError={() => setProfileImage('https://via.placeholder.com/150')}
-                    />
-                  </TouchableOpacity>
-                  <TouchableOpacity 
-                    onPress={handleChangeProfilePicture} 
-                    style={styles.editIconContainer}
-                  >
-                    <ThemedText style={styles.editIconText}>✎</ThemedText>
-                  </TouchableOpacity>
+                {/* Profile Avatar */}
+                <View style={styles.avatarSection}>
+                  <Animated.View style={[styles.avatarContainer, avatarScaleStyle]}>
+                    <TouchableOpacity 
+                      style={styles.avatarWrapper}
+                      onPress={handleAvatarPress} 
+                      onLongPress={handleAvatarLongPress}
+                      delayLongPress={500}
+                      activeOpacity={0.8}
+                    >
+                      {profileImage ? (
+                        <Image source={{ uri: profileImage }} style={styles.avatarImage} />
+                      ) : (
+                        <LinearGradient
+                          colors={['#8E2DE2', '#4A00E0']}
+                          style={styles.avatarPlaceholder}
+                        >
+                          <ThemedText style={styles.avatarPlaceholderText}>
+                            {username.substring(0, 2).toUpperCase()}
+                          </ThemedText>
+                        </LinearGradient>
+                      )}
+                      <View style={styles.editAvatarButton}>
+                        <Feather name="edit-2" size={12} color="#FFF" />
+                      </View>
+                    </TouchableOpacity>
+                  </Animated.View>
+                  
+                  {showTooltip && (
+                    <Animated.View 
+                      style={styles.tooltip}
+                      entering={FadeIn.duration(300)}
+                      exiting={FadeOut.duration(300)}
+                    >
+                      <ThemedText style={styles.tooltipText}>
+                        Tap to view • Long press to edit
+                      </ThemedText>
+                    </Animated.View>
+                  )}
                 </View>
                 
-                <View style={styles.usernameContainer}>
-                  {isEditingUsername ? (
-                    <View style={styles.editUsernameContainer}>
+                {/* Name and Bio */}
+                <View style={styles.profileInfo}>
+                  {editingName ? (
+                    <View style={styles.editNameContainer}>
                       <TextInput
                         value={username}
                         onChangeText={setUsername}
-                        style={[styles.usernameInput, { color: colors.text }]}
+                        style={styles.nameInput}
                         autoFocus
+                        onBlur={handleSaveName}
+                        onSubmitEditing={handleSaveName}
                       />
-                      <TouchableOpacity onPress={handleUpdateUsername} style={styles.saveButton}>
-                        <ThemedText style={styles.saveButtonText}>Save</ThemedText>
-                      </TouchableOpacity>
+                      <Animated.View style={nameUnderlineStyle} />
                     </View>
                   ) : (
-                    <View style={styles.usernameDisplayContainer}>
-                      <ThemedText style={styles.username}>{username}</ThemedText>
-                      <TouchableOpacity onPress={() => setIsEditingUsername(true)} style={styles.editButton}>
-                        <ThemedText style={styles.editButtonText}>✎</ThemedText>
-                      </TouchableOpacity>
+                    <TouchableOpacity onPress={handleEditName} activeOpacity={0.7}>
+                      <ThemedText style={styles.userName}>{username}</ThemedText>
+                    </TouchableOpacity>
+                  )}
+                  
+                  {editingBio ? (
+                    <View style={styles.editBioContainer}>
+                      <TextInput
+                        value={userBio}
+                        onChangeText={setUserBio}
+                        style={styles.bioInput}
+                        multiline
+                        numberOfLines={3}
+                        autoFocus
+                        onBlur={handleSaveBio}
+                      />
+                      <Animated.View style={bioUnderlineStyle} />
                     </View>
+                  ) : (
+                    <TouchableOpacity onPress={handleEditBio} activeOpacity={0.7}>
+                      <ThemedText style={styles.userBio}>{userBio}</ThemedText>
+                    </TouchableOpacity>
                   )}
                 </View>
-              </View>
-              
-              <View style={styles.settingsSection}>
-                {/* New settings options */}
-                <View style={styles.settingItem}>
-                  <View style={styles.settingLabelContainer}>
-                    <ThemedText style={styles.settingLabel}>Dark Theme</ThemedText>
-                  </View>
-                  <Switch
-                    value={isDarkModeEnabled}
-                    onValueChange={handleDarkModeToggle}
-                    trackColor={{ false: '#767577', true: '#81b0ff' }}
-                    thumbColor={isDarkModeEnabled ? '#2563EB' : '#f4f3f4'}
-                    ios_backgroundColor="#3e3e3e"
-                  />
-                </View>
-
-                <View style={styles.settingItem}>
-                  <View style={styles.settingLabelContainer}>
-                    <ThemedText style={styles.settingLabel}>Notifications</ThemedText>
-                  </View>
-                  <Switch
-                    value={isNotificationsEnabled}
-                    onValueChange={handleNotificationsToggle}
-                    trackColor={{ false: '#767577', true: '#81b0ff' }}
-                    thumbColor={isNotificationsEnabled ? '#2563EB' : '#f4f3f4'}
-                    ios_backgroundColor="#3e3e3e"
-                  />
-                </View>
-
-                <TouchableOpacity onPress={openLanguageSelector} style={styles.settingItem}>
-                  <View style={styles.settingLabelContainer}>
-                    <ThemedText style={styles.settingLabel}>News Language</ThemedText>
-                  </View>
-                  <View style={styles.settingValueContainer}>
-                    <ThemedText style={styles.settingValue}>{newsLanguage}</ThemedText>
-                    <ThemedText style={styles.chevronText}>›</ThemedText>
-                  </View>
-                </TouchableOpacity>
-
-                {/* Existing settings */}
-                <TouchableOpacity onPress={handleSettings} style={styles.settingItem}>
-                  <View style={styles.settingLabelContainer}>
-                    <ThemedText style={styles.settingLabel}>Settings</ThemedText>
-                  </View>
-                  <ThemedText style={styles.chevronText}>›</ThemedText>
-                </TouchableOpacity>
                 
-                <TouchableOpacity onPress={handlePrivacyPolicy} style={styles.settingItem}>
-                  <View style={styles.settingLabelContainer}>
-                    <ThemedText style={styles.settingLabel}>Privacy Policy</ThemedText>
+                {/* Interest Tags */}
+                <View style={styles.interestsContainer}>
+                  <View style={styles.interestsHeader}>
+                    <ThemedText style={styles.interestsTitle}>Research Interests</ThemedText>
+                    <TouchableOpacity onPress={() => setShowInterestSelector(true)} style={styles.editInterestsButton}>
+                      <Feather name="edit" size={16} color={Colors.light.primary} />
+                    </TouchableOpacity>
                   </View>
-                  <ThemedText style={styles.chevronText}>›</ThemedText>
-                </TouchableOpacity>
-                
-                <TouchableOpacity onPress={handleHelpCenter} style={styles.settingItem}>
-                  <View style={styles.settingLabelContainer}>
-                    <ThemedText style={styles.settingLabel}>Help Center</ThemedText>
-                  </View>
-                  <ThemedText style={styles.chevronText}>›</ThemedText>
-                </TouchableOpacity>
-              </View>
-            </>
-          )}
-        </ScrollView>
-      </ThemedView>
-
-      {/* Language selector modal */}
-      <Modal
-        visible={showLanguageModal}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setShowLanguageModal(false)}
-      >
-        <View style={styles.languageModalContainer}>
-          <View style={styles.simpleLanguageModalContent}>
-            <ThemedText style={styles.languageModalTitle}>Select Language</ThemedText>
-            
-            <ScrollView style={styles.simpleLanguageScrollView}>
-              {languages.map((language) => {
-                // Get language code for backend integration
-                const languageCode = LanguageService.getCodeFromName(language);
-                
-                return (
-                  <TouchableOpacity
-                    key={language}
-                    style={[
-                      styles.simpleLanguageOption,
-                      newsLanguage === language && styles.simpleSelectedLanguageOption
-                    ]}
-                    onPress={() => selectLanguage(language)}
-                  >
-                    <ThemedText 
-                      style={styles.simpleLanguageText}
-                    >
-                      {language}
-                    </ThemedText>
+                  
+                  <View style={styles.tagContainer}>
+                    {selectedInterests.map(tag => (
+                      <View
+                        key={tag.id}
+                        style={[
+                          styles.interestTag,
+                          { backgroundColor: tag.color }
+                        ]}
+                      >
+                        <ThemedText
+                          style={[
+                            styles.interestTagText,
+                            { color: tag.textColor }
+                          ]}
+                        >
+                          {tag.name}
+                        </ThemedText>
+                      </View>
+                    ))}
                     
-                    {newsLanguage === language && (
-                      <IconSymbol 
-                        name="star.fill" 
-                        size={24} 
-                        color="#2563EB"
-                      />
+                    {selectedInterests.length < 5 && (
+                      <TouchableOpacity
+                        style={styles.addInterestButton}
+                        onPress={() => setShowInterestSelector(true)}
+                      >
+                        <Feather name="plus" size={16} color="#666" />
+                      </TouchableOpacity>
                     )}
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-            
-            <TouchableOpacity
-              style={styles.simpleCancelButton}
-              onPress={() => setShowLanguageModal(false)}
-            >
-              <ThemedText style={styles.simpleCancelButtonText}>Cancel</ThemedText>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-      
-      {/* Privacy Policy Modal */}
-      <Modal
-        visible={showPrivacyPolicyModal}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setShowPrivacyPolicyModal(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.privacyPolicyModalContent}>
-            <View style={styles.privacyPolicyHeader}>
-              <ThemedText style={styles.privacyPolicyTitle}>Privacy Policy</ThemedText>
-              <TouchableOpacity 
-                style={styles.privacyPolicyCloseButton} 
-                onPress={() => setShowPrivacyPolicyModal(false)}
-              >
-                <ThemedText style={styles.privacyPolicyCloseButtonText}>✕</ThemedText>
-              </TouchableOpacity>
-            </View>
-            
-            <ScrollView style={styles.privacyPolicyScrollView} showsVerticalScrollIndicator={false}>
-              <View style={styles.privacyPolicyContent}>
-                <ThemedText style={styles.privacyPolicySectionTitle}>Privacy Policy for ReScroll</ThemedText>
-                <ThemedText style={styles.privacyPolicyLastUpdated}>Last Updated: {new Date().toLocaleDateString()}</ThemedText>
-                
-                <ThemedText style={styles.privacyPolicyParagraph}>
-                  Welcome to ReScroll. We respect your privacy and are committed to protecting your personal data. This privacy policy will inform you about how we look after your personal data when you visit our application and tell you about your privacy rights and how the law protects you.
-                </ThemedText>
-                
-                <ThemedText style={styles.privacyPolicyHeading}>1. Information We Collect</ThemedText>
-                <ThemedText style={styles.privacyPolicyParagraph}>
-                  We collect several types of information from and about users of our application, including:
-                </ThemedText>
-                <ThemedText style={styles.privacyPolicyBulletPoint}>
-                  • Personal identifiers such as name, email address, and username
-                </ThemedText>
-                <ThemedText style={styles.privacyPolicyBulletPoint}>
-                  • Profile information including profile pictures
-                </ThemedText>
-                <ThemedText style={styles.privacyPolicyBulletPoint}>
-                  • Preferences such as language selection and theme options
-                </ThemedText>
-                <ThemedText style={styles.privacyPolicyBulletPoint}>
-                  • Device information and usage data
-                </ThemedText>
-                
-                <ThemedText style={styles.privacyPolicyHeading}>2. How We Use Your Information</ThemedText>
-                <ThemedText style={styles.privacyPolicyParagraph}>
-                  We use the information we collect about you for various purposes, including:
-                </ThemedText>
-                <ThemedText style={styles.privacyPolicyBulletPoint}>
-                  • Providing, personalizing, and improving our application
-                </ThemedText>
-                <ThemedText style={styles.privacyPolicyBulletPoint}>
-                  • Communicating with you, including sending notifications if enabled
-                </ThemedText>
-                <ThemedText style={styles.privacyPolicyBulletPoint}>
-                  • Developing new features and services
-                </ThemedText>
-                <ThemedText style={styles.privacyPolicyBulletPoint}>
-                  • Analyzing usage patterns to improve user experience
-                </ThemedText>
-                
-                <ThemedText style={styles.privacyPolicyHeading}>3. Your Choices</ThemedText>
-                <ThemedText style={styles.privacyPolicyParagraph}>
-                  You can control certain aspects of how we collect and use your information:
-                </ThemedText>
-                <ThemedText style={styles.privacyPolicyBulletPoint}>
-                  • Profile Information: You can update or delete your profile information at any time.
-                </ThemedText>
-                <ThemedText style={styles.privacyPolicyBulletPoint}>
-                  • Notifications: You can enable or disable notifications in your profile settings.
-                </ThemedText>
-                <ThemedText style={styles.privacyPolicyBulletPoint}>
-                  • Language Preferences: You can select your preferred language for content.
-                </ThemedText>
-                
-                <ThemedText style={styles.privacyPolicyHeading}>4. Storage and Security</ThemedText>
-                <ThemedText style={styles.privacyPolicyParagraph}>
-                  We implement appropriate security measures to protect your personal information. However, no electronic transmission or storage technology is completely secure, and we cannot guarantee the absolute security of your data.
-                </ThemedText>
-                
-                <ThemedText style={styles.privacyPolicyHeading}>5. Contact Us</ThemedText>
-                <ThemedText style={styles.privacyPolicyParagraph}>
-                  If you have any questions about this privacy policy or our data practices, please contact us at:
-                </ThemedText>
-                <ThemedText style={styles.privacyPolicyContactInfo}>
-                  privacy@rescroll.com
-                </ThemedText>
+                  </View>
+                </View>
               </View>
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
-      
-      {/* Help Center Chatbot Modal */}
-      <Modal
-        visible={showHelpCenterModal}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setShowHelpCenterModal(false)}
-      >
-        <KeyboardAvoidingView 
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.modalContainer}
-        >
-          <View style={styles.chatContainer}>
-            <View style={styles.chatHeader}>
-              <ThemedText style={styles.chatHeaderTitle}>ReScroll Help Assistant</ThemedText>
-              <TouchableOpacity onPress={() => setShowHelpCenterModal(false)}>
-                <Feather name="x" size={20} color={Colors.light.icon} />
-              </TouchableOpacity>
-            </View>
-            
-            <ScrollView 
-              style={styles.chatScrollView}
-              ref={chatScrollViewRef}
-              onContentSizeChange={() => chatScrollViewRef.current?.scrollToEnd({ animated: true })}
-            >
-              {chatMessages.map((message) => (
-                <View
-                  key={message.id}
-                  style={[
-                    styles.chatBubble,
-                    message.sender === 'user' && styles.userChatBubble,
-                  ]}
-                >
-                  <ThemedText
-                    style={[
-                      styles.chatBubbleText,
-                      message.sender === 'user' && styles.userChatBubbleText,
-                    ]}
-                  >
-                    {message.text}
-                  </ThemedText>
-                  <ThemedText style={styles.timestampText}>
-                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </ThemedText>
-                </View>
-              ))}
               
-              {isTyping && (
-                <View style={styles.typingIndicator}>
-                  <Animated.View style={[styles.typingDot, animatedStyle1]} />
-                  <Animated.View style={[styles.typingDot, animatedStyle2]} />
-                  <Animated.View style={[styles.typingDot, animatedStyle3]} />
+              {/* Other profile sections can be added here */}
+              <View style={styles.sectionContainer}>
+                <ThemedText style={styles.sectionTitle}>Settings</ThemedText>
+                
+                <View style={styles.settingItem}>
+                  <View style={styles.settingItemLeft}>
+                    <View style={[styles.settingIcon, { backgroundColor: '#F3E8FF' }]}>
+                      <Feather name="moon" size={18} color="#6C5CE7" />
+                    </View>
+                    <ThemedText style={styles.settingText}>Dark Mode</ThemedText>
+                  </View>
+                  <Switch
+                    value={isDarkMode}
+                    onValueChange={handleDarkModeToggle}
+                    trackColor={{ false: '#E0E0E0', true: Colors.light.primary }}
+                    thumbColor={'#FFFFFF'}
+                  />
                 </View>
-              )}
-            </ScrollView>
-            
-            <View style={styles.chatInputContainer}>
-              <TextInput
-                style={[
-                  styles.chatInput,
-                  messageInput.trim() === '' && styles.chatInputFocused,
-                ]}
-                placeholder="Ask a question..."
-                placeholderTextColor={Colors.light.textTertiary}
-                value={messageInput}
-                onChangeText={setMessageInput}
-                onFocus={() => setIsTyping(true)}
-                onBlur={() => setIsTyping(false)}
-              />
-              <TouchableOpacity
-                style={[
-                  styles.sendButton,
-                  (!messageInput.trim() || isTyping) && styles.disabledSendButton,
-                ]}
-                onPress={handleSendMessage}
-                disabled={!messageInput.trim() || isTyping}
+                
+                <View style={styles.settingItem}>
+                  <View style={styles.settingItemLeft}>
+                    <View style={[styles.settingIcon, { backgroundColor: '#FFF3E0' }]}>
+                      <Feather name="bell" size={18} color="#FF9800" />
+                    </View>
+                    <ThemedText style={styles.settingText}>Notifications</ThemedText>
+                  </View>
+                  <Switch
+                    value={notifications}
+                    onValueChange={(value) => {
+                      setNotifications(value);
+                      AsyncStorage.setItem(NOTIFICATIONS_ENABLED_KEY, value ? 'true' : 'false');
+                    }}
+                    trackColor={{ false: '#E0E0E0', true: Colors.light.primary }}
+                    thumbColor={'#FFFFFF'}
+                  />
+                </View>
+                
+                <TouchableOpacity style={styles.settingItem} onPress={openLanguageSelector}>
+                  <View style={styles.settingItemLeft}>
+                    <View style={[styles.settingIcon, { backgroundColor: '#E6FFFB' }]}>
+                      <Feather name="globe" size={18} color="#13C2C2" />
+                    </View>
+                    <ThemedText style={styles.settingText}>Language</ThemedText>
+                  </View>
+                  <View style={styles.settingItemRight}>
+                    <ThemedText style={styles.settingValue}>
+                      {LanguageService.getNameFromCode(selectedLanguage)}
+                    </ThemedText>
+                    <Feather name="chevron-right" size={18} color="#999" />
+                  </View>
+                </TouchableOpacity>
+              </View>
+              
+              <View style={styles.sectionContainer}>
+                <ThemedText style={styles.sectionTitle}>Support</ThemedText>
+                
+                <TouchableOpacity style={styles.settingItem} onPress={handleHelpCenter}>
+                  <View style={styles.settingItemLeft}>
+                    <View style={[styles.settingIcon, { backgroundColor: '#F9F0FF' }]}>
+                      <Feather name="help-circle" size={18} color="#722ED1" />
+                    </View>
+                    <ThemedText style={styles.settingText}>Help Center</ThemedText>
+                  </View>
+                  <Feather name="chevron-right" size={18} color="#999" />
+                </TouchableOpacity>
+                
+                <TouchableOpacity style={styles.settingItem} onPress={handlePrivacyPolicy}>
+                  <View style={styles.settingItemLeft}>
+                    <View style={[styles.settingIcon, { backgroundColor: '#FFF0F6' }]}>
+                      <Feather name="shield" size={18} color="#EB2F96" />
+                    </View>
+                    <ThemedText style={styles.settingText}>Privacy Policy</ThemedText>
+                  </View>
+                  <Feather name="chevron-right" size={18} color="#999" />
+                </TouchableOpacity>
+              </View>
+            </Animated.View>
+          </Animated.ScrollView>
+          
+          {/* Profile Picture Options Bottom Sheet */}
+          {showImageOptions && (
+            <Modal
+              transparent={true}
+              animationType="slide"
+              visible={showImageOptions}
+              onRequestClose={() => setShowImageOptions(false)}
+            >
+              <TouchableOpacity 
+                style={styles.modalOverlay}
+                activeOpacity={1}
+                onPress={() => setShowImageOptions(false)}
               >
-                <Feather name="send" size={18} color={Colors.light.textInverse} />
+                <View style={styles.bottomSheet}>
+                  <View style={styles.bottomSheetHeader}>
+                    <ThemedText style={styles.bottomSheetTitle}>Profile Picture</ThemedText>
+                    <TouchableOpacity onPress={() => setShowImageOptions(false)}>
+                      <Feather name="x" size={24} color="#999" />
+                    </TouchableOpacity>
+                  </View>
+                  
+                  <TouchableOpacity style={styles.bottomSheetOption} onPress={takePicture}>
+                    <Feather name="camera" size={22} color="#333" />
+                    <ThemedText style={styles.bottomSheetOptionText}>Take Photo</ThemedText>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity style={styles.bottomSheetOption} onPress={handleChangeProfilePicture}>
+                    <Feather name="image" size={22} color="#333" />
+                    <ThemedText style={styles.bottomSheetOptionText}>Choose from Library</ThemedText>
+                  </TouchableOpacity>
+                  
+                  {profileImage && (
+                    <TouchableOpacity style={styles.bottomSheetOption} onPress={removeProfilePicture}>
+                      <Feather name="trash-2" size={22} color="#FF4D4F" />
+                      <ThemedText style={[styles.bottomSheetOptionText, { color: '#FF4D4F' }]}>
+                        Remove Photo
+                      </ThemedText>
+                    </TouchableOpacity>
+                  )}
+                  
+                  <TouchableOpacity style={styles.bottomSheetOption} onPress={handleViewProfileImage}>
+                    <Feather name="maximize-2" size={22} color="#333" />
+                    <ThemedText style={styles.bottomSheetOptionText}>View Full Image</ThemedText>
+                  </TouchableOpacity>
+                </View>
               </TouchableOpacity>
+            </Modal>
+          )}
+          
+          {/* Interest Selector Modal */}
+          {showInterestSelector && (
+            <Modal
+              visible={showInterestSelector}
+              transparent={true}
+              animationType="slide"
+              onRequestClose={() => setShowInterestSelector(false)}
+            >
+              <View style={styles.modalContainer}>
+                <View style={styles.interestSelectorContainer}>
+                  <View style={styles.interestSelectorHeader}>
+                    <ThemedText style={styles.interestSelectorTitle}>Select Research Interests</ThemedText>
+                    <TouchableOpacity onPress={() => setShowInterestSelector(false)}>
+                      <Feather name="x" size={24} color="#000" />
+                    </TouchableOpacity>
+                  </View>
+                  
+                  <ScrollView style={styles.interestSelectorContent}>
+                    <View style={styles.interestTagsGrid}>
+                      {PREDEFINED_TAGS.map((tag) => {
+                        const isSelected = selectedInterests.some(interest => interest.id === tag.id);
+                        return (
+                          <TouchableOpacity
+                            key={tag.id}
+                            style={[
+                              styles.interestSelectorTag,
+                              { backgroundColor: tag.color },
+                              isSelected && styles.interestTagSelected
+                            ]}
+                            onPress={() => toggleInterest(tag)}
+                          >
+                            <ThemedText
+                              style={[
+                                styles.interestSelectorTagText,
+                                { color: tag.textColor }
+                              ]}
+                            >
+                              {tag.name}
+                            </ThemedText>
+                            {isSelected && (
+                              <View style={styles.selectedIndicator}>
+                                <Feather name="check" size={12} color="#FFF" />
+                              </View>
+                            )}
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  </ScrollView>
+                  
+                  <TouchableOpacity
+                    style={styles.doneButton}
+                    onPress={() => setShowInterestSelector(false)}
+                  >
+                    <ThemedText style={styles.doneButtonText}>Done</ThemedText>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
+          )}
+          
+          {/* Help Center Bot Modal */}
+          <Modal
+            visible={showHelpCenter}
+            transparent={false}
+            animationType="slide"
+            onRequestClose={() => setShowHelpCenter(false)}
+          >
+            <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+              <View style={styles.helpCenterHeader}>
+                <TouchableOpacity 
+                  onPress={() => setShowHelpCenter(false)} 
+                  style={styles.helpCenterBackButton}
+                >
+                  <Feather name="chevron-left" size={24} color="#000" />
+                </TouchableOpacity>
+                <ThemedText style={styles.helpCenterTitle}>Help Center</ThemedText>
+                <View style={{ width: 40 }} />
+              </View>
+              
+              <View style={styles.helpCenterContainer}>
+                <ScrollView 
+                  ref={chatScrollRef}
+                  style={styles.chatContainer}
+                  contentContainerStyle={styles.chatContentContainer}
+                >
+                  {chatMessages.map((message) => (
+                    <View 
+                      key={message.id} 
+                      style={[
+                        styles.chatBubble, 
+                        message.isBot ? styles.botBubble : styles.userBubble
+                      ]}
+                    >
+                      {message.isBot && (
+                        <View style={styles.botAvatarContainer}>
+                          <Feather name="help-circle" size={16} color="#fff" />
+                        </View>
+                      )}
+                      <View style={styles.messageContent}>
+                        <ThemedText 
+                          style={[
+                            styles.chatText, 
+                            message.isBot ? styles.botText : styles.userText
+                          ]}
+                        >
+                          {message.text}
+                        </ThemedText>
+                      </View>
+                    </View>
+                  ))}
+                </ScrollView>
+                
+                <KeyboardAvoidingView
+                  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                  style={styles.inputContainer}
+                >
+                  <TextInput
+                    style={styles.chatInput}
+                    value={chatInput}
+                    onChangeText={setChatInput}
+                    placeholder="Ask a question..."
+                    placeholderTextColor="#999"
+                    onSubmitEditing={handleSendMessage}
+                    returnKeyType="send"
+                  />
+                  <TouchableOpacity style={styles.sendButton} onPress={handleSendMessage}>
+                    <Feather name="send" size={18} color="#fff" />
+                  </TouchableOpacity>
+                </KeyboardAvoidingView>
+              </View>
+            </SafeAreaView>
+          </Modal>
+          
+          {/* Privacy Policy Modal */}
+          <Modal
+            visible={showPrivacyPolicy}
+            transparent={false}
+            animationType="slide"
+            onRequestClose={() => setShowPrivacyPolicy(false)}
+          >
+            <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+              <View style={styles.privacyHeader}>
+                <TouchableOpacity 
+                  onPress={() => setShowPrivacyPolicy(false)} 
+                  style={styles.privacyBackButton}
+                >
+                  <Feather name="chevron-left" size={24} color="#000" />
+                </TouchableOpacity>
+                <ThemedText style={styles.privacyTitle}>Privacy Policy</ThemedText>
+                <View style={{ width: 40 }} />
+              </View>
+              
+              <ScrollView style={styles.privacyContainer}>
+                <View style={styles.privacyContent}>
+                  <ThemedText style={styles.privacySection}>Last Updated: May 1, 2023</ThemedText>
+                  
+                  <ThemedText style={styles.privacyHeading}>1. Introduction</ThemedText>
+                  <ThemedText style={styles.privacyText}>
+                    Welcome to Rescroll. We respect your privacy and are committed to protecting your personal data. This privacy policy will inform you about how we collect, use, and disclose your information when you use our application.
+                  </ThemedText>
+                  
+                  <ThemedText style={styles.privacyHeading}>2. Data We Collect</ThemedText>
+                  <ThemedText style={styles.privacyText}>
+                    We collect information that you provide directly to us, such as when you create an account, update your profile, or interact with features in the app. This includes your name, email address, profile picture, and any other information you choose to provide.
+                  </ThemedText>
+                  
+                  <ThemedText style={styles.privacyHeading}>3. How We Use Your Data</ThemedText>
+                  <ThemedText style={styles.privacyText}>
+                    We use the information we collect to provide, maintain, and improve our services, to develop new features, and to protect Rescroll and our users. We also use the data to communicate with you about updates, security alerts, and support messages.
+                  </ThemedText>
+                  
+                  <ThemedText style={styles.privacyHeading}>4. Data Sharing and Disclosure</ThemedText>
+                  <ThemedText style={styles.privacyText}>
+                    We do not share your personal information with third parties except in limited circumstances, such as when required by law, to protect our rights, or with your explicit consent.
+                  </ThemedText>
+                  
+                  <ThemedText style={styles.privacyHeading}>5. Data Security</ThemedText>
+                  <ThemedText style={styles.privacyText}>
+                    We implement appropriate security measures to protect your personal information from unauthorized access, alteration, disclosure, or destruction.
+                  </ThemedText>
+                  
+                  <ThemedText style={styles.privacyHeading}>6. Your Rights</ThemedText>
+                  <ThemedText style={styles.privacyText}>
+                    Depending on your location, you may have certain rights regarding your personal information, such as the right to access, correct, or delete your data.
+                  </ThemedText>
+                  
+                  <ThemedText style={styles.privacyHeading}>7. Changes to This Policy</ThemedText>
+                  <ThemedText style={styles.privacyText}>
+                    We may update our privacy policy from time to time. We will notify you of any changes by posting the new privacy policy on this page and updating the "Last Updated" date.
+                  </ThemedText>
+                  
+                  <ThemedText style={styles.privacyHeading}>8. Contact Us</ThemedText>
+                  <ThemedText style={styles.privacyText}>
+                    If you have any questions about this privacy policy or our data practices, please contact us at privacy@rescroll.com.
+                  </ThemedText>
+                </View>
+              </ScrollView>
+            </SafeAreaView>
+          </Modal>
+          
+          {/* Language Selector Modal */}
+          <Modal
+            visible={showLanguageSelector}
+            transparent={true}
+            animationType="slide"
+            onRequestClose={() => setShowLanguageSelector(false)}
+          >
+            <View style={styles.languageModalContainer}>
+              <View style={styles.languageModalContent}>
+                <View style={styles.languageModalHeader}>
+                  <ThemedText style={styles.languageModalTitle}>Select Language</ThemedText>
+                  <TouchableOpacity onPress={() => setShowLanguageSelector(false)}>
+                    <Feather name="x" size={24} color="#000" />
+                  </TouchableOpacity>
+                </View>
+                
+                <FlatList
+                  data={Object.values(LanguageService.languages)}
+                  keyExtractor={(item) => item.code}
+                  style={styles.languageList}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity 
+                      style={[
+                        styles.languageItem,
+                        selectedLanguage === item.code && styles.selectedLanguageItem
+                      ]}
+                      onPress={() => {
+                        selectLanguage(item.code);
+                        setShowLanguageSelector(false);
+                      }}
+                    >
+                      <View style={styles.languageInfo}>
+                        <ThemedText style={styles.languageName}>{item.name}</ThemedText>
+                        <ThemedText style={styles.languageNative}>{item.native}</ThemedText>
+                      </View>
+                      {selectedLanguage === item.code && (
+                        <Feather name="check" size={18} color={Colors.light.primary} />
+                      )}
+                    </TouchableOpacity>
+                  )}
+                />
+              </View>
             </View>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
-    </SafeAreaView>
+          </Modal>
+          
+          {/* Full Screen Image Viewer Modal */}
+          <Modal
+            visible={showFullScreenImage}
+            transparent={true}
+            animationType="fade"
+            onRequestClose={() => setShowFullScreenImage(false)}
+          >
+            <View style={styles.fullScreenImageContainer}>
+              <TouchableOpacity 
+                style={styles.fullScreenCloseButton}
+                onPress={() => setShowFullScreenImage(false)}
+              >
+                <Feather name="x" size={24} color="#fff" />
+              </TouchableOpacity>
+              
+              {profileImage && (
+                <Image 
+                  source={{ uri: profileImage }} 
+                  style={styles.fullScreenImage}
+                  resizeMode="contain"
+                />
+              )}
+            </View>
+          </Modal>
+        </Animated.View>
+      </SafeAreaView>
+    </GestureHandlerRootView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#fff',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+    height: 56,
+    zIndex: 10,
   },
   backButton: {
-    padding: Spacing.sm,
-    marginLeft: Spacing.sm,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.05)',
   },
-  backButtonText: {
-    fontSize: 24,
-    fontWeight: '300',
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#000',
+  },
+  contentContainer: {
+    flex: 1,
   },
   profileHeader: {
+    padding: 24,
     alignItems: 'center',
-    marginTop: 24,
-    marginBottom: 32,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
-  profileImageContainer: {
+  avatarSection: {
+    alignItems: 'center',
+    marginBottom: 20,
     position: 'relative',
-    marginBottom: Spacing.md,
   },
-  profileImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: Colors.light.lightGray,
-    ...Shadows.md,
+  avatarContainer: {
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 4,
   },
-  editIconContainer: {
+  avatarWrapper: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    overflow: 'hidden',
+    borderWidth: 3,
+    borderColor: '#fff',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 50,
+  },
+  avatar: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+  },
+  avatarPlaceholder: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#F0F0F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarPlaceholderText: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  editAvatarButton: {
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: Colors.light.primary,
     width: 32,
     height: 32,
     borderRadius: 16,
-    justifyContent: 'center',
+    backgroundColor: Colors.light.primary,
     alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 2,
-    borderColor: Colors.light.background,
-    ...Shadows.sm,
+    borderColor: '#fff',
   },
-  editIconText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
+  profileInfo: {
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 24,
   },
-  usernameContainer: {
+  userInfo: {
+    alignItems: 'center',
+    width: '100%',
+    paddingHorizontal: 20,
+  },
+  nameContainer: {
+    alignItems: 'center',
+    marginBottom: 16,
+    width: '100%',
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  editNameContainer: {
+    alignItems: 'center',
+    marginBottom: 12,
+    width: '100%',
+  },
+  nameInput: {
+    fontSize: 22,
+    fontWeight: '600',
+    textAlign: 'center',
+    minWidth: 200,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    backgroundColor: 'rgba(0,0,0,0.03)',
+    borderRadius: 8,
+  },
+  userName: {
+    fontSize: 22,
+    fontWeight: '600',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  bioContainer: {
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  bioRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+  },
+  editNameButton: {
+    padding: 8,
+    marginLeft: 8,
+  },
+  editBioButton: {
+    padding: 8,
+    marginLeft: 8,
+  },
+  editBioContainer: {
     width: '100%',
     alignItems: 'center',
   },
-  usernameDisplayContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  username: {
-    fontSize: 24,
-    fontWeight: '600',
-    marginRight: 8,
-  },
-  editButton: {
-    padding: Spacing.xs,
-  },
-  editButtonText: {
-    fontSize: 20,
-  },
-  editUsernameContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '80%',
-  },
-  usernameInput: {
-    fontSize: 20,
-    flex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+  bioInput: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    width: '100%',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    backgroundColor: 'rgba(0,0,0,0.03)',
     borderRadius: 8,
+    minHeight: 60,
   },
-  saveButton: {
-    marginLeft: 8,
-    paddingVertical: 8,
+  userBio: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    maxWidth: '90%',
+    lineHeight: 22,
+  },
+  interestsContainer: {
+    width: '100%',
+    marginBottom: 16,
+  },
+  interestsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
     paddingHorizontal: 16,
-    backgroundColor: '#2563EB',
-    borderRadius: 8,
   },
-  saveButtonText: {
-    color: '#FFFFFF',
+  interestsTitle: {
+    fontSize: 16,
     fontWeight: '600',
   },
-  settingsSection: {
-    marginBottom: 24,
+  editInterestsButton: {
+    padding: 8,
+  },
+  interestTagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: 16,
+  },
+  tagContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    width: '100%',
+    paddingHorizontal: 16,
+  },
+  interestTag: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
+    marginRight: 8,
+    marginBottom: 8,
+    backgroundColor: '#F3E8FF',
+  },
+  interestTagText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#6C5CE7',
+  },
+  addInterestButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderStyle: 'dashed',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  addInterestText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#666',
+    marginLeft: 4,
+  },
+  sectionContainer: {
+    padding: 20,
+    marginBottom: 8,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 16,
+    color: '#000',
+  },
+  settingsContainer: {
+    backgroundColor: '#fff',
     borderRadius: 12,
     overflow: 'hidden',
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
   },
   settingItem: {
     flexDirection: 'row',
@@ -1059,427 +1495,370 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: '#f5f5f5',
   },
-  settingLabelContainer: {
+  settingItemLeft: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  settingLabel: {
-    fontSize: 16,
-  },
-  chevronText: {
-    fontSize: 24,
-    color: '#9CA3AF',
-  },
-  signOutButton: {
-    marginVertical: 24,
-    padding: 16,
-    backgroundColor: '#EF4444',
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  signOutButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-    fontSize: 16,
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    backgroundColor: Colors.light.background,
-    borderTopLeftRadius: BorderRadius.lg,
-    borderTopRightRadius: BorderRadius.lg,
-    paddingBottom: Platform.OS === 'ios' ? 34 : 24, // Extra padding for home indicator
-    maxHeight: '80%',
-    ...Shadows.lg,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.light.border,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  closeButton: {
-    fontSize: 24,
-    fontWeight: '300',
-  },
-  languageModalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  languageModalContent: {
-    width: '85%',
-    maxHeight: SCREEN_HEIGHT * 0.8,
-    backgroundColor: 'white',
-    borderRadius: 16,
-    padding: 20,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-    position: 'relative',
-  },
-  languageModalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
-  languageScrollView: {
-    width: '100%',
-    marginTop: 10,
-    marginBottom: 10,
-    maxHeight: SCREEN_HEIGHT * 0.6,
-  },
-  languageItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.light.border,
-  },
-  selectedLanguageItem: {
-    backgroundColor: Colors.light.primaryLight,
-  },
-  languageText: {
-    fontSize: 16,
-  },
-  selectedLanguageText: {
-    fontWeight: '600',
-    color: Colors.light.primary,
-  },
-  cancelButton: {
-    marginTop: 10,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    backgroundColor: '#2563EB',
-    width: '100%',
-    alignItems: 'center',
-  },
-  cancelButtonText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#FFFFFF',
-  },
-  simpleLanguageModalContent: {
-    width: '85%',
-    maxHeight: SCREEN_HEIGHT * 0.8,
-    backgroundColor: 'white',
-    borderRadius: 16,
-    padding: 20,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-    position: 'relative',
-  },
-  simpleLanguageScrollView: {
-    width: '100%',
-    marginTop: 10,
-    marginBottom: 10,
-    maxHeight: SCREEN_HEIGHT * 0.6,
-  },
-  simpleLanguageOption: {
-    width: '100%',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  simpleSelectedLanguageOption: {
-    backgroundColor: '#EBF5FF',
-  },
-  simpleLanguageText: {
-    fontSize: 16,
-  },
-  simpleCancelButton: {
-    marginTop: 10,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    backgroundColor: '#F3F4F6',
-    width: '100%',
-    alignItems: 'center',
-  },
-  simpleCancelButtonText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#4B5563',
-  },
-  privacyPolicyModalContent: {
-    width: '90%',
-    maxHeight: SCREEN_HEIGHT * 0.8,
-    backgroundColor: 'white',
-    borderRadius: 16,
-    padding: 20,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  privacyPolicyHeader: {
-    width: '100%',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingBottom: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-    position: 'relative',
-  },
-  privacyPolicyTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  privacyPolicyCloseButton: {
-    position: 'absolute',
-    right: 0,
-    padding: 5,
-  },
-  privacyPolicyCloseButtonText: {
-    fontSize: 20,
-    color: '#6B7280',
-  },
-  privacyPolicyScrollView: {
-    width: '100%',
-    marginTop: 15,
-  },
-  privacyPolicyContent: {
-    paddingBottom: 20,
-  },
-  privacyPolicySectionTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  privacyPolicyLastUpdated: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginBottom: 20,
-  },
-  privacyPolicyHeading: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginTop: 20,
-    marginBottom: 10,
-  },
-  privacyPolicyParagraph: {
-    fontSize: 16,
-    lineHeight: 24,
-    marginBottom: 14,
-  },
-  privacyPolicyBulletPoint: {
-    fontSize: 16,
-    lineHeight: 24,
-    marginBottom: 8,
-    paddingLeft: 8,
-  },
-  privacyPolicyContactInfo: {
-    fontSize: 16,
-    color: '#2563EB',
-    marginTop: 8,
-  },
-  chatContainer: {
-    flex: 1,
-    backgroundColor: Colors.light.background,
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
-    overflow: 'hidden',
-    ...Shadows.md,
-  },
-  chatHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.light.border,
-    backgroundColor: Colors.light.card,
-  },
-  chatHeaderTitle: {
-    fontSize: FontSizes.md,
-    fontWeight: '600',
-    color: Colors.light.text,
-  },
-  chatScrollView: {
-    flex: 1,
-    padding: Spacing.md,
-    backgroundColor: Colors.light.backgroundSecondary,
-  },
-  chatInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: Colors.light.border,
-    backgroundColor: Colors.light.card,
-  },
-  chatInput: {
-    flex: 1,
-    height: 40,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    backgroundColor: Colors.light.backgroundSecondary,
-    marginRight: Spacing.sm,
-    color: Colors.light.text,
-    fontSize: FontSizes.md,
-  },
-  chatInputFocused: {
-    borderColor: Colors.light.primary,
-    ...Glows.subtle,
-  },
-  sendButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: BorderRadius.round,
-    backgroundColor: Colors.light.primary,
-    ...Glows.subtle,
-  },
-  disabledSendButton: {
-    backgroundColor: Colors.light.backgroundTertiary,
-    opacity: 0.7,
-  },
-  sendButtonText: {
-    color: Colors.light.textInverse,
-    fontSize: FontSizes.lg,
-  },
-  chatBubble: {
-    maxWidth: '80%',
-    padding: Spacing.sm,
-    borderRadius: BorderRadius.md,
-    marginVertical: Spacing.xs,
-    backgroundColor: Colors.light.backgroundTertiary,
-    alignSelf: 'flex-start',
-    ...Shadows.sm,
-  },
-  userChatBubble: {
-    backgroundColor: Colors.light.primary,
-    alignSelf: 'flex-end',
-    ...Glows.subtle,
-  },
-  chatBubbleText: {
-    fontSize: FontSizes.md,
-    color: Colors.light.text,
-  },
-  userChatBubbleText: {
-    color: Colors.light.textInverse,
-  },
-  timestampText: {
-    fontSize: FontSizes.xs,
-    color: Colors.light.textSecondary,
-    marginTop: Spacing.xs,
-    alignSelf: 'flex-end',
-  },
-  userTimestampText: {
-    color: Colors.light.textInverse,
-    opacity: 0.8,
-  },
-  loadingContainer: {
-    padding: Spacing.sm,
-    alignItems: 'center',
-  },
-  typingIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: Spacing.xs,
-    borderRadius: BorderRadius.md,
-    backgroundColor: Colors.light.backgroundTertiary,
-    alignSelf: 'flex-start',
-    marginVertical: Spacing.xs,
-  },
-  typingDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: Colors.light.textSecondary,
-    marginHorizontal: 2,
-  },
-  modalCloseButton: {
-    position: 'absolute',
-    top: Platform.OS === 'ios' ? 50 : 20,
-    right: 20,
-    zIndex: 10,
-    padding: 10,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: 20,
-  },
-  modalCloseButtonText: {
-    color: 'white',
-    fontSize: 20,
-    fontWeight: '300',
-  },
-  modalImageContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: '100%',
-    height: '100%',
-  },
-  modalImage: {
-    width: SCREEN_WIDTH,
-    height: SCREEN_WIDTH,
-    resizeMode: 'contain',
-  },
-  editProfilePhotoButton: {
-    position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 50 : 30,
-    padding: 15,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+  settingIcon: {
+    width: 36,
+    height: 36,
     borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
   },
-  editProfilePhotoButtonText: {
-    color: 'white',
+  settingText: {
     fontSize: 16,
-    fontWeight: '500',
+    color: '#333',
   },
-  settingValueContainer: {
+  settingItemRight: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   settingValue: {
     fontSize: 16,
-    color: '#6B7280',
+    color: '#666',
     marginRight: 8,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  bottomSheet: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    padding: 20,
+    paddingBottom: 36,
+    minHeight: 200,
+  },
+  bottomSheetHeader: {
+    alignItems: 'center',
+    marginBottom: 24,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  bottomSheetIndicator: {
+    width: 40,
+    height: 5,
+    backgroundColor: '#DDDDDD',
+    borderRadius: 3,
+    marginBottom: 10,
+  },
+  bottomSheetTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+  },
+  bottomSheetContent: {
+    paddingBottom: 24,
+  },
+  bottomSheetOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f5f5f5',
+  },
+  bottomSheetOptionText: {
+    fontSize: 16,
+    marginLeft: 12,
+    color: '#333',
+  },
+  interestSelectorContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    width: '90%',
+    maxHeight: '80%',
+    padding: 20,
+  },
+  interestSelectorHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  interestSelectorTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+  },
+  interestSelectorContent: {
+    flex: 1,
+    paddingVertical: 8,
+  },
+  interestTagsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-start',
+  },
+  interestSelectorTag: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 16,
+    margin: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 100,
+  },
+  interestSelectorTagText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  interestTagSelected: {
+    borderWidth: 2,
+    borderColor: Colors.light.primary,
+  },
+  selectedIndicator: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: Colors.light.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  doneButton: {
+    backgroundColor: Colors.light.primary,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  doneButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  helpCenterHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+  },
+  helpCenterBackButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.05)',
+  },
+  helpCenterTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#000',
+  },
+  helpCenterContainer: {
+    flex: 1,
+    padding: 16,
+  },
+  chatContainer: {
+    flex: 1,
+  },
+  chatContentContainer: {
+    padding: 16,
+  },
+  chatBubble: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  botBubble: {
+    backgroundColor: '#F3E8FF',
+    borderRadius: 12,
+    padding: 12,
+  },
+  userBubble: {
+    backgroundColor: '#E6FFFB',
+    borderRadius: 12,
+    padding: 12,
+  },
+  botAvatarContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#6C5CE7',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  messageContent: {
+    flex: 1,
+  },
+  chatText: {
+    fontSize: 16,
+    color: '#000',
+  },
+  botText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  userText: {
+    fontSize: 16,
+    color: '#666',
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+  },
+  chatInput: {
+    flex: 1,
+    padding: 12,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+  },
+  sendButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#6C5CE7',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
+  },
+  privacyHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+  },
+  privacyBackButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.05)',
+  },
+  privacyTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#000',
+  },
+  privacyContainer: {
+    flex: 1,
+    padding: 16,
+  },
+  privacyContent: {
+    padding: 16,
+  },
+  privacySection: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 12,
+  },
+  privacyHeading: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  privacyText: {
+    fontSize: 16,
+    color: '#666',
+  },
+  languageModalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  languageModalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    width: '90%',
+    maxHeight: '80%',
+    padding: 20,
+  },
+  languageModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  languageModalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+  },
+  languageList: {
+    flex: 1,
+  },
+  languageItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  languageInfo: {
+    flex: 1,
+  },
+  languageName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000',
+  },
+  languageNative: {
+    fontSize: 14,
+    color: '#666',
+  },
+  selectedLanguageItem: {
+    backgroundColor: '#E6FFFB',
+  },
+  fullScreenImageContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fullScreenImage: {
+    width: '100%',
+    height: '80%',
+  },
+  fullScreenCloseButton: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+  },
+  tooltip: {
+    position: 'absolute',
+    bottom: -30,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    zIndex: 5,
+  },
+  tooltipText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '500',
   },
 }); 
