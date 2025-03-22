@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   StyleSheet,
   View,
@@ -8,6 +8,8 @@ import {
   Image,
   TextInput,
   Dimensions,
+  SectionList,
+  Modal,
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
@@ -16,6 +18,7 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Feather } from '@expo/vector-icons';
 
 // Define the type for the saved paper items
 interface Author {
@@ -88,87 +91,207 @@ const SAVED_PAPERS: SavedPaper[] = [
   },
 ];
 
-// Define bookmark categories
-const BOOKMARK_CATEGORIES = ['All', 'Recent', 'Research', 'Medicine', 'Technology'];
+// Define a folder type
+interface BookmarkFolder {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  isSmartFolder: boolean;
+  papers: SavedPaper[];
+}
+
+// Replace the bookmark categories with smart folders
+const BOOKMARK_FOLDERS: BookmarkFolder[] = [
+  {
+    id: 'all',
+    name: 'All Bookmarks',
+    icon: 'bookmark',
+    color: '#3498db',
+    isSmartFolder: true,
+    papers: [] // This will be populated dynamically
+  },
+  {
+    id: 'recent',
+    name: 'Recent',
+    icon: 'clock',
+    color: '#2ecc71',
+    isSmartFolder: true,
+    papers: [] // This will be populated with papers from last 7 days
+  },
+  {
+    id: 'highly-cited',
+    name: 'Highly Cited',
+    icon: 'award',
+    color: '#f39c12',
+    isSmartFolder: true,
+    papers: [] // This will be populated with papers that have high citation counts
+  },
+  {
+    id: 'medicine',
+    name: 'Medicine',
+    icon: 'heart',
+    color: '#e74c3c',
+    isSmartFolder: false,
+    papers: [] // This will be populated with papers tagged as medicine
+  },
+  {
+    id: 'technology',
+    name: 'Technology',
+    icon: 'cpu',
+    color: '#9b59b6',
+    isSmartFolder: false,
+    papers: [] // This will be populated with papers tagged as technology
+  },
+];
 
 export default function LibraryScreen() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedFolderId, setSelectedFolderId] = useState('all');
+  const [isCreateBookmarkModalVisible, setIsCreateBookmarkModalVisible] = useState(false);
+  const [newBookmarkTitle, setNewBookmarkTitle] = useState('');
+  const [newBookmarkUrl, setNewBookmarkUrl] = useState('');
+  const [folders, setFolders] = useState<BookmarkFolder[]>(BOOKMARK_FOLDERS);
   const router = useRouter();
   const colorScheme = useColorScheme();
   const colors = Colors.light; // Always use light theme to match other tabs
   
   const screenWidth = Dimensions.get('window').width;
+  const numColumns = 2; // Number of columns in the grid
 
-  const filteredPapers = SAVED_PAPERS.filter(paper => 
-    paper.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    paper.summary.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    paper.authors.some(author => author.name.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  // Organize papers into smart folders based on criteria
+  const organizedFolders = useMemo(() => {
+    // Helper function to determine if a paper is recent (within last 7 days)
+    const isRecent = (date: string): boolean => {
+      if (date.includes('day')) {
+        const days = parseInt(date.split(' ')[0]);
+        return days <= 7;
+      }
+      return false;
+    };
 
-  const renderBookmarkItem = ({ item }: { item: SavedPaper }) => (
-    <TouchableOpacity 
-      style={styles.bookmarkCard}
-      onPress={() => router.push(`/paper/${item.id}`)}
-    >
-      <View style={styles.bookmarkContainer}>
+    // Helper function to determine if a paper is highly cited (more than 30 citations)
+    const isHighlyCited = (citationCount?: number): boolean => {
+      return citationCount !== undefined && citationCount > 30;
+    };
+
+    // Helper function to categorize papers by keyword
+    const categorizeByKeyword = (paper: SavedPaper, category: string): boolean => {
+      if (!paper.keywords) return false;
+      
+      const keywordMap: Record<string, string[]> = {
+        'medicine': ['medicine', 'health', 'bioethics', 'gene', 'CRISPR'],
+        'technology': ['technology', 'machine learning', 'transformer', 'deep learning', 'AI'],
+      };
+      
+      return paper.keywords.some(keyword => 
+        keywordMap[category]?.some(catKey => 
+          keyword.toLowerCase().includes(catKey.toLowerCase())
+        )
+      );
+    };
+    
+    // Start with a copy of the folder structure
+    return folders.map(folder => {
+      // Create a new folder object to avoid mutating the original
+      const updatedFolder = { ...folder, papers: [] as SavedPaper[] };
+      
+      // Fill each folder based on its criteria
+      if (folder.id === 'all') {
+        updatedFolder.papers = SAVED_PAPERS;
+      } else if (folder.id === 'recent') {
+        updatedFolder.papers = SAVED_PAPERS.filter(paper => isRecent(paper.date));
+      } else if (folder.id === 'highly-cited') {
+        updatedFolder.papers = SAVED_PAPERS.filter(paper => isHighlyCited(paper.citationCount));
+      } else if (folder.id === 'medicine') {
+        updatedFolder.papers = SAVED_PAPERS.filter(paper => categorizeByKeyword(paper, 'medicine'));
+      } else if (folder.id === 'technology') {
+        updatedFolder.papers = SAVED_PAPERS.filter(paper => categorizeByKeyword(paper, 'technology'));
+      }
+      
+      // Filter papers if there's a search query
+      if (searchQuery) {
+        updatedFolder.papers = updatedFolder.papers.filter(paper => 
+          paper.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          paper.summary.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          paper.authors.some(author => author.name.toLowerCase().includes(searchQuery.toLowerCase()))
+        );
+      }
+      
+      return updatedFolder;
+    });
+  }, [searchQuery, folders]);
+
+  // Function to add a new bookmark
+  const addNewBookmark = () => {
+    if (newBookmarkTitle.trim()) {
+      // In a real app, this would create an actual bookmark
+      // For now we just close the modal
+      setNewBookmarkTitle('');
+      setNewBookmarkUrl('');
+      setIsCreateBookmarkModalVisible(false);
+    }
+  };
+
+  // Render a collection item (folder)
+  const renderCollectionItem = ({ item }: { item: BookmarkFolder }) => {
+    const paperCount = organizedFolders.find(f => f.id === item.id)?.papers.length || 0;
+    const paperImages = organizedFolders.find(f => f.id === item.id)?.papers.slice(0, 4).map(p => p.imageUrl) || [];
+    
+    return (
+      <TouchableOpacity
+        style={styles.collectionItem}
+        onPress={() => setSelectedFolderId(item.id)}
+      >
+        <View style={styles.collectionPreview}>
+          {paperImages.length > 0 ? (
+            <View style={styles.previewGrid}>
+              {paperImages.slice(0, Math.min(4, paperImages.length)).map((imgUrl, idx) => (
+                <Image 
+                  key={idx}
+                  source={{ uri: imgUrl }}
+                  style={styles.previewImage}
+                />
+              ))}
+              {/* Fill empty spaces if needed */}
+              {Array.from({ length: Math.max(0, 4 - paperImages.length) }).map((_, idx) => (
+                <View key={`empty-${idx}`} style={[styles.previewImage, styles.emptyPreview]} />
+              ))}
+            </View>
+          ) : (
+            <View style={[styles.emptyCollectionIcon, { backgroundColor: item.color }]}>
+              <Feather name={item.icon as React.ComponentProps<typeof Feather>['name']} size={30} color="#fff" />
+            </View>
+          )}
+        </View>
+        <ThemedText style={styles.collectionName}>{item.name}</ThemedText>
+      </TouchableOpacity>
+    );
+  };
+
+  // Render a bookmark item in the grid
+  const renderBookmarkItem = ({ item }: { item: SavedPaper }) => {
+    return (
+      <TouchableOpacity 
+        style={styles.bookmarkGridItem}
+        onPress={() => {
+          // Navigate to paper detail view when implemented
+          // router.push(`/paper/${item.id}`);
+        }}
+      >
         <Image 
-          source={{ uri: item.imageUrl }}
-          style={styles.bookmarkImage} 
+          source={{ uri: item.imageUrl }} 
+          style={styles.bookmarkGridImage}
         />
-        <View style={styles.bookmarkContent}>
-          <ThemedText style={styles.bookmarkTitle} numberOfLines={2}>
+        <View style={styles.bookmarkGridOverlay}>
+          <ThemedText style={styles.bookmarkGridTitle} numberOfLines={2}>
             {item.title}
           </ThemedText>
-          <ThemedText style={styles.bookmarkAuthors} numberOfLines={1}>
-            {item.authors.map(author => author.name).join(', ')}
-          </ThemedText>
-          <View style={styles.bookmarkMeta}>
-            <ThemedText style={styles.bookmarkJournal}>
-              {item.journal} • {item.year}
-            </ThemedText>
-            {item.citationCount !== undefined && (
-              <View style={styles.citationContainer}>
-                <IconSymbol name="star.fill" size={12} color="#FFB800" />
-                <ThemedText style={styles.citationText}>{item.citationCount} citations</ThemedText>
-              </View>
-            )}
-          </View>
         </View>
-      </View>
-      <View style={styles.bookmarkActions}>
-        <ThemedText style={styles.bookmarkDate}>{item.date}</ThemedText>
-        <View style={styles.actionButtons}>
-          <TouchableOpacity style={styles.bookmarkAction}>
-            <IconSymbol name="square.and.arrow.up" size={20} color="#555" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.bookmarkAction}>
-            <IconSymbol name="bookmark.fill" size={20} color={colors.primary} />
-          </TouchableOpacity>
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
-
-  const renderCategoryItem = ({ item }: { item: string }) => (
-    <TouchableOpacity
-      style={[
-        styles.categoryItem,
-        selectedCategory === item && styles.selectedCategoryItem,
-      ]}
-      onPress={() => setSelectedCategory(item)}
-    >
-      <ThemedText
-        style={[
-          styles.categoryText,
-          selectedCategory === item && styles.selectedCategoryText,
-        ]}
-      >
-        {item}
-      </ThemedText>
-    </TouchableOpacity>
-  );
-
+      </TouchableOpacity>
+    );
+  };
+  
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
       <ThemedView style={styles.container}>
@@ -176,56 +299,135 @@ export default function LibraryScreen() {
         
         <View style={styles.header}>
           <View style={styles.headerContent}>
-            <ThemedText style={styles.screenTitle}>Bookmarks</ThemedText>
+            <TouchableOpacity onPress={() => router.back()}>
+              <Feather name="chevron-left" size={24} color="#000" />
+            </TouchableOpacity>
+            <ThemedText style={styles.screenTitle}>Saved</ThemedText>
+            <TouchableOpacity onPress={() => setIsCreateBookmarkModalVisible(true)}>
+              <Feather name="plus" size={24} color="#000" />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <ScrollView style={styles.contentContainer}>
+          {/* Collections/Folders Section */}
+          <View style={styles.sectionContainer}>
+            <FlatList
+              data={folders}
+              renderItem={renderCollectionItem}
+              keyExtractor={item => item.id}
+              numColumns={2}
+              key="folders-grid"
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.collectionsGrid}
+              scrollEnabled={false}
+            />
           </View>
           
-          {/* Search Bar with grey shade styling matching home page */}
-          <View style={styles.searchContainer}>
-            <View style={styles.searchBar}>
-              <IconSymbol name="magnifyingglass" size={16} color="#777" />
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Search bookmarks..."
-                placeholderTextColor="#777"
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-              />
-              {searchQuery.length > 0 && (
-                <TouchableOpacity onPress={() => setSearchQuery('')}>
-                  <IconSymbol name="xmark.circle.fill" size={16} color="#777" />
-                </TouchableOpacity>
+          {/* Selected Collection Papers - Only show if a collection is selected */}
+          {selectedFolderId !== 'all' && (
+            <View style={styles.sectionContainer}>
+              <View style={styles.sectionHeader}>
+                <ThemedText style={styles.sectionTitle}>{
+                  folders.find(f => f.id === selectedFolderId)?.name || 'All Posts'
+                }</ThemedText>
+              </View>
+              
+              {organizedFolders.find(f => f.id === selectedFolderId)?.papers.length ? (
+                <FlatList
+                  data={organizedFolders.find(f => f.id === selectedFolderId)?.papers || []}
+                  renderItem={renderBookmarkItem}
+                  keyExtractor={item => item.id}
+                  numColumns={2}
+                  key={`folder-papers-${selectedFolderId}`}
+                  showsVerticalScrollIndicator={false}
+                  contentContainerStyle={styles.bookmarksGrid}
+                  scrollEnabled={false}
+                />
+              ) : (
+                <View style={styles.emptyBookmarksContainer}>
+                  <Feather name="bookmark" size={60} color="#ddd" />
+                  <ThemedText style={styles.emptyBookmarksText}>
+                    No saved bookmarks
+                  </ThemedText>
+                </View>
               )}
             </View>
-          </View>
-        </View>
+          )}
+          
+          {/* All Posts (Default) - Show all bookmarks when no specific collection is selected */}
+          {selectedFolderId === 'all' && (
+            <View style={styles.sectionContainer}>
+              <View style={styles.sectionHeader}>
+                <ThemedText style={styles.sectionTitle}>All Posts</ThemedText>
+              </View>
+              
+              {SAVED_PAPERS.length > 0 ? (
+                <FlatList
+                  data={SAVED_PAPERS}
+                  renderItem={renderBookmarkItem}
+                  keyExtractor={item => item.id}
+                  numColumns={2}
+                  key="all-papers-grid"
+                  showsVerticalScrollIndicator={false}
+                  contentContainerStyle={styles.bookmarksGrid}
+                  scrollEnabled={false}
+                />
+              ) : (
+                <View style={styles.emptyBookmarksContainer}>
+                  <Feather name="bookmark" size={60} color="#ddd" />
+                  <ThemedText style={styles.emptyBookmarksText}>
+                    No saved bookmarks
+                  </ThemedText>
+                </View>
+              )}
+            </View>
+          )}
+        </ScrollView>
 
-        {/* Categories Horizontal Scroll */}
-        <View style={styles.categoriesContainer}>
-          <FlatList
-            data={BOOKMARK_CATEGORIES}
-            renderItem={renderCategoryItem}
-            keyExtractor={(item) => item}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.categoriesList}
-          />
-        </View>
-
-        {filteredPapers.length > 0 ? (
-          <FlatList
-            data={filteredPapers}
-            renderItem={renderBookmarkItem}
-            keyExtractor={item => item.id}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.listContainer}
-          />
-        ) : (
-          <View style={styles.emptyContainer}>
-            <IconSymbol name="bookmark" size={60} color={colors.lightGray} />
-            <ThemedText style={styles.emptyText}>No bookmarks found</ThemedText>
-            <ThemedText style={styles.emptySubtext}>Papers you save will appear here</ThemedText>
+        {/* Create Bookmark Modal */}
+        <Modal
+          animationType="fade"
+          transparent={true}
+          visible={isCreateBookmarkModalVisible}
+          onRequestClose={() => setIsCreateBookmarkModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <ThemedText style={styles.modalTitle}>Add New Bookmark</ThemedText>
+              
+              <TextInput
+                style={styles.modalInput}
+                placeholder="Title"
+                value={newBookmarkTitle}
+                onChangeText={setNewBookmarkTitle}
+                autoFocus
+              />
+              
+              <TextInput
+                style={styles.modalInput}
+                placeholder="URL or DOI"
+                value={newBookmarkUrl}
+                onChangeText={setNewBookmarkUrl}
+              />
+              
+              <View style={styles.modalActions}>
+                <TouchableOpacity 
+                  style={styles.modalButton}
+                  onPress={() => setIsCreateBookmarkModalVisible(false)}
+                >
+                  <ThemedText style={styles.modalButtonText}>Cancel</ThemedText>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.modalButton, styles.modalPrimaryButton]}
+                  onPress={addNewBookmark}
+                >
+                  <ThemedText style={styles.modalPrimaryButtonText}>Save</ThemedText>
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
-        )}
+        </Modal>
       </ThemedView>
     </SafeAreaView>
   );
@@ -240,168 +442,164 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 8,
     backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
   },
   headerContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    paddingVertical: 10,
   },
   screenTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
   },
-  searchContainer: {
-    marginTop: 10,
-    paddingHorizontal: 6,
-    marginBottom: 8,
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f0f0f0',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  searchInput: {
+  contentContainer: {
     flex: 1,
-    fontSize: 14,
-    marginLeft: 8,
-    color: '#333',
-    paddingVertical: 6,
   },
-  categoriesContainer: {
-    marginVertical: 8,
+  sectionContainer: {
+    marginTop: 20,
   },
-  categoriesList: {
-    paddingHorizontal: 16,
-  },
-  categoryItem: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginRight: 12,
-    backgroundColor: '#f0f0f0',
-  },
-  selectedCategoryItem: {
-    backgroundColor: Colors.light.primary,
-  },
-  categoryText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#555',
-  },
-  selectedCategoryText: {
-    color: '#fff',
-  },
-  listContainer: {
-    padding: 16,
-  },
-  bookmarkCard: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    marginBottom: 16,
-    padding: 14,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  bookmarkContainer: {
+  sectionHeader: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    marginBottom: 10,
   },
-  bookmarkImage: {
-    width: 80,
-    height: 80,
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  collectionsGrid: {
+    paddingHorizontal: 8,
+  },
+  collectionItem: {
+    width: Dimensions.get('window').width / 2 - 16,
+    margin: 8,
+    alignItems: 'center',
+  },
+  collectionPreview: {
+    width: '100%',
+    aspectRatio: 1,
     borderRadius: 8,
     backgroundColor: '#f0f0f0',
+    overflow: 'hidden',
   },
-  bookmarkContent: {
-    flex: 1,
-    marginLeft: 12,
-    justifyContent: 'space-between',
-  },
-  bookmarkTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    marginBottom: 4,
-    lineHeight: 20,
-  },
-  bookmarkAuthors: {
-    fontSize: 13,
-    color: '#555',
-    marginBottom: 4,
-  },
-  bookmarkMeta: {
+  previewGrid: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     flexWrap: 'wrap',
+    width: '100%',
+    height: '100%',
   },
-  bookmarkJournal: {
-    fontSize: 12,
-    color: '#777',
-    flex: 1,
+  previewImage: {
+    width: '50%',
+    height: '50%',
   },
-  citationContainer: {
-    flexDirection: 'row',
+  emptyPreview: {
+    backgroundColor: '#e0e0e0',
+  },
+  emptyCollectionIcon: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 184, 0, 0.1)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    backgroundColor: '#ddd',
   },
-  citationText: {
-    fontSize: 11,
-    color: '#555',
-    marginLeft: 4,
-  },
-  bookmarkActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  collectionName: {
     marginTop: 8,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
+    fontSize: 14,
+    fontWeight: '500',
+    textAlign: 'center',
   },
-  bookmarkDate: {
+  bookmarksGrid: {
+    paddingHorizontal: 8,
+  },
+  bookmarkGridItem: {
+    width: Dimensions.get('window').width / 2 - 16,
+    height: 200,
+    margin: 8,
+    borderRadius: 8,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  bookmarkGridImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  bookmarkGridOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: 8,
+  },
+  bookmarkGridTitle: {
+    color: 'white',
     fontSize: 12,
-    color: '#777',
+    fontWeight: '500',
   },
-  actionButtons: {
-    flexDirection: 'row',
-  },
-  bookmarkAction: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#f5f5f5',
-    justifyContent: 'center',
+  emptyBookmarksContainer: {
+    padding: 40,
     alignItems: 'center',
-    marginLeft: 12,
+    justifyContent: 'center',
   },
-  emptyContainer: {
+  emptyBookmarksText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#999',
+    textAlign: 'center',
+  },
+  modalOverlay: {
     flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingBottom: 80, // Extra padding to center the content better
   },
-  emptyText: {
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 24,
+    width: '80%',
+    maxWidth: 400,
+  },
+  modalTitle: {
     fontSize: 18,
     fontWeight: '600',
-    marginTop: 16,
-    marginBottom: 8,
+    marginBottom: 16,
+    textAlign: 'center',
   },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#888',
+  modalInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    marginBottom: 16,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 8,
+  },
+  modalButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    marginLeft: 12,
+    borderRadius: 8,
+  },
+  modalButtonText: {
+    fontSize: 16,
+    color: '#666',
+  },
+  modalPrimaryButton: {
+    backgroundColor: Colors.light.primary,
+  },
+  modalPrimaryButtonText: {
+    color: '#fff',
+    fontWeight: '500',
   },
 }); 
