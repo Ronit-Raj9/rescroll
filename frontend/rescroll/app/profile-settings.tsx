@@ -251,7 +251,7 @@ export default function ProfileSettingsScreen() {
           console.log('[ProfileScreen] Is valid language code?', isValidLanguage);
           
           if (isValidLanguage) {
-            setSelectedLanguage(savedLanguage);
+          setSelectedLanguage(savedLanguage);
           } else {
             console.warn('[ProfileScreen] Invalid language code in storage, using default');
             setSelectedLanguage('en'); // Default to English
@@ -353,7 +353,7 @@ export default function ProfileSettingsScreen() {
             });
           } catch (error) {
             console.error('[ProfileScreen] Error navigating back:', error);
-            router.back();
+    router.back();
           }
         }, 50);
       });
@@ -534,7 +534,7 @@ export default function ProfileSettingsScreen() {
   const openLanguageSelector = () => {
     openLanguageModal();
   };
-  
+
   // Animation styles
   const nameUnderlineStyle = useAnimatedStyle(() => {
     return {
@@ -559,7 +559,7 @@ export default function ProfileSettingsScreen() {
       transform: [{ scale: avatarScale.value }]
     };
   });
-  
+
   const contentAnimatedStyle = useAnimatedStyle(() => {
     return {
       opacity: contentOpacity.value,
@@ -688,53 +688,53 @@ export default function ProfileSettingsScreen() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaView style={{ flex: 1 }}>
         <Animated.View style={[styles.container, backgroundStyle]}>
-          <Stack.Screen options={{ headerShown: false }} />
-          
-          {/* Header with back button */}
-          <View style={styles.header}>
-            <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+        <Stack.Screen options={{ headerShown: false }} />
+        
+        {/* Header with back button */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={handleBack} style={styles.backButton}>
               <Feather name="chevron-left" size={24} color={isDarkMode ? "#FFF" : "#000"} />
-            </TouchableOpacity>
+          </TouchableOpacity>
             <Animated.Text style={[styles.headerTitle, textColorStyle]}>Profile</Animated.Text>
-            <View style={{ width: 32 }} />
-          </View>
-          
+          <View style={{ width: 32 }} />
+        </View>
+        
           <Animated.ScrollView 
-            style={styles.contentContainer}
-            showsVerticalScrollIndicator={false}
+          style={styles.contentContainer}
+          showsVerticalScrollIndicator={false}
             onScroll={handleScroll}
             scrollEventThrottle={16}
-          >
+        >
             <Animated.View style={contentAnimatedStyle}>
-              {/* Profile Header Section */}
-              <View style={styles.profileHeader}>
-                {/* Profile Avatar */}
+          {/* Profile Header Section */}
+          <View style={styles.profileHeader}>
+            {/* Profile Avatar */}
                 <View style={styles.avatarSection}>
-                  <Animated.View style={[styles.avatarContainer, avatarScaleStyle]}>
-                    <TouchableOpacity 
-                      style={styles.avatarWrapper}
-                      onPress={handleAvatarPress} 
+            <Animated.View style={[styles.avatarContainer, avatarScaleStyle]}>
+              <TouchableOpacity 
+                style={styles.avatarWrapper}
+                onPress={handleAvatarPress} 
                       onLongPress={handleAvatarLongPress}
                       delayLongPress={500}
-                      activeOpacity={0.8}
-                    >
-                      {profileImage ? (
-                        <Image source={{ uri: profileImage }} style={styles.avatarImage} />
-                      ) : (
-                        <LinearGradient
-                          colors={['#8E2DE2', '#4A00E0']}
-                          style={styles.avatarPlaceholder}
-                        >
-                          <ThemedText style={styles.avatarPlaceholderText}>
-                            {username.substring(0, 2).toUpperCase()}
-                          </ThemedText>
-                        </LinearGradient>
-                      )}
-                      <View style={styles.editAvatarButton}>
-                        <Feather name="edit-2" size={12} color="#FFF" />
-                      </View>
-                    </TouchableOpacity>
-                  </Animated.View>
+                activeOpacity={0.8}
+              >
+                {profileImage ? (
+                  <Image source={{ uri: profileImage }} style={styles.avatarImage} />
+                ) : (
+                  <LinearGradient
+                    colors={['#8E2DE2', '#4A00E0']}
+                    style={styles.avatarPlaceholder}
+                  >
+                    <ThemedText style={styles.avatarPlaceholderText}>
+                      {username.substring(0, 2).toUpperCase()}
+                    </ThemedText>
+                  </LinearGradient>
+                )}
+                <View style={styles.editAvatarButton}>
+                  <Feather name="edit-2" size={12} color="#FFF" />
+                </View>
+              </TouchableOpacity>
+            </Animated.View>
                   
                   {showTooltip && (
                     <Animated.View 
@@ -748,273 +748,291 @@ export default function ProfileSettingsScreen() {
                     </Animated.View>
                   )}
                 </View>
-                
-                {/* Name and Bio */}
-                <View style={styles.profileInfo}>
-                  {editingName ? (
-                    <View style={styles.editNameContainer}>
-                      <TextInput
-                        value={username}
-                        onChangeText={setUsername}
-                        style={styles.nameInput}
-                        autoFocus
-                        onBlur={handleSaveName}
-                        onSubmitEditing={handleSaveName}
-                      />
-                      <Animated.View style={nameUnderlineStyle} />
-                    </View>
-                  ) : (
-                    <TouchableOpacity onPress={handleEditName} activeOpacity={0.7}>
-                      <ThemedText style={styles.userName}>{username}</ThemedText>
-                    </TouchableOpacity>
-                  )}
-                  
-                  {editingBio ? (
-                    <View style={styles.editBioContainer}>
-                      <TextInput
-                        value={userBio}
-                        onChangeText={setUserBio}
-                        style={styles.bioInput}
-                        multiline
-                        numberOfLines={3}
-                        autoFocus
-                        onBlur={handleSaveBio}
-                      />
-                      <Animated.View style={bioUnderlineStyle} />
-                    </View>
-                  ) : (
-                    <TouchableOpacity onPress={handleEditBio} activeOpacity={0.7}>
-                      <ThemedText style={styles.userBio}>{userBio}</ThemedText>
-                    </TouchableOpacity>
-                  )}
+            
+            {/* Name and Bio */}
+            <View style={styles.profileInfo}>
+              {editingName ? (
+                <View style={styles.editNameContainer}>
+                  <TextInput
+                    value={username}
+                    onChangeText={setUsername}
+                    style={styles.nameInput}
+                    autoFocus
+                    onBlur={handleSaveName}
+                    onSubmitEditing={handleSaveName}
+                  />
+                  <Animated.View style={nameUnderlineStyle} />
                 </View>
-                
-                {/* Interest Tags */}
-                <View style={styles.interestsContainer}>
-                  <View style={styles.interestsHeader}>
-                    <ThemedText style={styles.interestsTitle}>Research Interests</ThemedText>
+              ) : (
+                <TouchableOpacity onPress={handleEditName} activeOpacity={0.7}>
+                  <ThemedText style={styles.userName}>{username}</ThemedText>
+                </TouchableOpacity>
+              )}
+              
+              {editingBio ? (
+                <View style={styles.editBioContainer}>
+                  <TextInput
+                    value={userBio}
+                    onChangeText={setUserBio}
+                    style={styles.bioInput}
+                    multiline
+                    numberOfLines={3}
+                    autoFocus
+                    onBlur={handleSaveBio}
+                  />
+                  <Animated.View style={bioUnderlineStyle} />
+                </View>
+              ) : (
+                <TouchableOpacity onPress={handleEditBio} activeOpacity={0.7}>
+                  <ThemedText style={styles.userBio}>{userBio}</ThemedText>
+                </TouchableOpacity>
+              )}
+            </View>
+            
+            {/* Interest Tags */}
+            <View style={styles.interestsContainer}>
+              <View style={styles.interestsHeader}>
+                <ThemedText style={styles.interestsTitle}>Research Interests</ThemedText>
                     <TouchableOpacity onPress={() => setShowInterestSelector(true)} style={styles.editInterestsButton}>
-                      <Feather name="edit" size={16} color={Colors.light.primary} />
-                    </TouchableOpacity>
-                  </View>
-                  
-                  <View style={styles.tagContainer}>
-                    {selectedInterests.map(tag => (
-                      <View
-                        key={tag.id}
-                        style={[
-                          styles.interestTag,
-                          { backgroundColor: tag.color }
-                        ]}
-                      >
-                        <ThemedText
-                          style={[
-                            styles.interestTagText,
-                            { color: tag.textColor }
-                          ]}
-                        >
-                          {tag.name}
-                        </ThemedText>
-                      </View>
-                    ))}
-                    
-                    {selectedInterests.length < 5 && (
-                      <TouchableOpacity
-                        style={styles.addInterestButton}
-                        onPress={() => setShowInterestSelector(true)}
-                      >
-                        <Feather name="plus" size={16} color="#666" />
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                </View>
+                  <Feather name="edit" size={16} color={Colors.light.primary} />
+                </TouchableOpacity>
               </View>
               
-              {/* Other profile sections can be added here */}
-              <View style={styles.sectionContainer}>
-                <ThemedText style={styles.sectionTitle}>Settings</ThemedText>
-                
-                <View style={styles.settingItem}>
-                  <View style={styles.settingItemLeft}>
-                    <View style={[styles.settingIcon, { backgroundColor: '#F3E8FF' }]}>
-                      <Feather name="moon" size={18} color="#6C5CE7" />
-                    </View>
-                    <ThemedText style={styles.settingText}>Dark Mode</ThemedText>
-                  </View>
-                  <Switch
-                    value={isDarkMode}
-                    onValueChange={handleDarkModeToggle}
-                    trackColor={{ false: '#E0E0E0', true: Colors.light.primary }}
-                    thumbColor={'#FFFFFF'}
-                  />
-                </View>
-                
-                <View style={styles.settingItem}>
-                  <View style={styles.settingItemLeft}>
-                    <View style={[styles.settingIcon, { backgroundColor: '#FFF3E0' }]}>
-                      <Feather name="bell" size={18} color="#FF9800" />
-                    </View>
-                    <ThemedText style={styles.settingText}>Notifications</ThemedText>
-                  </View>
-                  <Switch
-                    value={notifications}
-                    onValueChange={(value) => {
-                      setNotifications(value);
-                      AsyncStorage.setItem(NOTIFICATIONS_ENABLED_KEY, value ? 'true' : 'false');
-                    }}
-                    trackColor={{ false: '#E0E0E0', true: Colors.light.primary }}
-                    thumbColor={'#FFFFFF'}
-                  />
-                </View>
-                
-                <TouchableOpacity style={styles.settingItem} onPress={openLanguageSelector}>
-                  <View style={styles.settingItemLeft}>
-                    <View style={[styles.settingIcon, { backgroundColor: '#E6FFFB' }]}>
-                      <Feather name="globe" size={18} color="#13C2C2" />
-                    </View>
-                    <ThemedText style={styles.settingText}>Language</ThemedText>
-                  </View>
-                  <View style={styles.settingItemRight}>
-                    <ThemedText style={styles.settingValue}>
-                      {LanguageService.getNameFromCode(selectedLanguage)}
+              <View style={styles.tagContainer}>
+                {selectedInterests.map(tag => (
+                  <View
+                    key={tag.id}
+                    style={[
+                      styles.interestTag,
+                      { backgroundColor: tag.color }
+                    ]}
+                  >
+                    <ThemedText
+                      style={[
+                        styles.interestTagText,
+                        { color: tag.textColor }
+                      ]}
+                    >
+                      {tag.name}
                     </ThemedText>
-                    <Feather name="chevron-right" size={18} color="#999" />
                   </View>
-                </TouchableOpacity>
-              </View>
-              
-              <View style={styles.sectionContainer}>
-                <ThemedText style={styles.sectionTitle}>Support</ThemedText>
+                ))}
                 
-                <TouchableOpacity style={styles.settingItem} onPress={handleHelpCenter}>
-                  <View style={styles.settingItemLeft}>
-                    <View style={[styles.settingIcon, { backgroundColor: '#F9F0FF' }]}>
-                      <Feather name="help-circle" size={18} color="#722ED1" />
-                    </View>
-                    <ThemedText style={styles.settingText}>Help Center</ThemedText>
-                  </View>
-                  <Feather name="chevron-right" size={18} color="#999" />
-                </TouchableOpacity>
-                
-                <TouchableOpacity style={styles.settingItem} onPress={handlePrivacyPolicy}>
-                  <View style={styles.settingItemLeft}>
-                    <View style={[styles.settingIcon, { backgroundColor: '#FFF0F6' }]}>
-                      <Feather name="shield" size={18} color="#EB2F96" />
-                    </View>
-                    <ThemedText style={styles.settingText}>Privacy Policy</ThemedText>
-                  </View>
-                  <Feather name="chevron-right" size={18} color="#999" />
-                </TouchableOpacity>
+                {selectedInterests.length < 5 && (
+                  <TouchableOpacity
+                    style={styles.addInterestButton}
+                        onPress={() => setShowInterestSelector(true)}
+                  >
+                    <Feather name="plus" size={16} color="#666" />
+                  </TouchableOpacity>
+                )}
               </View>
+            </View>
+          </View>
+          
+          {/* Other profile sections can be added here */}
+          <View style={styles.sectionContainer}>
+            <ThemedText style={styles.sectionTitle}>Settings</ThemedText>
+            
+            <View style={styles.settingItem}>
+              <View style={styles.settingItemLeft}>
+                <View style={[styles.settingIcon, { backgroundColor: '#F3E8FF' }]}>
+                  <Feather name="moon" size={18} color="#6C5CE7" />
+                </View>
+                <ThemedText style={styles.settingText}>Dark Mode</ThemedText>
+              </View>
+              <Switch
+                value={isDarkMode}
+                    onValueChange={handleDarkModeToggle}
+                trackColor={{ false: '#E0E0E0', true: Colors.light.primary }}
+                thumbColor={'#FFFFFF'}
+              />
+            </View>
+            
+            <View style={styles.settingItem}>
+              <View style={styles.settingItemLeft}>
+                <View style={[styles.settingIcon, { backgroundColor: '#FFF3E0' }]}>
+                  <Feather name="bell" size={18} color="#FF9800" />
+                </View>
+                <ThemedText style={styles.settingText}>Notifications</ThemedText>
+              </View>
+              <Switch
+                value={notifications}
+                onValueChange={(value) => {
+                  setNotifications(value);
+                  AsyncStorage.setItem(NOTIFICATIONS_ENABLED_KEY, value ? 'true' : 'false');
+                }}
+                trackColor={{ false: '#E0E0E0', true: Colors.light.primary }}
+                thumbColor={'#FFFFFF'}
+              />
+            </View>
+            
+            <TouchableOpacity style={styles.settingItem} onPress={openLanguageSelector}>
+              <View style={styles.settingItemLeft}>
+                <View style={[styles.settingIcon, { backgroundColor: '#E6FFFB' }]}>
+                  <Feather name="globe" size={18} color="#13C2C2" />
+                </View>
+                <ThemedText style={styles.settingText}>Language</ThemedText>
+              </View>
+              <View style={styles.settingItemRight}>
+                <ThemedText style={styles.settingValue}>
+                      {LanguageService.getNameFromCode(selectedLanguage)}
+                </ThemedText>
+                <Feather name="chevron-right" size={18} color="#999" />
+              </View>
+            </TouchableOpacity>
+          </View>
+          
+          {/* AI Features Section */}
+          <View style={styles.sectionContainer}>
+            <ThemedText style={styles.sectionTitle}>AI Features</ThemedText>
+            
+            <TouchableOpacity
+              style={styles.settingItem}
+              onPress={() => router.push('/ai-icons')}
+            >
+              <View style={styles.settingItemLeft}>
+                <View style={[styles.settingIcon, { backgroundColor: '#F9F0FF' }]}>
+                  <Feather name="star" size={18} color="#722ED1" />
+                </View>
+                <ThemedText style={styles.settingText}>AI Icon Gallery</ThemedText>
+              </View>
+              <Feather name="chevron-right" size={18} color="#999" />
+            </TouchableOpacity>
+          </View>
+          
+          <View style={styles.sectionContainer}>
+            <ThemedText style={styles.sectionTitle}>Support</ThemedText>
+            
+            <TouchableOpacity style={styles.settingItem} onPress={handleHelpCenter}>
+              <View style={styles.settingItemLeft}>
+                <View style={[styles.settingIcon, { backgroundColor: '#F9F0FF' }]}>
+                  <Feather name="help-circle" size={18} color="#722ED1" />
+                </View>
+                <ThemedText style={styles.settingText}>Help Center</ThemedText>
+              </View>
+              <Feather name="chevron-right" size={18} color="#999" />
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.settingItem} onPress={handlePrivacyPolicy}>
+              <View style={styles.settingItemLeft}>
+                <View style={[styles.settingIcon, { backgroundColor: '#FFF0F6' }]}>
+                  <Feather name="shield" size={18} color="#EB2F96" />
+                </View>
+                <ThemedText style={styles.settingText}>Privacy Policy</ThemedText>
+              </View>
+              <Feather name="chevron-right" size={18} color="#999" />
+            </TouchableOpacity>
+          </View>
             </Animated.View>
           </Animated.ScrollView>
-          
-          {/* Profile Picture Options Bottom Sheet */}
-          {showImageOptions && (
-            <Modal
-              transparent={true}
-              animationType="slide"
-              visible={showImageOptions}
-              onRequestClose={() => setShowImageOptions(false)}
+        
+        {/* Profile Picture Options Bottom Sheet */}
+        {showImageOptions && (
+          <Modal
+            transparent={true}
+            animationType="slide"
+            visible={showImageOptions}
+            onRequestClose={() => setShowImageOptions(false)}
+          >
+            <TouchableOpacity 
+              style={styles.modalOverlay}
+              activeOpacity={1}
+              onPress={() => setShowImageOptions(false)}
             >
-              <TouchableOpacity 
-                style={styles.modalOverlay}
-                activeOpacity={1}
-                onPress={() => setShowImageOptions(false)}
-              >
-                <View style={styles.bottomSheet}>
-                  <View style={styles.bottomSheetHeader}>
-                    <ThemedText style={styles.bottomSheetTitle}>Profile Picture</ThemedText>
-                    <TouchableOpacity onPress={() => setShowImageOptions(false)}>
-                      <Feather name="x" size={24} color="#999" />
-                    </TouchableOpacity>
-                  </View>
-                  
-                  <TouchableOpacity style={styles.bottomSheetOption} onPress={takePicture}>
-                    <Feather name="camera" size={22} color="#333" />
-                    <ThemedText style={styles.bottomSheetOptionText}>Take Photo</ThemedText>
+              <View style={styles.bottomSheet}>
+                <View style={styles.bottomSheetHeader}>
+                  <ThemedText style={styles.bottomSheetTitle}>Profile Picture</ThemedText>
+                  <TouchableOpacity onPress={() => setShowImageOptions(false)}>
+                    <Feather name="x" size={24} color="#999" />
                   </TouchableOpacity>
-                  
-                  <TouchableOpacity style={styles.bottomSheetOption} onPress={handleChangeProfilePicture}>
-                    <Feather name="image" size={22} color="#333" />
-                    <ThemedText style={styles.bottomSheetOptionText}>Choose from Library</ThemedText>
+                </View>
+                
+                <TouchableOpacity style={styles.bottomSheetOption} onPress={takePicture}>
+                  <Feather name="camera" size={22} color="#333" />
+                  <ThemedText style={styles.bottomSheetOptionText}>Take Photo</ThemedText>
+                </TouchableOpacity>
+                
+                <TouchableOpacity style={styles.bottomSheetOption} onPress={handleChangeProfilePicture}>
+                  <Feather name="image" size={22} color="#333" />
+                  <ThemedText style={styles.bottomSheetOptionText}>Choose from Library</ThemedText>
+                </TouchableOpacity>
+                
+                {profileImage && (
+                  <TouchableOpacity style={styles.bottomSheetOption} onPress={removeProfilePicture}>
+                    <Feather name="trash-2" size={22} color="#FF4D4F" />
+                    <ThemedText style={[styles.bottomSheetOptionText, { color: '#FF4D4F' }]}>
+                      Remove Photo
+                    </ThemedText>
                   </TouchableOpacity>
-                  
-                  {profileImage && (
-                    <TouchableOpacity style={styles.bottomSheetOption} onPress={removeProfilePicture}>
-                      <Feather name="trash-2" size={22} color="#FF4D4F" />
-                      <ThemedText style={[styles.bottomSheetOptionText, { color: '#FF4D4F' }]}>
-                        Remove Photo
-                      </ThemedText>
-                    </TouchableOpacity>
-                  )}
+                )}
                   
                   <TouchableOpacity style={styles.bottomSheetOption} onPress={handleViewProfileImage}>
                     <Feather name="maximize-2" size={22} color="#333" />
                     <ThemedText style={styles.bottomSheetOptionText}>View Full Image</ThemedText>
                   </TouchableOpacity>
-                </View>
-              </TouchableOpacity>
-            </Modal>
-          )}
-          
-          {/* Interest Selector Modal */}
-          {showInterestSelector && (
-            <Modal
+              </View>
+            </TouchableOpacity>
+          </Modal>
+        )}
+        
+        {/* Interest Selector Modal */}
+        {showInterestSelector && (
+          <Modal
               visible={showInterestSelector}
-              transparent={true}
-              animationType="slide"
-              onRequestClose={() => setShowInterestSelector(false)}
-            >
+            transparent={true}
+            animationType="slide"
+            onRequestClose={() => setShowInterestSelector(false)}
+          >
               <View style={styles.modalContainer}>
                 <View style={styles.interestSelectorContainer}>
                   <View style={styles.interestSelectorHeader}>
                     <ThemedText style={styles.interestSelectorTitle}>Select Research Interests</ThemedText>
-                    <TouchableOpacity onPress={() => setShowInterestSelector(false)}>
+                  <TouchableOpacity onPress={() => setShowInterestSelector(false)}>
                       <Feather name="x" size={24} color="#000" />
-                    </TouchableOpacity>
-                  </View>
-                  
-                  <ScrollView style={styles.interestSelectorContent}>
-                    <View style={styles.interestTagsGrid}>
-                      {PREDEFINED_TAGS.map((tag) => {
-                        const isSelected = selectedInterests.some(interest => interest.id === tag.id);
-                        return (
-                          <TouchableOpacity
-                            key={tag.id}
-                            style={[
-                              styles.interestSelectorTag,
-                              { backgroundColor: tag.color },
-                              isSelected && styles.interestTagSelected
-                            ]}
-                            onPress={() => toggleInterest(tag)}
-                          >
-                            <ThemedText
-                              style={[
-                                styles.interestSelectorTagText,
-                                { color: tag.textColor }
-                              ]}
-                            >
-                              {tag.name}
-                            </ThemedText>
-                            {isSelected && (
-                              <View style={styles.selectedIndicator}>
-                                <Feather name="check" size={12} color="#FFF" />
-                              </View>
-                            )}
-                          </TouchableOpacity>
-                        );
-                      })}
-                    </View>
-                  </ScrollView>
-                  
-                  <TouchableOpacity
-                    style={styles.doneButton}
-                    onPress={() => setShowInterestSelector(false)}
-                  >
-                    <ThemedText style={styles.doneButtonText}>Done</ThemedText>
                   </TouchableOpacity>
                 </View>
+                
+                  <ScrollView style={styles.interestSelectorContent}>
+                <View style={styles.interestTagsGrid}>
+                      {PREDEFINED_TAGS.map((tag) => {
+                    const isSelected = selectedInterests.some(interest => interest.id === tag.id);
+                    return (
+                      <TouchableOpacity
+                        key={tag.id}
+                        style={[
+                              styles.interestSelectorTag,
+                          { backgroundColor: tag.color },
+                          isSelected && styles.interestTagSelected
+                        ]}
+                        onPress={() => toggleInterest(tag)}
+                      >
+                        <ThemedText
+                          style={[
+                                styles.interestSelectorTagText,
+                            { color: tag.textColor }
+                          ]}
+                        >
+                          {tag.name}
+                        </ThemedText>
+                        {isSelected && (
+                              <View style={styles.selectedIndicator}>
+                                <Feather name="check" size={12} color="#FFF" />
+                          </View>
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+                  </ScrollView>
+                
+                <TouchableOpacity 
+                    style={styles.doneButton}
+                  onPress={() => setShowInterestSelector(false)}
+                >
+                    <ThemedText style={styles.doneButtonText}>Done</ThemedText>
+                </TouchableOpacity>
+              </View>
               </View>
             </Modal>
           )}
@@ -1033,7 +1051,7 @@ export default function ProfileSettingsScreen() {
                   style={styles.helpCenterBackButton}
                 >
                   <Feather name="chevron-left" size={24} color="#000" />
-                </TouchableOpacity>
+            </TouchableOpacity>
                 <ThemedText style={styles.helpCenterTitle}>Help Center</ThemedText>
                 <View style={{ width: 40 }} />
               </View>
@@ -1229,7 +1247,7 @@ export default function ProfileSettingsScreen() {
             </View>
           </Modal>
         </Animated.View>
-      </SafeAreaView>
+    </SafeAreaView>
     </GestureHandlerRootView>
   );
 }
