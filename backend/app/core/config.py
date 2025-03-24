@@ -4,6 +4,9 @@ from typing import Any, Dict, List, Optional, Union
 from pydantic import AnyHttpUrl, Field, PostgresDsn, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from functools import lru_cache
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class Settings(BaseSettings):
     # API settings
@@ -75,6 +78,21 @@ class Settings(BaseSettings):
     MAIL_FROM_NAME: str = Field(default=os.getenv("MAIL_FROM_NAME", "Rescroll"))
     EMAIL_RESET_TOKEN_EXPIRE_HOURS: int = 24
     FRONTEND_URL: str = Field(default=os.getenv("FRONTEND_URL", "http://localhost:3000"))
+    
+    # Redis settings
+    REDIS_HOST: str = os.getenv("REDIS_HOST", "localhost")
+    REDIS_PORT: int = int(os.getenv("REDIS_PORT", "6379"))
+    REDIS_PASSWORD: str = os.getenv("REDIS_PASSWORD", "")
+    REDIS_DB: int = int(os.getenv("REDIS_DB", "0"))
+    REDIS_URL: str = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}"
+    REDIS_SSL: bool = os.getenv("REDIS_SSL", "false").lower() == "true"
+    REDIS_TIMEOUT: int = int(os.getenv("REDIS_TIMEOUT", "5"))
+    REDIS_MAX_CONNECTIONS: int = int(os.getenv("REDIS_MAX_CONNECTIONS", "10"))
+
+    # Cache settings
+    CACHE_TTL: int = int(os.getenv("CACHE_TTL", "3600"))  # 1 hour default
+    CACHE_PREFIX: str = os.getenv("CACHE_PREFIX", "rescroll")
+    CACHE_ENABLED: bool = os.getenv("CACHE_ENABLED", "true").lower() == "true"
     
     # Extra settings
     model_config = SettingsConfigDict(

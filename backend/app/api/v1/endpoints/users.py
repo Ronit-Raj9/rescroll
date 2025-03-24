@@ -61,18 +61,26 @@ async def upload_profile_image(
 ) -> Any:
     """
     Upload a profile image for the current user.
+    If a profile image already exists, it will be replaced.
     """
-    # Delete old image if it exists
-    if current_user.profile_image:
-        delete_image(current_user.profile_image)
-    
-    # Upload new image to Cloudinary
-    image_url = await upload_image(file, folder="profile_images")
-    
-    # Update user profile with new image URL
-    await crud.user.update_user_profile_image(db, db_user=current_user, image_url=image_url)
-    
-    return {"image_url": image_url}
+    try:
+        # Upload new image to Cloudinary first
+        image_url = await upload_image(file, folder="profile_images")
+        
+        # Only delete old image if new image was successfully uploaded
+        if current_user.profile_image:
+            delete_image(current_user.profile_image)
+        
+        # Update user profile with new image URL
+        await crud.user.update_user_profile_image(db, db_user=current_user, image_url=image_url)
+        
+        return {"image_url": image_url}
+    except Exception as e:
+        # If anything fails, we don't want to delete the old image
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to upload profile image: {str(e)}"
+        )
 
 @router.delete("/me/profile-image", response_model=schemas.User)
 async def delete_profile_image(
