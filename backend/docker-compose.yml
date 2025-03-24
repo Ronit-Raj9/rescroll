@@ -8,8 +8,21 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - .:/app
-      - ./logs:/app/logs
+      - type: bind
+        source: ./app
+        target: /app/app
+      - type: bind
+        source: ./logs
+        target: /app/logs
+      - type: bind
+        source: ./alembic
+        target: /app/alembic
+      - type: bind
+        source: ./alembic.ini
+        target: /app/alembic.ini
+      - type: bind
+        source: ./requirements.txt
+        target: /app/requirements.txt
     environment:
       - POSTGRES_SERVER=db
       - POSTGRES_USER=postgres
@@ -37,14 +50,14 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=rescroll
     ports:
-      - "5432:5432"
+      - "5433:5432"
     networks:
       - rescroll-network
 
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - redis_data:/data
     networks:
@@ -56,7 +69,21 @@ services:
       dockerfile: Dockerfile
     command: celery -A app.core.celery_app worker --loglevel=info
     volumes:
-      - .:/app
+      - type: bind
+        source: ./app
+        target: /app/app
+      - type: bind
+        source: ./logs
+        target: /app/logs
+      - type: bind
+        source: ./alembic
+        target: /app/alembic
+      - type: bind
+        source: ./alembic.ini
+        target: /app/alembic.ini
+      - type: bind
+        source: ./requirements.txt
+        target: /app/requirements.txt
     environment:
       - POSTGRES_SERVER=db
       - POSTGRES_USER=postgres
@@ -81,7 +108,21 @@ services:
       dockerfile: Dockerfile
     command: celery -A app.core.celery_app beat --loglevel=info
     volumes:
-      - .:/app
+      - type: bind
+        source: ./app
+        target: /app/app
+      - type: bind
+        source: ./logs
+        target: /app/logs
+      - type: bind
+        source: ./alembic
+        target: /app/alembic
+      - type: bind
+        source: ./alembic.ini
+        target: /app/alembic.ini
+      - type: bind
+        source: ./requirements.txt
+        target: /app/requirements.txt
     environment:
       - POSTGRES_SERVER=db
       - POSTGRES_USER=postgres

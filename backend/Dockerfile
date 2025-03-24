@@ -1,5 +1,5 @@
 # Use Python 3.11 slim as base image
-FROM python:3.11-slim as builder
+FROM python:3.11-slim AS builder
 
 # Set working directory
 WORKDIR /app
@@ -35,11 +35,8 @@ COPY --from=builder /app/requirements.txt .
 # Install dependencies
 RUN pip install --no-cache /wheels/*
 
-# Copy application code
-COPY . .
-
 # Create necessary directories
-RUN mkdir -p /app/logs && \
+RUN mkdir -p /app/app /app/logs /app/alembic && \
     chown -R app:app /app
 
 # Switch to non-root user
