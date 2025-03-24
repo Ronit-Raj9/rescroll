@@ -1,91 +1,77 @@
-from typing import Any, List, Optional, Union
-from pydantic import AnyHttpUrl, validator
-from pydantic_settings import BaseSettings
+import os
 import secrets
+from typing import Any, Dict, List, Optional, Union
+from pydantic import AnyHttpUrl, Field, PostgresDsn, field_validator, model_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from functools import lru_cache
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "Rescroll"
-    VERSION: str = "1.0.0"
-    DESCRIPTION: str = "Rescroll Backend API"
+    # API settings
     API_V1_STR: str = "/api/v1"
+    SECRET_KEY: str = Field(default_factory=lambda: os.getenv("SECRET_KEY", secrets.token_urlsafe(32)))
+    ACCESS_TOKEN_SECRET: str = Field(default_factory=lambda: os.getenv("ACCESS_TOKEN_SECRET", secrets.token_urlsafe(32)))
+    REFRESH_TOKEN_SECRET: str = Field(default_factory=lambda: os.getenv("REFRESH_TOKEN_SECRET", secrets.token_urlsafe(32)))
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    ALGORITHM: str = "HS256"
     
-    # CORS
-    BACKEND_CORS_ORIGINS: List[str] = [
-        "http://localhost:3000",
-        "http://localhost:8000",
-        "https://ionia-next.vercel.app",
-        "https://www.ionia.sbs",
-        "https://ionia.sbs",
-        "https://ionia-next-production.up.railway.app"
-    ]
-
-    @validator("BACKEND_CORS_ORIGINS", pre=True)
+    # CORS settings
+    BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
+    
+    @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
         if isinstance(v, str) and not v.startswith("["):
             return [i.strip() for i in v.split(",")]
         elif isinstance(v, (list, str)):
             return v
         raise ValueError(v)
-
-    # Database
-    POSTGRES_SERVER: str
-    POSTGRES_USER: str
-    POSTGRES_PASSWORD: str
-    POSTGRES_DB: str
-    POSTGRES_PORT: str
-    SQLALCHEMY_DATABASE_URI: Optional[str] = None
-
-    @validator("SQLALCHEMY_DATABASE_URI", pre=True)
-    def assemble_db_connection(cls, v: Optional[str], values: dict[str, Any]) -> Any:
+    
+    # Database settings
+    DATABASE_USERNAME: str = Field(default=os.getenv("DATABASE_USERNAME", "postgres"))
+    DATABASE_PASSWORD: str = Field(default=os.getenv("DATABASE_PASSWORD", "postgres"))
+    DATABASE_HOST: str = Field(default=os.getenv("DATABASE_HOST", "localhost"))
+    DATABASE_PORT: str = Field(default=os.getenv("DATABASE_PORT", "5432"))
+    DATABASE_NAME: str = Field(default=os.getenv("DATABASE_NAME", "rescroll"))
+    
+    SQLALCHEMY_DATABASE_URI: Optional[PostgresDsn] = None
+    
+    @field_validator("SQLALCHEMY_DATABASE_URI", mode="before")
+    def assemble_db_connection(cls, v: Optional[str], info: Any) -> Any:
         if isinstance(v, str):
             return v
-        return f"postgresql://{values.get('POSTGRES_USER')}:{values.get('POSTGRES_PASSWORD')}@{values.get('POSTGRES_SERVER')}:{values.get('POSTGRES_PORT')}/{values.get('POSTGRES_DB')}"
-
-    # JWT
-    SECRET_KEY: str = secrets.token_urlsafe(32)
-    ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8  # 8 days
-    REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 30  # 30 days
-    EMAIL_RESET_TOKEN_EXPIRE_HOURS: int = 24
-    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+            
+        values = info.data
+        port = values.get("DATABASE_PORT")
+        # Convert port to integer
+        if port is not None:
+            port = int(port)
+            
+        return PostgresDsn.build(
+            scheme="postgresql+asyncpg",
+            username=values.get("DATABASE_USERNAME"),
+            password=values.get("DATABASE_PASSWORD"),
+            host=values.get("DATABASE_HOST"),
+            port=port,
+            path=f"/{values.get('DATABASE_NAME') or ''}",
+        )
     
-    # Cookie settings
-    COOKIE_SECURE: bool = False  # Set to True in production with HTTPS
-
-    # MongoDB
-    MONGODB_URL: str
-    DB_NAME: str = "rescroll"
+    # Application settings
+    PROJECT_NAME: str = "Rescroll"
+    VERSION: str = "1.0.0"
+    DESCRIPTION: str = "Rescroll Backend API"
+    DEBUG: bool = Field(default=os.getenv("DEBUG", "False").lower() == "true")
+    PORT: int = Field(default=int(os.getenv("PORT", 8000)))
     
-    # Redis
-    REDIS_HOST: str
-    REDIS_PORT: int
-    REDIS_DB: int
-    REDIS_URL: str
+    # MongoDB settings
+    MONGODB_ATLAS_URI: str = Field(default=os.getenv("MONGODB_ATLAS_URI", ""))
+    MONGODB_LOCAL_URI: str = Field(default=os.getenv("MONGODB_LOCAL_URI", "mongodb://localhost:27017"))
     
-    # AI/ML Settings
-    GEMINI_API_KEY: str
-    MODEL_NAME: str
-    MAX_TOKENS: int
-    
-    # Research Paper APIs
-    ARXIV_API_URL: str
-    
-    # Analytics
-    ANALYTICS_DB_URL: str
-    
-    # Background Tasks
-    CELERY_BROKER_URL: str
-    CELERY_RESULT_BACKEND: str
-    
-    # Cloudinary
-    CLOUDINARY_CLOUD_NAME: str
-    CLOUDINARY_API_KEY: str
-    CLOUDINARY_API_SECRET: str
-
-    class Config:
-        case_sensitive = True
-        env_file = ".env"
+    # Extra settings
+    model_config = SettingsConfigDict(
+        case_sensitive=True,
+        env_file=".env",
+        extra="allow",
+    )
 
 @lru_cache()
 def get_settings() -> Settings:

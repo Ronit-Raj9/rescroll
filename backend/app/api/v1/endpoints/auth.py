@@ -3,55 +3,69 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Cookie, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import crud, schemas
 from app.api import deps
 from app.core import security
-from app.core.config import settings
+from app.core.config import settings, Settings
 from app.core.security import get_password_hash
 from app.utils import (
     generate_password_reset_token,
     verify_password_reset_token,
 )
 from app.models.test_user import TestUser
+from app.db.database import get_db
+from app.services.auth_service import AuthService
+from app.services.user_service import UserService
+from app.schemas.token import Token
+from app.schemas.user import UserCreate, UserResponse
 
 router = APIRouter()
+settings = Settings()
 
-@router.post("/register", response_model=schemas.User)
-def register(
-    *,
-    db: Session = Depends(deps.get_db),
-    user_in: schemas.UserCreate,
-) -> Any:
-    """
-    Register a new user.
-    """
-    try:
-        # Check if user with this email already exists
-        user = crud.get_user_by_email(db, email=user_in.email)
-        if user:
-            raise HTTPException(
-                status_code=400,
-                detail="A user with this email already exists.",
-            )
-        
-        # Check if user with this username already exists
-        user = crud.get_user_by_username(db, username=user_in.username)
-        if user:
-            raise HTTPException(
-                status_code=400,
-                detail="A user with this username already exists.",
-            )
-        
-        # Create the user
-        user = crud.create_user(db, user=user_in)
-        return user
-    except Exception as e:
-        # Log the error
+@router.post("/token", response_model=Token)
+async def login_for_access_token(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: AsyncSession = Depends(get_db)
+):
+    auth_service = AuthService(db)
+    user = await auth_service.authenticate_user(form_data.username, form_data.password)
+    if not user:
         raise HTTPException(
-            status_code=500,
-            detail=f"An error occurred: {str(e)}",
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"},
         )
+    
+    access_token = auth_service.create_access_token(
+        data={"sub": str(user.id)}
+    )
+    refresh_token = auth_service.create_refresh_token(
+        data={"sub": str(user.id)}
+    )
+    
+    return {
+        "access_token": access_token, 
+        "refresh_token": refresh_token, 
+        "token_type": "bearer"
+    }
+
+@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+async def register_user(
+    user_data: UserCreate,
+    db: AsyncSession = Depends(get_db)
+):
+    user_service = UserService(db)
+    existing_user = await user_service.get_user_by_email(user_data.email)
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered"
+        )
+    
+    user = await user_service.create_user(user_data)
+    return user
 
 @router.post("/login", response_model=schemas.Token)
 def login_access_token(

@@ -1,29 +1,45 @@
-from typing import Any, Optional
-from bson import ObjectId
-from motor.motor_asyncio import AsyncIOMotorDatabase
+from typing import Optional, List
+from sqlalchemy.orm import Session
+from ..models.user import User
+from ..schemas.user import UserCreate, UserUpdate
 
 class UserRepository:
-    def __init__(self, db: AsyncIOMotorDatabase):
-        self.db = db["users"]
+    def __init__(self, db: Session):
+        self.db = db
 
-    async def get_user_by_id(self, user_id: str) -> Optional[dict[str, Any]]:
-        return await self.db.find_one({"_id": ObjectId(user_id)})
+    async def create(self, user_data: UserCreate) -> User:
+        db_user = User(**user_data.dict())
+        self.db.add(db_user)
+        await self.db.commit()
+        await self.db.refresh(db_user)
+        return db_user
 
-    async def get_user_by_email(self, email: str) -> Optional[dict[str, Any]]:
-        return await self.db.find_one({"email": email})
+    async def get_by_id(self, user_id: int) -> Optional[User]:
+        return await self.db.query(User).filter(User.id == user_id).first()
 
-    async def create_user(self, user_data: dict[str, Any]) -> dict[str, Any]:
-        result = await self.db.insert_one(user_data)
-        user_data["id"] = str(result.inserted_id)
-        return user_data
+    async def get_by_email(self, email: str) -> Optional[User]:
+        return await self.db.query(User).filter(User.email == email).first()
 
-    async def update_user(self, user_id: str, user_data: dict[str, Any]) -> Optional[dict[str, Any]]:
-        await self.db.update_one(
-            {"_id": ObjectId(user_id)},
-            {"$set": user_data}
-        )
-        return await self.get_user_by_id(user_id)
+    async def get_all(self) -> List[User]:
+        return await self.db.query(User).all()
 
-    async def delete_user(self, user_id: str) -> bool:
-        result = await self.db.delete_one({"_id": ObjectId(user_id)})
-        return result.deleted_count > 0 
+    async def update(self, user_id: int, user_data: UserUpdate) -> Optional[User]:
+        user = await self.get_by_id(user_id)
+        if not user:
+            return None
+
+        for field, value in user_data.dict(exclude_unset=True).items():
+            setattr(user, field, value)
+
+        await self.db.commit()
+        await self.db.refresh(user)
+        return user
+
+    async def delete(self, user_id: int) -> bool:
+        user = await self.get_by_id(user_id)
+        if not user:
+            return False
+
+        await self.db.delete(user)
+        await self.db.commit()
+        return True 

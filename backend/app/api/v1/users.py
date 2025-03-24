@@ -1,30 +1,38 @@
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from fastapi.security import OAuth2PasswordRequestForm
-from typing import Optional
-from ..schemas.user import UserCreate, UserLogin, UserUpdate, UserResponse, TokenResponse
-from ..core.security import (
+from typing import Optional, Annotated
+from sqlalchemy.ext.asyncio import AsyncSession
+from datetime import datetime
+import shutil
+import os
+
+from app.db.database import get_db
+from app.core.config import settings
+from app.schemas.user import UserCreate, UserLogin, UserUpdate, UserResponse, TokenResponse, User as UserSchema
+from app.core.security import (
     create_access_token,
     create_refresh_token,
     get_current_user,
     get_password_hash,
     verify_password
 )
-from ..models.user import User
-from ..core.config import settings
-import shutil
-import os
-from datetime import datetime
+from app.models.user import User
+from app.services.user_service import UserService
 
 router = APIRouter()
 
-@router.post("/register", response_model=UserResponse)
+@router.post("/register", response_model=UserSchema)
 async def register_user(
     user_data: UserCreate,
+    db: AsyncSession = Depends(get_db),
     avatar: Optional[UploadFile] = File(None),
     cover_image: Optional[UploadFile] = File(None)
 ):
+    # Create user service
+    user_service = UserService(db)
+    
     # Check if user exists
-    existing_user = await User.find_one({"email": user_data.email})
+    existing_user = await user_service.get_user_by_email(user_data.email)
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -35,77 +43,93 @@ async def register_user(
     hashed_password = get_password_hash(user_data.password)
     
     # Handle file uploads
-    avatar_path = None
-    cover_image_path = None
+    profile_image_path = None
     
     if avatar:
-        avatar_path = f"static/avatars/{user_data.email}_{avatar.filename}"
-        os.makedirs(os.path.dirname(avatar_path), exist_ok=True)
-        with open(avatar_path, "wb") as buffer:
+        profile_image_path = f"static/avatars/{user_data.email}_{avatar.filename}"
+        os.makedirs(os.path.dirname(profile_image_path), exist_ok=True)
+        with open(profile_image_path, "wb") as buffer:
             shutil.copyfileobj(avatar.file, buffer)
-    
-    if cover_image:
-        cover_image_path = f"static/covers/{user_data.email}_{cover_image.filename}"
-        os.makedirs(os.path.dirname(cover_image_path), exist_ok=True)
-        with open(cover_image_path, "wb") as buffer:
-            shutil.copyfileobj(cover_image.file, buffer)
 
     # Create user
-    user_dict = user_data.dict()
-    user_dict.pop("password")
-    new_user = {
-        **user_dict,
-        "password": hashed_password,
-        "avatar": avatar_path,
-        "coverImage": cover_image_path,
-        "createdAt": datetime.utcnow(),
-        "updatedAt": datetime.utcnow()
-    }
+    db_user = User(
+        email=user_data.email,
+        username=user_data.username,
+        full_name=user_data.full_name,
+        hashed_password=hashed_password,
+        profile_image=profile_image_path,
+        is_active=True
+    )
     
-    result = await User.insert_one(new_user)
-    created_user = await User.find_one({"_id": result.inserted_id})
+    db.add(db_user)
+    await db.commit()
+    await db.refresh(db_user)
     
-    return UserResponse(**created_user)
+    return db_user
 
 @router.post("/login", response_model=TokenResponse)
-async def login_user(user_credentials: UserLogin):
-    user = await User.find_one({"email": user_credentials.email})
-    if not user or not verify_password(user_credentials.password, user["password"]):
+async def login_user(
+    user_credentials: UserLogin,
+    db: AsyncSession = Depends(get_db)
+):
+    # Create user service
+    user_service = UserService(db)
+    
+    # Check user credentials
+    user = await user_service.get_user_by_email(user_credentials.email)
+    if not user or not verify_password(user_credentials.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password"
         )
 
-    access_token = create_access_token(data={"sub": str(user["_id"])})
-    refresh_token = create_refresh_token(data={"sub": str(user["_id"])})
+    # Create tokens
+    access_token = create_access_token(data={"sub": str(user.id)})
+    refresh_token = create_refresh_token(data={"sub": str(user.id)})
 
     return TokenResponse(
         access_token=access_token,
         refresh_token=refresh_token
     )
 
-@router.get("/me", response_model=UserResponse)
-async def get_current_user_info(current_user: User = Depends(get_current_user)):
-    return current_user
-
-@router.patch("/update", response_model=UserResponse)
-async def update_user(
-    user_update: UserUpdate,
+@router.get("/me", response_model=UserSchema)
+async def get_current_user_info(
     current_user: User = Depends(get_current_user)
 ):
-    update_data = user_update.dict(exclude_unset=True)
-    if update_data:
-        update_data["updatedAt"] = datetime.utcnow()
-        await User.update_one(
-            {"_id": current_user["_id"]},
-            {"$set": update_data}
-        )
+    return current_user
+
+@router.patch("/update", response_model=UserSchema)
+async def update_user(
+    user_update: UserUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    # Create user service
+    user_service = UserService(db)
     
-    updated_user = await User.find_one({"_id": current_user["_id"]})
-    return UserResponse(**updated_user)
+    # Update user
+    update_data = user_update.dict(exclude_unset=True)
+    if "password" in update_data:
+        update_data["hashed_password"] = get_password_hash(update_data.pop("password"))
+    
+    # Get user from database
+    user = await user_service.get_user_by_id(current_user.id)
+    
+    # Update user fields
+    for field, value in update_data.items():
+        setattr(user, field, value)
+    
+    # Save changes
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+    
+    return user
 
 @router.post("/logout")
-async def logout_user(current_user: User = Depends(get_current_user)):
+async def logout_user(
+    current_user: User = Depends(get_current_user)
+):
     # In a real implementation, you might want to invalidate the token
     # This could involve adding it to a blacklist or similar mechanism
     return {"message": "Successfully logged out"} 

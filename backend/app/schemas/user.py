@@ -1,39 +1,55 @@
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
 
+# Base User Schema
 class UserBase(BaseModel):
-    email: Optional[EmailStr] = None
-    username: Optional[str] = Field(None, min_length=3, max_length=50)
-    full_name: Optional[str] = Field(None, min_length=1, max_length=100, description="User's full name")
-    is_active: Optional[bool] = True
+    email: EmailStr
+    username: str
+    full_name: Optional[str] = None
+    is_active: bool = True
     is_superuser: bool = False
-    avatar: Optional[str] = None
-    cover_image: Optional[str] = None
+    profile_image: Optional[str] = None
+    reading_time: int = 0
+    articles_read: int = 0
+    favorite_domains: List[str] = []
+    reading_streak: int = 0
+    last_read_date: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = {
+        "from_attributes": True
+    }
 
-class UserCreate(BaseModel):
-    email: EmailStr
-    username: str = Field(..., min_length=3, max_length=50)
-    full_name: str = Field(..., min_length=1, max_length=100)
-    password: str = Field(..., min_length=6)
-
-class UserLogin(BaseModel):
-    email: EmailStr
+# Schema for user creation
+class UserCreate(UserBase):
     password: str
 
+# Schema for user update
 class UserUpdate(BaseModel):
-    full_name: Optional[str] = None
     email: Optional[EmailStr] = None
     username: Optional[str] = None
-    avatar: Optional[str] = None
-    cover_image: Optional[str] = None
+    full_name: Optional[str] = None
     password: Optional[str] = None
+    is_active: Optional[bool] = None
+    is_superuser: Optional[bool] = None
+    profile_image: Optional[str] = None
+    reading_time: Optional[int] = None
+    articles_read: Optional[int] = None
+    favorite_domains: Optional[List[str]] = None
+    reading_streak: Optional[int] = None
+    last_read_date: Optional[str] = None
+
+# Schema for user response
+class UserResponse(UserBase):
+    id: int
+    is_active: bool
+    is_admin: bool
+    created_at: datetime
+    updated_at: datetime
+    profile_image: Optional[str] = None
 
 class UserInDBBase(UserBase):
-    id: str
+    id: int
     created_at: datetime
     updated_at: datetime
 
@@ -42,11 +58,6 @@ class User(UserInDBBase):
 
 class UserInDB(UserInDBBase):
     hashed_password: str
-
-class UserResponse(UserBase):
-    id: str
-    created_at: datetime
-    updated_at: datetime
 
 class Token(BaseModel):
     access_token: str

@@ -1,41 +1,32 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Optional
-
-from fastapi import HTTPException, status
-from motor.motor_asyncio import AsyncIOMotorDatabase
+from sqlalchemy.orm import Session
+from jose import jwt
 
 from app.core.config import settings
-from app.core.security import create_access_token, verify_password
-from app.schemas.auth import Token
-from app.services.user_service import UserService
+from app.core.security import verify_password
+from app.models.user import User
 
 class AuthService:
-    def __init__(self, db: AsyncIOMotorDatabase):
-        self.user_service = UserService(db)
+    def __init__(self, db: Session):
+        self.db = db
 
-    async def authenticate_user(self, email: str, password: str) -> Optional[dict]:
-        user = await self.user_service.get_user_by_email(email)
-        if not user or not verify_password(password, user["hashed_password"]):
+    async def authenticate_user(self, email: str, password: str) -> Optional[User]:
+        user = await self.db.query(User).filter(User.email == email).first()
+        if not user:
+            return None
+        if not verify_password(password, user.hashed_password):
             return None
         return user
 
-    async def create_access_token(self, user: dict) -> Token:
-        access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-        access_token = create_access_token(
-            data={"sub": user["email"]},
-            expires_delta=access_token_expires
-        )
-        return Token(
-            access_token=access_token,
-            token_type="bearer"
-        )
+    def create_access_token(self, user_id: str) -> str:
+        expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        to_encode = {"exp": expire, "sub": str(user_id)}
+        encoded_jwt = jwt.encode(to_encode, settings.ACCESS_TOKEN_SECRET, algorithm=settings.ALGORITHM)
+        return encoded_jwt
 
-    async def login(self, email: str, password: str) -> Token:
-        user = await self.authenticate_user(email, password)
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect email or password",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-        return await self.create_access_token(user) 
+    def create_refresh_token(self, user_id: str) -> str:
+        expire = datetime.utcnow() + timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES)
+        to_encode = {"exp": expire, "sub": str(user_id)}
+        encoded_jwt = jwt.encode(to_encode, settings.REFRESH_TOKEN_SECRET, algorithm=settings.ALGORITHM)
+        return encoded_jwt 
