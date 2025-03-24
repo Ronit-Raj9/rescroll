@@ -12,7 +12,6 @@ class UserBase(BaseModel):
     profile_image: Optional[str] = None
     reading_time: int = 0
     articles_read: int = 0
-    favorite_domains: List[str] = []
     reading_streak: int = 0
     last_read_date: Optional[str] = None
 
@@ -35,7 +34,6 @@ class UserUpdate(BaseModel):
     profile_image: Optional[str] = None
     reading_time: Optional[int] = None
     articles_read: Optional[int] = None
-    favorite_domains: Optional[List[str]] = None
     reading_streak: Optional[int] = None
     last_read_date: Optional[str] = None
 

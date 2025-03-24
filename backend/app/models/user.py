@@ -1,6 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, JSON, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, JSON
 from .base import BaseModel
 
 class User(BaseModel):
@@ -20,10 +19,5 @@ class User(BaseModel):
     # Analytics fields
     reading_time = Column(Integer, default=0)  # Total reading time in minutes
     articles_read = Column(Integer, default=0)  # Total number of articles read
-    favorite_domains = Column(JSON, default=list)  # List of favorite research domains
     reading_streak = Column(Integer, default=0)  # Current reading streak in days
     last_read_date = Column(String, nullable=True)  # Last date when user read an article
-    
-    # Relationships
-    research_papers = relationship("ResearchPaper", back_populates="user")
-    items = relationship("Item", back_populates="owner")

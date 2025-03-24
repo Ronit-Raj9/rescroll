@@ -41,3 +41,20 @@ def decode_token(token: str, secret_key: str) -> dict:
 
 async def get_token_data(token: str = Depends(oauth2_scheme)) -> dict:
     return decode_token(token, settings.ACCESS_TOKEN_SECRET)
+
+def verify_refresh_token(token: str) -> Optional[str]:
+    try:
+        payload = jwt.decode(
+            token, settings.REFRESH_TOKEN_SECRET, algorithms=[settings.ALGORITHM]
+        )
+        return payload.get("sub")
+    except JWTError:
+        return None
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+    """Create an access token."""
+    return create_token(data, settings.ACCESS_TOKEN_SECRET, expires_delta)
+
+def create_refresh_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+    """Create a refresh token."""
+    return create_token(data, settings.REFRESH_TOKEN_SECRET, expires_delta)

@@ -2,7 +2,6 @@ from datetime import timedelta, datetime
 from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Cookie, Request
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import crud, schemas
@@ -14,12 +13,16 @@ from app.utils import (
     generate_password_reset_token,
     verify_password_reset_token,
 )
-from app.models.test_user import TestUser
 from app.db.database import get_db
 from app.services.auth_service import AuthService
 from app.services.user_service import UserService
 from app.schemas.token import Token
 from app.schemas.user import UserCreate, UserResponse
+from app.utils.email import send_reset_password_email
+import logging
+
+# Configure logger
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 settings = Settings()
@@ -56,28 +59,35 @@ async def register_user(
     user_data: UserCreate,
     db: AsyncSession = Depends(get_db)
 ):
-    user_service = UserService(db)
-    existing_user = await user_service.get_user_by_email(user_data.email)
-    if existing_user:
+    """
+    Register a new user.
+    """
+    try:
+        user_service = UserService(db)
+        user = await user_service.create_user(user_data)
+        return user
+    except HTTPException as e:
+        # Re-raise HTTP exceptions as they are already properly formatted
+        raise e
+    except Exception as e:
+        # Log the unexpected error
+        logger.error(f"Error during user registration: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred during registration"
         )
-    
-    user = await user_service.create_user(user_data)
-    return user
 
 @router.post("/login", response_model=schemas.Token)
-def login_access_token(
+async def login_access_token(
     response: Response,
-    db: Session = Depends(deps.get_db), 
+    db: AsyncSession = Depends(get_db), 
     form_data: OAuth2PasswordRequestForm = Depends()
 ) -> Any:
     """
     OAuth2 compatible token login, get an access token for future requests.
     Stores tokens in cookies for seamless authentication.
     """
-    user = crud.authenticate_user(
+    user = await crud.authenticate_user(
         db, email=form_data.username, password=form_data.password
     )
     if not user:
@@ -86,13 +96,13 @@ def login_access_token(
         raise HTTPException(status_code=400, detail="Inactive user")
     
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    refresh_token_expires = timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES)
+    refresh_token_expires = timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
     
     access_token = security.create_access_token(
-        user.id, expires_delta=access_token_expires
+        data={"sub": str(user.id)}, expires_delta=access_token_expires
     )
     refresh_token = security.create_refresh_token(
-        user.id, expires_delta=refresh_token_expires
+        data={"sub": str(user.id)}, expires_delta=refresh_token_expires
     )
     
     # Set cookies
@@ -111,7 +121,7 @@ def login_access_token(
         key="refresh_token",
         value=refresh_token,
         httponly=True,
-        max_age=settings.REFRESH_TOKEN_EXPIRE_MINUTES * 60,
+        max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,  # Convert days to seconds
         expires=int((datetime.utcnow() + refresh_token_expires).timestamp()),
         samesite="none",  # Allow cross-origin requests
         secure=True,  # Required for SameSite=None
@@ -125,11 +135,11 @@ def login_access_token(
     }
 
 @router.post("/refresh-token", response_model=schemas.Token)
-def refresh_access_token(
+async def refresh_access_token(
     response: Response,
     refresh_token: str = Cookie(None),
     refresh_token_body: schemas.RefreshToken = None,
-    db: Session = Depends(deps.get_db),
+    db: AsyncSession = Depends(get_db),
 ) -> Any:
     """
     Refresh access token using a valid refresh token from either cookie or request body.
@@ -152,7 +162,7 @@ def refresh_access_token(
         response.delete_cookie("refresh_token", domain="localhost", samesite="none", secure=True)
         raise HTTPException(status_code=401, detail="Invalid refresh token")
     
-    user = crud.get_user_by_id(db, id=int(user_id))
+    user = await crud.get_user_by_id(db, id=int(user_id))
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     if not crud.is_active(user):
@@ -162,10 +172,10 @@ def refresh_access_token(
     refresh_token_expires = timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES)
     
     access_token = security.create_access_token(
-        user.id, expires_delta=access_token_expires
+        data={"sub": str(user.id)}, expires_delta=access_token_expires
     )
     new_refresh_token = security.create_refresh_token(
-        user.id, expires_delta=refresh_token_expires
+        data={"sub": str(user.id)}, expires_delta=refresh_token_expires
     )
     
     # Set cookies
@@ -198,7 +208,7 @@ def refresh_access_token(
     }
 
 @router.post("/logout")
-def logout(response: Response) -> dict:
+async def logout(response: Response) -> dict:
     """
     Logout user by clearing cookies
     """
@@ -217,18 +227,18 @@ def logout(response: Response) -> dict:
     return {"message": "Successfully logged out"}
 
 @router.post("/login/test-token", response_model=schemas.User)
-def test_token(current_user = Depends(deps.get_current_user)) -> Any:
+async def test_token(current_user = Depends(deps.get_current_user)) -> Any:
     """
     Test access token
     """
     return current_user
 
 @router.post("/password-recovery/{email}", response_model=schemas.Msg)
-def recover_password(email: str, db: Session = Depends(deps.get_db)) -> Any:
+async def recover_password(email: str, db: AsyncSession = Depends(get_db)) -> Any:
     """
     Password Recovery
     """
-    user = crud.get_user_by_email(db, email=email)
+    user = await crud.get_user_by_email(db, email=email)
 
     if not user:
         raise HTTPException(
@@ -236,18 +246,18 @@ def recover_password(email: str, db: Session = Depends(deps.get_db)) -> Any:
             detail="The user with this email does not exist in the system.",
         )
     password_reset_token = security.create_access_token(
-        user.id, expires_delta=timedelta(hours=settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS)
+        data={"sub": str(user.id)}, expires_delta=timedelta(hours=settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS)
     )
-    # send_reset_password_email(
-    #     email_to=user.email, email=email, token=password_reset_token
-    # )
-    return {"msg": "Password recovery email sent"}
+    await send_reset_password_email(
+        email_to=user.email, email=email, token=password_reset_token
+    )
+    return {"msg": "Password recovery email sent", "token": password_reset_token}
 
 @router.post("/reset-password/", response_model=schemas.Msg)
-def reset_password(
+async def reset_password(
     token: str,
     new_password: str,
-    db: Session = Depends(deps.get_db),
+    db: AsyncSession = Depends(get_db),
 ) -> Any:
     """
     Reset password
@@ -255,79 +265,15 @@ def reset_password(
     user_id = verify_password_reset_token(token)
     if not user_id:
         raise HTTPException(status_code=400, detail="Invalid token")
-    user = crud.get_user_by_id(db, id=int(user_id))
+    
+    user = await crud.get_user_by_id(db, id=int(user_id))
     if not user:
         raise HTTPException(
             status_code=404,
             detail="The user with this email does not exist in the system.",
         )
-    elif not crud.is_active(user):
-        raise HTTPException(status_code=400, detail="Inactive user")
-    hashed_password = get_password_hash(new_password)
-    user.hashed_password = hashed_password
-    db.add(user)
-    db.commit()
+    
+    await crud.update_user(
+        db, db_user=user, user_in=schemas.UserUpdate(password=new_password)
+    )
     return {"msg": "Password updated successfully"}
-
-@router.post("/test-register", response_model=dict)
-def test_register(
-    *,
-    db: Session = Depends(deps.get_db),
-    user_in: schemas.UserCreate,
-) -> Any:
-    """
-    Test endpoint to register a user using the TestUser model.
-    """
-    try:
-        # Check if user with this email already exists
-        user = db.query(TestUser).filter(TestUser.email == user_in.email).first()
-        if user:
-            raise HTTPException(
-                status_code=400,
-                detail="A user with this email already exists.",
-            )
-        
-        # Check if user with this username already exists
-        user = db.query(TestUser).filter(TestUser.username == user_in.username).first()
-        if user:
-            raise HTTPException(
-                status_code=400,
-                detail="A user with this username already exists.",
-            )
-        
-        # Create the user
-        hashed_password = get_password_hash(user_in.password)
-        db_user = TestUser(
-            email=user_in.email,
-            username=user_in.username,
-            hashed_password=hashed_password,
-            full_name=user_in.full_name,
-            is_active=True,
-        )
-        db.add(db_user)
-        db.commit()
-        db.refresh(db_user)
-        
-        return {
-            "id": db_user.id,
-            "email": db_user.email,
-            "username": db_user.username,
-            "full_name": db_user.full_name,
-            "is_active": db_user.is_active,
-            "is_superuser": db_user.is_superuser,
-        }
-    except Exception as e:
-        # Log the error
-        print(f"Error in test_register endpoint: {str(e)}")
-        # Re-raise the exception with more details
-        raise HTTPException(
-            status_code=500,
-            detail=f"An error occurred during test registration: {str(e)}",
-        )
-
-@router.get("/test", response_model=dict)
-def test_endpoint() -> Any:
-    """
-    Test endpoint to check if the API is working correctly.
-    """
-    return {"status": "ok", "message": "Auth API is working correctly"}

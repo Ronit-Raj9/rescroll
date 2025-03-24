@@ -1,9 +1,10 @@
-from typing import Optional
+from typing import Optional, Tuple
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate
 from passlib.context import CryptContext
+from fastapi import HTTPException, status
 
 # Password context for hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -18,7 +19,46 @@ class UserService:
     def get_password_hash(self, password: str) -> str:
         return pwd_context.hash(password)
 
+    async def check_user_exists(self, email: str, username: str) -> Tuple[bool, bool]:
+        """
+        Check if a user with the given email or username exists.
+        Returns a tuple of (email_exists, username_exists)
+        """
+        query = select(User).where(
+            (User.email == email) | (User.username == username)
+        )
+        result = await self.db.execute(query)
+        existing_user = result.scalar_one_or_none()
+        
+        if existing_user:
+            return (
+                existing_user.email == email,
+                existing_user.username == username
+            )
+        return False, False
+
     async def create_user(self, user_data: UserCreate) -> User:
+        # Check if user exists
+        email_exists, username_exists = await self.check_user_exists(
+            user_data.email, user_data.username
+        )
+        
+        if email_exists and username_exists:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Both email and username are already registered"
+            )
+        elif email_exists:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered"
+            )
+        elif username_exists:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Username already taken"
+            )
+        
         hashed_password = self.get_password_hash(user_data.password)
         db_user = User(
             email=user_data.email,
@@ -37,6 +77,11 @@ class UserService:
         result = await self.db.execute(query)
         return result.scalars().first()
 
+    async def get_user_by_username(self, username: str) -> Optional[User]:
+        query = select(User).where(User.username == username)
+        result = await self.db.execute(query)
+        return result.scalars().first()
+
     async def get_user_by_id(self, user_id: int) -> Optional[User]:
         query = select(User).where(User.id == user_id)
         result = await self.db.execute(query)
@@ -48,6 +93,25 @@ class UserService:
             return None
         
         update_data = user_data.dict(exclude_unset=True)
+        
+        # Check for email and username uniqueness if they're being updated
+        if "email" in update_data or "username" in update_data:
+            email_exists, username_exists = await self.check_user_exists(
+                update_data.get("email", user.email),
+                update_data.get("username", user.username)
+            )
+            
+            if "email" in update_data and email_exists and update_data["email"] != user.email:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Email already registered"
+                )
+            if "username" in update_data and username_exists and update_data["username"] != user.username:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Username already taken"
+                )
+        
         if "password" in update_data:
             update_data["hashed_password"] = self.get_password_hash(update_data.pop("password"))
         

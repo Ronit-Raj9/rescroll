@@ -6,7 +6,7 @@ from typing import AsyncGenerator
 from app.core.config import settings
 
 # Create async engine
-engine = create_async_engine(settings.SQLALCHEMY_DATABASE_URI, echo=True)
+engine = create_async_engine(str(settings.SQLALCHEMY_DATABASE_URI), echo=True)
 
 # Create async session factory
 AsyncSessionLocal = sessionmaker(

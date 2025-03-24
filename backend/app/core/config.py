@@ -46,14 +46,14 @@ class Settings(BaseSettings):
         if port is not None:
             port = int(port)
             
-        return PostgresDsn.build(
+        return str(PostgresDsn.build(
             scheme="postgresql+asyncpg",
             username=values.get("DATABASE_USERNAME"),
             password=values.get("DATABASE_PASSWORD"),
             host=values.get("DATABASE_HOST"),
             port=port,
-            path=f"/{values.get('DATABASE_NAME') or ''}",
-        )
+            path=values.get("DATABASE_NAME") or "",  # Remove the leading slash
+        ))
     
     # Application settings
     PROJECT_NAME: str = "Rescroll"
@@ -65,6 +65,16 @@ class Settings(BaseSettings):
     # MongoDB settings
     MONGODB_ATLAS_URI: str = Field(default=os.getenv("MONGODB_ATLAS_URI", ""))
     MONGODB_LOCAL_URI: str = Field(default=os.getenv("MONGODB_LOCAL_URI", "mongodb://localhost:27017"))
+    
+    # Email settings
+    MAIL_USERNAME: str = Field(default=os.getenv("MAIL_USERNAME", ""))
+    MAIL_PASSWORD: str = Field(default=os.getenv("MAIL_PASSWORD", ""))
+    MAIL_FROM: str = Field(default=os.getenv("MAIL_FROM", "noreply@rescroll.com"))
+    MAIL_PORT: int = Field(default=int(os.getenv("MAIL_PORT", "587")))
+    MAIL_SERVER: str = Field(default=os.getenv("MAIL_SERVER", "smtp.gmail.com"))
+    MAIL_FROM_NAME: str = Field(default=os.getenv("MAIL_FROM_NAME", "Rescroll"))
+    EMAIL_RESET_TOKEN_EXPIRE_HOURS: int = 24
+    FRONTEND_URL: str = Field(default=os.getenv("FRONTEND_URL", "http://localhost:3000"))
     
     # Extra settings
     model_config = SettingsConfigDict(

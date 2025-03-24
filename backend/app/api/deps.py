@@ -4,12 +4,12 @@ from fastapi import Depends, HTTPException, status, Cookie, Header, Request
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
 from pydantic import ValidationError
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import crud, models, schemas
 from app.core import security
 from app.core.config import settings
-from app.db.session import SessionLocal
+from app.db.session import get_db
 
 # Set up logger
 logger = logging.getLogger("root")
@@ -18,13 +18,6 @@ oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl=f"{settings.API_V1_STR}/auth/login",
     auto_error=False
 )
-
-def get_db() -> Generator:
-    try:
-        db = SessionLocal()
-        yield db
-    finally:
-        db.close()
 
 async def get_token_from_cookie_or_header(
     request: Request,
@@ -83,7 +76,7 @@ async def get_token_from_cookie_or_header(
     return token
 
 async def get_current_user(
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     token: str = Depends(get_token_from_cookie_or_header)
 ) -> models.User:
     print(f"DEBUG - Token in get_current_user: {token}")
@@ -102,7 +95,7 @@ async def get_current_user(
         print(f"DEBUG - Decoding token: {token[:10]}...")
         logger.info(f"DEBUG - Decoding token: {token[:10]}...")
         payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+            token, settings.ACCESS_TOKEN_SECRET, algorithms=[settings.ALGORITHM]
         )
         print(f"DEBUG - Token payload: {payload}")
         logger.info(f"DEBUG - Token payload: {payload}")
@@ -116,7 +109,7 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    user = crud.get_user_by_id(db, id=token_data.sub)
+    user = await crud.get_user_by_id(db, id=token_data.sub)
     if not user:
         print(f"DEBUG - User not found for ID: {token_data.sub}")
         logger.info(f"DEBUG - User not found for ID: {token_data.sub}")
@@ -126,14 +119,14 @@ async def get_current_user(
     logger.info(f"DEBUG - User found: {user.email}")
     return user
 
-def get_current_active_user(
+async def get_current_active_user(
     current_user: models.User = Depends(get_current_user),
 ) -> models.User:
     if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
 
-def get_current_active_superuser(
+async def get_current_active_superuser(
     current_user: models.User = Depends(get_current_user),
 ) -> models.User:
     if not current_user.is_active:
