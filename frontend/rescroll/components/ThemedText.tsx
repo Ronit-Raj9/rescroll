@@ -1,6 +1,8 @@
 import { Text, type TextProps, StyleSheet } from 'react-native';
-import { useThemeColor } from '@/hooks/useThemeColor';
 import { FontSizes, Spacing } from '@/constants/Colors';
+import { useColorScheme } from '@/hooks/useColorScheme';
+import { useTheme } from '@/contexts/ThemeContext';
+import { Colors } from '@/constants/Colors';
 
 export type TextVariant = 
   | 'body'           // Default body text
@@ -34,12 +36,17 @@ export function ThemedText({
   align = 'auto',
   ...rest
 }: ThemedTextProps) {
-  const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
+  const { colorScheme } = useTheme();
+  const theme = colorScheme === 'dark' ? 'dark' : 'light';
+  
+  const textColor = lightColor && darkColor
+    ? theme === 'dark' ? darkColor : lightColor
+    : Colors[theme].text;
 
   return (
     <Text
       style={[
-        { color },
+        { color: textColor },
         styles[variant],
         weight === 'medium' && styles.medium,
         weight === 'semibold' && styles.semibold,

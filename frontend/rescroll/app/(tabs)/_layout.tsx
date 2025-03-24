@@ -9,12 +9,18 @@ import CustomTabBar from '@/components/CustomTabBar';
 import { AppContext } from '../_layout';
 import { Feather } from '@expo/vector-icons';
 import AIIcon from '@/components/AIIcon';
+import { useTheme } from '@/contexts/ThemeContext';
 
 // Define the allowed tabs explicitly
 const ALLOWED_TABS = ['index', 'search', 'tops', 'library', 'explore'];
 
+// Use consistent blue gradient for all tab icons
+const BLUE_GRADIENT: [string, string] = ['#4F8EF7', '#3b5998'];
+
 export default function TabLayout() {
-  const colors = Colors.light;
+  const { colorScheme } = useTheme();
+  const currentColorScheme: 'light' | 'dark' = (colorScheme === 'dark') ? 'dark' : 'light';
+  const colors = Colors[currentColorScheme];
   const router = useRouter();
   const pathname = usePathname();
   const segments = useSegments();
@@ -25,6 +31,12 @@ export default function TabLayout() {
   
   // Track renders to detect potential issues
   renderCountRef.current += 1;
+  
+  // Add logging to debug color theme
+  useEffect(() => {
+    console.log('[TabLayout] Theme colors loaded:', colorScheme);
+    console.log('[TabLayout] Navigation background color:', colors.background);
+  }, [colorScheme, colors]);
   
   useEffect(() => {
     // Store and compare navigation state to detect changes
@@ -65,17 +77,22 @@ export default function TabLayout() {
   return (
     <Tabs
       // Use our custom tab bar instead of the default one
-      tabBar={props => <CustomTabBar {...props} />}
+      tabBar={props => <CustomTabBar {...props} colorScheme={currentColorScheme} />}
       screenOptions={{
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.icon,
+        tabBarStyle: {
+          backgroundColor: colors.background,
+          borderTopColor: colors.border,
+          height: 65, // Modified height for better proportion
+        },
         headerTitleStyle: {
           fontWeight: '600',
           textAlign: 'center',
           color: colors.text,
         },
         headerStyle: {
-          backgroundColor: colors.card,
+          backgroundColor: colors.background,
           borderBottomWidth: 1,
           borderBottomColor: colors.border,
         },
@@ -93,10 +110,10 @@ export default function TabLayout() {
             <AIIcon 
               family="Ionicons" 
               name="home" 
-              size={26} 
+              size={24} 
               color={color} 
               focused={focused} 
-              gradientColors={['#4F8EF7', '#3b5998']}
+              gradientColors={BLUE_GRADIENT}
             />
           ),
           headerRight: () => (
@@ -126,10 +143,10 @@ export default function TabLayout() {
             <AIIcon 
               family="Ionicons" 
               name="search" 
-              size={24} 
+              size={22} 
               color={color} 
               focused={focused} 
-              gradientColors={['#FF9190', '#FF6A88']}
+              gradientColors={BLUE_GRADIENT}
             />
           ),
           headerShown: true,
@@ -143,10 +160,10 @@ export default function TabLayout() {
             <AIIcon 
               family="FontAwesome5" 
               name="file-alt" 
-              size={24} 
+              size={22} 
               color={color} 
               focused={focused} 
-              gradientColors={['#43E97B', '#38F9D7']}
+              gradientColors={BLUE_GRADIENT}
             />
           ),
           headerShown: true,
@@ -160,10 +177,10 @@ export default function TabLayout() {
             <AIIcon 
               family="Ionicons" 
               name="bookmark" 
-              size={24} 
+              size={22} 
               color={color} 
               focused={focused} 
-              gradientColors={['#A155FB', '#F59E0B']}
+              gradientColors={BLUE_GRADIENT}
             />
           ),
           headerShown: true,
@@ -177,10 +194,10 @@ export default function TabLayout() {
             <AIIcon 
               family="Ionicons" 
               name="compass" 
-              size={26} 
+              size={24} 
               color={color} 
               focused={focused} 
-              gradientColors={['#FA709A', '#FEE140']}
+              gradientColors={BLUE_GRADIENT}
             />
           ),
           headerShown: true,

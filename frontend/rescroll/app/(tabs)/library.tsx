@@ -16,6 +16,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Colors } from '@/constants/Colors';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -146,297 +147,422 @@ const BOOKMARK_FOLDERS: BookmarkFolder[] = [
 ];
 
 export default function LibraryScreen() {
+  const [activeSection, setActiveSection] = useState('collections');
+  const [showFolderModal, setShowFolderModal] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedFolderId, setSelectedFolderId] = useState('all');
-  const [isCreateBookmarkModalVisible, setIsCreateBookmarkModalVisible] = useState(false);
-  const [newBookmarkTitle, setNewBookmarkTitle] = useState('');
-  const [newBookmarkUrl, setNewBookmarkUrl] = useState('');
-  const [folders, setFolders] = useState<BookmarkFolder[]>(BOOKMARK_FOLDERS);
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const colors = Colors.light; // Always use light theme to match other tabs
   
-  const screenWidth = Dimensions.get('window').width;
-  const numColumns = 2; // Number of columns in the grid
-
-  // Organize papers into smart folders based on criteria
-  const organizedFolders = useMemo(() => {
-    // Helper function to determine if a paper is recent (within last 7 days)
+  // Get theme colors directly from ThemeContext
+  const { colorScheme } = useTheme();
+  const isDarkMode = colorScheme === 'dark';
+  const theme = isDarkMode ? 'dark' : 'light';
+  const colors = Colors[theme];
+  
+  // Filter saved papers based on search query
+  const filteredBookmarks = useMemo(() => 
+    SAVED_PAPERS.filter(paper => 
+      paper.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      paper.summary.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      paper.authors.some(author => 
+        author.name.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    ), 
+    [searchQuery]
+  );
+  
+  // Create structured folder data
+  const folders = useMemo(() => {
     const isRecent = (date: string): boolean => {
-      if (date.includes('day')) {
-        const days = parseInt(date.split(' ')[0]);
-        return days <= 7;
-      }
-      return false;
+      const now = new Date();
+      const paperDate = new Date(date);
+      const diffTime = Math.abs(now.getTime() - paperDate.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays <= 7;
     };
-
-    // Helper function to determine if a paper is highly cited (more than 30 citations)
+    
     const isHighlyCited = (citationCount?: number): boolean => {
-      return citationCount !== undefined && citationCount > 30;
+      return (citationCount || 0) > 50;
     };
-
-    // Helper function to categorize papers by keyword
+    
     const categorizeByKeyword = (paper: SavedPaper, category: string): boolean => {
-      if (!paper.keywords) return false;
-      
-      const keywordMap: Record<string, string[]> = {
-        'medicine': ['medicine', 'health', 'bioethics', 'gene', 'CRISPR'],
-        'technology': ['technology', 'machine learning', 'transformer', 'deep learning', 'AI'],
+      const categoryKeywords: Record<string, string[]> = {
+        'AI & Machine Learning': ['AI', 'machine learning', 'deep learning', 'neural', 'NLP', 'computer vision'],
+        'Climate & Energy': ['climate', 'energy', 'renewable', 'sustainability', 'environment'],
+        'Biology & Health': ['gene', 'biology', 'health', 'medicine', 'CRISPR', 'virus'],
       };
       
-      return paper.keywords.some(keyword => 
-        keywordMap[category]?.some(catKey => 
-          keyword.toLowerCase().includes(catKey.toLowerCase())
+      return (paper.keywords || []).some(keyword => 
+        categoryKeywords[category]?.some(catKeyword => 
+          keyword.toLowerCase().includes(catKeyword.toLowerCase())
         )
       );
     };
     
-    // Start with a copy of the folder structure
-    return folders.map(folder => {
-      // Create a new folder object to avoid mutating the original
-      const updatedFolder = { ...folder, papers: [] as SavedPaper[] };
-      
-      // Fill each folder based on its criteria
-      if (folder.id === 'all') {
-        updatedFolder.papers = SAVED_PAPERS;
-      } else if (folder.id === 'recent') {
-        updatedFolder.papers = SAVED_PAPERS.filter(paper => isRecent(paper.date));
-      } else if (folder.id === 'highly-cited') {
-        updatedFolder.papers = SAVED_PAPERS.filter(paper => isHighlyCited(paper.citationCount));
-      } else if (folder.id === 'medicine') {
-        updatedFolder.papers = SAVED_PAPERS.filter(paper => categorizeByKeyword(paper, 'medicine'));
-      } else if (folder.id === 'technology') {
-        updatedFolder.papers = SAVED_PAPERS.filter(paper => categorizeByKeyword(paper, 'technology'));
-      }
-      
-      // Filter papers if there's a search query
-      if (searchQuery) {
-        updatedFolder.papers = updatedFolder.papers.filter(paper => 
-          paper.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          paper.summary.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          paper.authors.some(author => author.name.toLowerCase().includes(searchQuery.toLowerCase()))
-        );
-      }
-      
-      return updatedFolder;
-    });
-  }, [searchQuery, folders]);
-
-  // Function to add a new bookmark
-  const addNewBookmark = () => {
-    if (newBookmarkTitle.trim()) {
-      // In a real app, this would create an actual bookmark
-      // For now we just close the modal
-      setNewBookmarkTitle('');
-      setNewBookmarkUrl('');
-      setIsCreateBookmarkModalVisible(false);
+    // Generate "smart" folders based on content
+    return [
+      {
+        id: 'all',
+        name: 'All Papers',
+        icon: 'archive',
+        color: '#6366F1',
+        isSmartFolder: true,
+        papers: SAVED_PAPERS,
+      },
+      {
+        id: 'recent',
+        name: 'Recently Saved',
+        icon: 'clock',
+        color: '#22C55E',
+        isSmartFolder: true,
+        papers: SAVED_PAPERS.filter(paper => isRecent(paper.date)),
+      },
+      {
+        id: 'cited',
+        name: 'Highly Cited',
+        icon: 'bar-chart-2',
+        color: '#F59E0B',
+        isSmartFolder: true,
+        papers: SAVED_PAPERS.filter(paper => isHighlyCited(paper.citationCount)),
+      },
+      {
+        id: 'ml',
+        name: 'AI & Machine Learning',
+        icon: 'cpu',
+        color: '#7C3AED',
+        isSmartFolder: true,
+        papers: SAVED_PAPERS.filter(paper => categorizeByKeyword(paper, 'AI & Machine Learning')),
+      },
+      {
+        id: 'climate',
+        name: 'Climate & Energy',
+        icon: 'sun',
+        color: '#10B981',
+        isSmartFolder: true,
+        papers: SAVED_PAPERS.filter(paper => categorizeByKeyword(paper, 'Climate & Energy')),
+      },
+      {
+        id: 'bio',
+        name: 'Biology & Health',
+        icon: 'activity',
+        color: '#EF4444',
+        isSmartFolder: true,
+        papers: SAVED_PAPERS.filter(paper => categorizeByKeyword(paper, 'Biology & Health')),
+      },
+      // User-created folders would be added here
+    ];
+  }, []);
+  
+  const addNewFolder = () => {
+    if (newFolderName.trim()) {
+      // Would update state or make API call in a real app
+      setNewFolderName('');
+      setShowFolderModal(false);
     }
   };
-
-  // Render a collection item (folder)
+  
   const renderCollectionItem = ({ item }: { item: BookmarkFolder }) => {
-    const paperCount = organizedFolders.find(f => f.id === item.id)?.papers.length || 0;
-    const paperImages = organizedFolders.find(f => f.id === item.id)?.papers.slice(0, 4).map(p => p.imageUrl) || [];
-    
     return (
-      <TouchableOpacity
-        style={styles.collectionItem}
-        onPress={() => setSelectedFolderId(item.id)}
+      <TouchableOpacity 
+        style={[
+          styles.folderItem, 
+          { backgroundColor: isDarkMode ? colors.backgroundSecondary : '#FFF' }
+        ]} 
+        onPress={() => {
+          // Use a simpler navigation approach
+          router.push('/(tabs)');
+        }}
       >
-        <View style={styles.collectionPreview}>
-          {paperImages.length > 0 ? (
-            <View style={styles.previewGrid}>
-              {paperImages.slice(0, Math.min(4, paperImages.length)).map((imgUrl, idx) => (
-                <Image 
-                  key={idx}
-                  source={{ uri: imgUrl }}
-                  style={styles.previewImage}
-                />
-              ))}
-              {/* Fill empty spaces if needed */}
-              {Array.from({ length: Math.max(0, 4 - paperImages.length) }).map((_, idx) => (
-                <View key={`empty-${idx}`} style={[styles.previewImage, styles.emptyPreview]} />
-              ))}
-            </View>
-          ) : (
-            <View style={[styles.emptyCollectionIcon, { backgroundColor: item.color }]}>
-              <Feather name={item.icon as React.ComponentProps<typeof Feather>['name']} size={30} color="#fff" />
-            </View>
-          )}
+        <View style={[styles.folderIconContainer, { backgroundColor: item.color }]}>
+          <Feather name={item.icon as any} size={20} color="#FFF" />
         </View>
-        <ThemedText style={styles.collectionName}>{item.name}</ThemedText>
+        <View style={styles.folderInfo}>
+          <ThemedText style={styles.folderName}>{item.name}</ThemedText>
+          <ThemedText style={[styles.folderCount, { color: isDarkMode ? colors.textSecondary : '#666' }]}>
+            {item.papers.length} papers
+          </ThemedText>
+        </View>
+        <Feather 
+          name="chevron-right" 
+          size={20} 
+          color={isDarkMode ? colors.textSecondary : '#999'} 
+        />
       </TouchableOpacity>
     );
   };
-
-  // Render a bookmark item in the grid
+  
   const renderBookmarkItem = ({ item }: { item: SavedPaper }) => {
     return (
       <TouchableOpacity 
-        style={styles.bookmarkGridItem}
+        style={[
+          styles.bookmarkItem, 
+          { backgroundColor: isDarkMode ? colors.backgroundSecondary : '#FFF' }
+        ]} 
         onPress={() => {
-          // Navigate to paper detail view when implemented
-          // router.push(`/paper/${item.id}`);
+          // Use a simpler navigation approach
+          router.push('/(tabs)');
         }}
       >
-        <Image 
-          source={{ uri: item.imageUrl }} 
-          style={styles.bookmarkGridImage}
-        />
-        <View style={styles.bookmarkGridOverlay}>
-          <ThemedText style={styles.bookmarkGridTitle} numberOfLines={2}>
+        <Image source={{ uri: item.imageUrl }} style={styles.bookmarkImage} />
+        <View style={styles.bookmarkInfo}>
+          <ThemedText style={styles.bookmarkTitle} numberOfLines={2}>
             {item.title}
           </ThemedText>
+          
+          <ThemedText style={[styles.bookmarkAuthors, { color: isDarkMode ? colors.textSecondary : '#666' }]} numberOfLines={1}>
+            {item.authors.map(a => a.name).join(', ')}
+          </ThemedText>
+          
+          <View style={styles.bookmarkMeta}>
+            <View style={styles.metaItem}>
+              <Feather 
+                name="file-text" 
+                size={14} 
+                color={isDarkMode ? colors.textSecondary : '#666'} 
+                style={styles.metaIcon} 
+              />
+              <ThemedText style={[styles.metaText, { color: isDarkMode ? colors.textSecondary : '#666' }]}>
+                {item.journal || 'Journal'}
+              </ThemedText>
+            </View>
+            
+            <View style={styles.metaItem}>
+              <Feather 
+                name="clock" 
+                size={14} 
+                color={isDarkMode ? colors.textSecondary : '#666'} 
+                style={styles.metaIcon} 
+              />
+              <ThemedText style={[styles.metaText, { color: isDarkMode ? colors.textSecondary : '#666' }]}>
+                {item.date}
+              </ThemedText>
+            </View>
+          </View>
         </View>
+        
+        <TouchableOpacity 
+          style={styles.bookmarkMore}
+          hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+        >
+          <Feather 
+            name="more-vertical" 
+            size={20} 
+            color={isDarkMode ? colors.textSecondary : '#999'} 
+          />
+        </TouchableOpacity>
       </TouchableOpacity>
     );
   };
   
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-      <ThemedView style={styles.container}>
-        <Stack.Screen options={{ headerShown: false }} />
-        
-        <View style={styles.header}>
-          <View style={styles.headerContent}>
-            <TouchableOpacity onPress={() => router.back()}>
-              <Feather name="chevron-left" size={24} color="#000" />
-            </TouchableOpacity>
-            <ThemedText style={styles.screenTitle}>Saved</ThemedText>
-            <TouchableOpacity onPress={() => setIsCreateBookmarkModalVisible(true)}>
-              <Feather name="plus" size={24} color="#000" />
-            </TouchableOpacity>
+    <ThemedView style={styles.container}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+        <View style={[styles.header, { 
+          backgroundColor: colors.background,
+          borderBottomColor: colors.border 
+        }]}>
+          <ThemedText style={[styles.headerTitle, { color: colors.text }]}>Library</ThemedText>
+          
+          <View style={[styles.searchContainer, { backgroundColor: isDarkMode ? colors.backgroundSecondary : colors.backgroundTertiary }]}>
+            <Feather 
+              name="search" 
+              size={18} 
+              color={colors.textSecondary}
+              style={styles.searchIcon} 
+            />
+            <TextInput
+              style={[
+                styles.searchInput, 
+                { color: colors.text, backgroundColor: isDarkMode ? colors.backgroundSecondary : colors.backgroundTertiary }
+              ]}
+              placeholder="Search your library"
+              placeholderTextColor={colors.textTertiary}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            {searchQuery !== '' && (
+              <TouchableOpacity onPress={() => setSearchQuery('')}>
+                <Feather 
+                  name="x" 
+                  size={18} 
+                  color={colors.textSecondary}
+                />
+              </TouchableOpacity>
+            )}
           </View>
         </View>
-
-        <ScrollView style={styles.contentContainer}>
-          {/* Collections/Folders Section */}
-          <View style={styles.sectionContainer}>
+        
+        <View style={styles.tabsContainer}>
+          <TouchableOpacity
+            style={[
+              styles.tab,
+              activeSection === 'collections' && [
+                styles.activeTab,
+                { borderBottomColor: colors.primary }
+              ]
+            ]}
+            onPress={() => setActiveSection('collections')}
+          >
+            <ThemedText
+              style={[
+                styles.tabText,
+                activeSection === 'collections' && [
+                  styles.activeTabText,
+                  { color: colors.primary }
+                ]
+              ]}
+            >
+              Collections
+            </ThemedText>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[
+              styles.tab,
+              activeSection === 'saved' && [
+                styles.activeTab,
+                { borderBottomColor: colors.primary }
+              ]
+            ]}
+            onPress={() => setActiveSection('saved')}
+          >
+            <ThemedText
+              style={[
+                styles.tabText,
+                activeSection === 'saved' && [
+                  styles.activeTabText,
+                  { color: colors.primary }
+                ]
+              ]}
+            >
+              Saved Papers
+            </ThemedText>
+          </TouchableOpacity>
+        </View>
+        
+        {activeSection === 'collections' ? (
+          <View style={styles.content}>
             <FlatList
               data={folders}
               renderItem={renderCollectionItem}
-              keyExtractor={item => item.id}
-              numColumns={2}
-              key="folders-grid"
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={styles.folderList}
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.collectionsGrid}
-              scrollEnabled={false}
+              ListFooterComponent={
+                <TouchableOpacity 
+                  style={[
+                    styles.addFolderButton, 
+                    { 
+                      backgroundColor: isDarkMode ? colors.backgroundSecondary : colors.backgroundTertiary,
+                      borderColor: colors.border 
+                    }
+                  ]} 
+                  onPress={() => setShowFolderModal(true)}
+                >
+                  <Feather 
+                    name="plus" 
+                    size={20} 
+                    color={colors.text}
+                  />
+                  <ThemedText style={styles.addFolderText}>
+                    Create New Collection
+                  </ThemedText>
+                </TouchableOpacity>
+              }
             />
           </View>
-          
-          {/* Selected Collection Papers - Only show if a collection is selected */}
-          {selectedFolderId !== 'all' && (
-            <View style={styles.sectionContainer}>
-              <View style={styles.sectionHeader}>
-                <ThemedText style={styles.sectionTitle}>{
-                  folders.find(f => f.id === selectedFolderId)?.name || 'All Posts'
-                }</ThemedText>
-              </View>
-              
-              {organizedFolders.find(f => f.id === selectedFolderId)?.papers.length ? (
-                <FlatList
-                  data={organizedFolders.find(f => f.id === selectedFolderId)?.papers || []}
-                  renderItem={renderBookmarkItem}
-                  keyExtractor={item => item.id}
-                  numColumns={2}
-                  key={`folder-papers-${selectedFolderId}`}
-                  showsVerticalScrollIndicator={false}
-                  contentContainerStyle={styles.bookmarksGrid}
-                  scrollEnabled={false}
-                />
-              ) : (
-                <View style={styles.emptyBookmarksContainer}>
-                  <Feather name="bookmark" size={60} color="#ddd" />
-                  <ThemedText style={styles.emptyBookmarksText}>
-                    No saved bookmarks
+        ) : (
+          <View style={styles.content}>
+            <FlatList
+              data={filteredBookmarks}
+              renderItem={renderBookmarkItem}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={styles.bookmarkList}
+              showsVerticalScrollIndicator={false}
+              ListEmptyComponent={
+                <View style={styles.emptyState}>
+                  <Feather 
+                    name="bookmark" 
+                    size={50} 
+                    color={isDarkMode ? 'rgba(255,255,255,0.2)' : '#DDD'} 
+                  />
+                  <ThemedText style={styles.emptyStateTitle}>
+                    No saved papers
+                  </ThemedText>
+                  <ThemedText style={[styles.emptyStateText, { color: isDarkMode ? colors.textSecondary : '#666' }]}>
+                    Your saved papers will appear here. Tap the bookmark icon on any paper to save it.
                   </ThemedText>
                 </View>
-              )}
-            </View>
-          )}
-          
-          {/* All Posts (Default) - Show all bookmarks when no specific collection is selected */}
-          {selectedFolderId === 'all' && (
-            <View style={styles.sectionContainer}>
-              <View style={styles.sectionHeader}>
-                <ThemedText style={styles.sectionTitle}>All Posts</ThemedText>
-              </View>
-              
-              {SAVED_PAPERS.length > 0 ? (
-                <FlatList
-                  data={SAVED_PAPERS}
-                  renderItem={renderBookmarkItem}
-                  keyExtractor={item => item.id}
-                  numColumns={2}
-                  key="all-papers-grid"
-                  showsVerticalScrollIndicator={false}
-                  contentContainerStyle={styles.bookmarksGrid}
-                  scrollEnabled={false}
-                />
-              ) : (
-                <View style={styles.emptyBookmarksContainer}>
-                  <Feather name="bookmark" size={60} color="#ddd" />
-                  <ThemedText style={styles.emptyBookmarksText}>
-                    No saved bookmarks
-                  </ThemedText>
-                </View>
-              )}
-            </View>
-          )}
-        </ScrollView>
-
-        {/* Create Bookmark Modal */}
+              }
+            />
+          </View>
+        )}
+        
+        {/* New Folder Modal */}
         <Modal
-          animationType="fade"
+          visible={showFolderModal}
           transparent={true}
-          visible={isCreateBookmarkModalVisible}
-          onRequestClose={() => setIsCreateBookmarkModalVisible(false)}
+          animationType="fade"
+          onRequestClose={() => setShowFolderModal(false)}
         >
           <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <ThemedText style={styles.modalTitle}>Add New Bookmark</ThemedText>
+            <View style={[
+              styles.modalContainer, 
+              { backgroundColor: isDarkMode ? colors.backgroundSecondary : colors.background }
+            ]}>
+              <ThemedText style={[styles.modalTitle, { color: colors.text }]}>Create New Collection</ThemedText>
               
               <TextInput
-                style={styles.modalInput}
-                placeholder="Title"
-                value={newBookmarkTitle}
-                onChangeText={setNewBookmarkTitle}
+                style={[
+                  styles.folderInput,
+                  { 
+                    color: colors.text,
+                    backgroundColor: isDarkMode ? colors.backgroundTertiary : colors.backgroundTertiary,
+                    borderColor: colors.border
+                  }
+                ]}
+                placeholder="Folder name"
+                placeholderTextColor={colors.textTertiary}
+                value={newFolderName}
+                onChangeText={setNewFolderName}
                 autoFocus
               />
               
-              <TextInput
-                style={styles.modalInput}
-                placeholder="URL or DOI"
-                value={newBookmarkUrl}
-                onChangeText={setNewBookmarkUrl}
-              />
-              
-              <View style={styles.modalActions}>
-                <TouchableOpacity 
-                  style={styles.modalButton}
-                  onPress={() => setIsCreateBookmarkModalVisible(false)}
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={[
+                    styles.modalButton, 
+                    styles.cancelButton,
+                    { borderColor: colors.border }
+                  ]}
+                  onPress={() => setShowFolderModal(false)}
                 >
-                  <ThemedText style={styles.modalButtonText}>Cancel</ThemedText>
+                  <ThemedText style={[styles.cancelButtonText, { color: colors.textSecondary }]}>Cancel</ThemedText>
                 </TouchableOpacity>
-                <TouchableOpacity 
-                  style={[styles.modalButton, styles.modalPrimaryButton]}
-                  onPress={addNewBookmark}
+                
+                <TouchableOpacity
+                  style={[
+                    styles.modalButton,
+                    styles.createButton,
+                    { backgroundColor: colors.primary }
+                  ]}
+                  onPress={addNewFolder}
                 >
-                  <ThemedText style={styles.modalPrimaryButtonText}>Save</ThemedText>
+                  <ThemedText style={styles.createButtonText}>Create</ThemedText>
                 </TouchableOpacity>
               </View>
             </View>
           </View>
         </Modal>
-      </ThemedView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   header: {
     paddingHorizontal: 16,
@@ -445,110 +571,137 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 10,
-  },
-  screenTitle: {
+  headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
   },
-  contentContainer: {
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 8,
+    borderRadius: 8,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
     flex: 1,
+    padding: 12,
+    fontSize: 16,
   },
-  sectionContainer: {
-    marginTop: 20,
-  },
-  sectionHeader: {
+  tabsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    marginBottom: 10,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  collectionsGrid: {
-    paddingHorizontal: 8,
-  },
-  collectionItem: {
-    width: Dimensions.get('window').width / 2 - 16,
-    margin: 8,
-    alignItems: 'center',
-  },
-  collectionPreview: {
-    width: '100%',
-    aspectRatio: 1,
-    borderRadius: 8,
-    backgroundColor: '#f0f0f0',
-    overflow: 'hidden',
-  },
-  previewGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    width: '100%',
-    height: '100%',
-  },
-  previewImage: {
-    width: '50%',
-    height: '50%',
-  },
-  emptyPreview: {
-    backgroundColor: '#e0e0e0',
-  },
-  emptyCollectionIcon: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#ddd',
-  },
-  collectionName: {
-    marginTop: 8,
-    fontSize: 14,
-    fontWeight: '500',
-    textAlign: 'center',
-  },
-  bookmarksGrid: {
-    paddingHorizontal: 8,
-  },
-  bookmarkGridItem: {
-    width: Dimensions.get('window').width / 2 - 16,
-    height: 200,
-    margin: 8,
-    borderRadius: 8,
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  bookmarkGridImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-  },
-  bookmarkGridOverlay: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(0,0,0,0.5)',
     padding: 8,
   },
-  bookmarkGridTitle: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: '500',
+  tab: {
+    flex: 1,
+    padding: 12,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
   },
-  emptyBookmarksContainer: {
-    padding: 40,
+  activeTab: {
+    borderBottomWidth: 2,
+    borderBottomColor: '#6366F1',
+  },
+  tabText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  activeTabText: {
+    color: '#6366F1',
+  },
+  content: {
+    flex: 1,
+  },
+  folderList: {
+    padding: 8,
+  },
+  folderItem: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#eee',
+    borderRadius: 8,
   },
-  emptyBookmarksText: {
-    marginTop: 16,
+  folderIconContainer: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  folderInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  folderName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  folderCount: {
+    fontSize: 14,
+    color: '#666',
+  },
+  bookmarkList: {
+    padding: 8,
+  },
+  bookmarkItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#eee',
+    borderRadius: 8,
+  },
+  bookmarkImage: {
+    width: 80,
+    height: 120,
+    borderRadius: 8,
+    marginRight: 12,
+  },
+  bookmarkInfo: {
+    flex: 1,
+  },
+  bookmarkTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  bookmarkAuthors: {
+    fontSize: 14,
+    color: '#666',
+  },
+  bookmarkMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  metaIcon: {
+    marginRight: 4,
+  },
+  metaText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  bookmarkMore: {
+    padding: 4,
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyStateTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  emptyStateText: {
     fontSize: 16,
     color: '#999',
     textAlign: 'center',
@@ -559,7 +712,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  modalContent: {
+  modalContainer: {
     backgroundColor: '#fff',
     borderRadius: 12,
     padding: 24,
@@ -572,7 +725,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     textAlign: 'center',
   },
-  modalInput: {
+  folderInput: {
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 8,
@@ -580,7 +733,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 16,
   },
-  modalActions: {
+  modalButtons: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     marginTop: 8,
@@ -591,15 +744,32 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     borderRadius: 8,
   },
-  modalButtonText: {
+  cancelButton: {
+    borderColor: '#ddd',
+  },
+  cancelButtonText: {
     fontSize: 16,
     color: '#666',
   },
-  modalPrimaryButton: {
-    backgroundColor: Colors.light.primary,
+  createButton: {
+    backgroundColor: '#6366F1',
   },
-  modalPrimaryButtonText: {
+  createButtonText: {
     color: '#fff',
     fontWeight: '500',
+  },
+  addFolderButton: {
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addFolderText: {
+    fontSize: 16,
+    fontWeight: '500',
+    marginLeft: 8,
   },
 }); 

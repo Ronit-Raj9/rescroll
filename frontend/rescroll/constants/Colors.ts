@@ -14,11 +14,28 @@ const greyScale = {
   deepGrey: '#3A3A3C',
 };
 
+// Dark theme greyscale
+const darkGreyScale = {
+  background: '#121212',
+  surface: '#1E1E1E',
+  element: '#2A2A2A',
+  textSecondary: '#A0A0A0',
+  textPrimary: '#E0E0E0',
+  deepGrey: '#666666',
+};
+
 // Accent colors
 const accent = {
   neonBlue: '#0A84FF',
   subtleBlue: '#5E9ED6',
   glowBlue: 'rgba(10, 132, 255, 0.15)',
+};
+
+// Dark theme accent colors (slightly brighter for better contrast)
+const darkAccent = {
+  neonBlue: '#2196F3',
+  subtleBlue: '#64B5F6',
+  glowBlue: 'rgba(33, 150, 243, 0.25)',
 };
 
 // Supporting colors
@@ -83,6 +100,31 @@ export const Shadows = {
   },
 };
 
+// Dark theme shadows
+export const DarkShadows = {
+  sm: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  md: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  lg: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+};
+
 // Glow effects for sci-fi aesthetic
 export const Glows = {
   subtle: {
@@ -103,6 +145,31 @@ export const Glows = {
     shadowColor: accent.neonBlue,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+};
+
+// Dark theme glows (slightly brighter)
+export const DarkGlows = {
+  subtle: {
+    shadowColor: darkAccent.neonBlue,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  medium: {
+    shadowColor: darkAccent.neonBlue,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  strong: {
+    shadowColor: darkAccent.neonBlue,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.45,
     shadowRadius: 12,
     elevation: 6,
   },
@@ -160,8 +227,55 @@ export const Colors = {
     surface: supporting.white,
     surfaceHover: greyScale.surface,
   },
-  // Dark mode will be implemented later
-  get dark() {
-    return this.light;
+  dark: {
+    // Text colors
+    text: darkGreyScale.textPrimary,
+    textSecondary: darkGreyScale.textSecondary,
+    textTertiary: darkGreyScale.element,
+    textInverse: supporting.black,
+    
+    // Background colors
+    background: darkGreyScale.background,
+    backgroundSecondary: darkGreyScale.surface,
+    backgroundTertiary: darkGreyScale.element,
+    
+    // Brand colors
+    primary: darkAccent.neonBlue,
+    primaryLight: darkAccent.glowBlue,
+    primaryDark: darkAccent.subtleBlue,
+    secondary: darkAccent.subtleBlue,
+    secondaryLight: 'rgba(100, 181, 246, 0.25)',
+    secondaryDark: '#4A9CE8',
+    
+    // UI colors
+    tint: darkAccent.neonBlue,
+    icon: darkGreyScale.textSecondary,
+    tabIconDefault: darkGreyScale.textSecondary,
+    tabIconSelected: darkAccent.neonBlue,
+    
+    // Feedback colors
+    success: '#4CD964',
+    successLight: 'rgba(76, 217, 100, 0.25)',
+    warning: '#FFA500',
+    warningLight: 'rgba(255, 165, 0, 0.25)',
+    error: '#FF453A',
+    errorLight: 'rgba(255, 69, 58, 0.25)',
+    info: darkAccent.neonBlue,
+    infoLight: darkAccent.glowBlue,
+    
+    // Neutral colors
+    lightGray: darkGreyScale.element,
+    mediumGray: darkGreyScale.textSecondary,
+    darkGray: darkGreyScale.textPrimary,
+    
+    // Border colors
+    border: darkGreyScale.element,
+    borderFocus: darkAccent.neonBlue,
+    
+    // Card and surface colors
+    card: darkGreyScale.surface,
+    cardHover: darkGreyScale.element,
+    surface: darkGreyScale.surface,
+    surfaceHover: darkGreyScale.element,
   }
 };

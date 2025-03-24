@@ -24,6 +24,10 @@ import { usePapers, Paper, ViewState } from '@/hooks/usePapers';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import { useAccessibility } from '@/hooks/useAccessibility';
 import { GestureHandlerRootView, PanGestureHandler, State, TapGestureHandler } from 'react-native-gesture-handler';
+import { useColorScheme } from '@/hooks/useColorScheme';
+import { useTheme } from '@/contexts/ThemeContext';
+import { ThemedView } from '@/components/ThemedView';
+import { Stack } from 'expo-router';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -78,7 +82,8 @@ const PaperCard = React.memo(({
 }) => {
   const [imageError, setImageError] = React.useState(false);
   const [imageLoading, setImageLoading] = React.useState(true);
-  const colors = Colors.light;
+  const { colorScheme } = useTheme();
+  const paperColors = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
   
   // Animation for double-tap like
   const [showLikeAnimation, setShowLikeAnimation] = useState(false);
@@ -281,7 +286,7 @@ const PaperCard = React.memo(({
               {/* Loading indicator */}
               {imageLoading && (
                 <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="large" color={colors.primary} />
+                  <ActivityIndicator size="large" color={paperColors.primary} />
                 </View>
               )}
               
@@ -325,6 +330,9 @@ export default function HomeScreen() {
   } = usePapers();
   const responsiveSize = useResponsiveSize();
   const accessibility = useAccessibility();
+  const { colorScheme } = useTheme();
+  const isDarkMode = colorScheme === 'dark';
+  const colors = Colors[isDarkMode ? 'dark' : 'light'];
   
   // Set mounted flag after component mounts
   useEffect(() => {
@@ -465,15 +473,23 @@ export default function HomeScreen() {
   // Using keyExtractor for performance
   const keyExtractor = useCallback((item: Paper) => item.id, []);
   
+  // Add logs to validate theme color usage
+  useEffect(() => {
+    console.log('[HomeScreen] Theme colors loaded:', colorScheme);
+    console.log('[HomeScreen] Header background color:', colors.background);
+    console.log('[HomeScreen] Header text color:', colors.text);
+  }, [colorScheme, colors]);
+  
   // Safety check for papers data
   if (!papers) return renderEmptyList();
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaView style={styles.container} edges={['top', 'right', 'left']}>
+    <ThemedView style={styles.container}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top', 'right', 'left']}>
         {/* Updated header with ReScroll logo and icons */}
-        <View style={styles.headerContainer}>
-          <ThemedText style={styles.headerLogo}>ReScroll</ThemedText>
+        <View style={[styles.headerContainer, { backgroundColor: colors.background }]}>
+          <ThemedText style={[styles.headerLogo, { color: colors.text }]}>ReScroll</ThemedText>
           <View style={styles.headerRight}>
             <TouchableOpacity 
               style={styles.headerIcon}
@@ -508,7 +524,7 @@ export default function HomeScreen() {
               accessibilityLabel="View notifications"
             >
               <View style={styles.notificationContainer}>
-                <IconSymbol name="bell" size={22} color="#E0E0E0" />
+                <IconSymbol name="bell" size={22} color={colors.icon} />
                 {appContext.unreadNotificationsCount > 0 && (
                   <View style={styles.notificationBadge}>
                     <ThemedText style={styles.notificationBadgeText}>
@@ -549,12 +565,12 @@ export default function HomeScreen() {
                 }
               }}
             >
-              <IconSymbol name="person.circle" size={22} color="#E0E0E0" />
+              <IconSymbol name="person.circle" size={22} color={colors.icon} />
             </TouchableOpacity>
           </View>
         </View>
         
-      <View style={styles.contentContainer}>
+      <View style={[styles.contentContainer, { backgroundColor: colors.background }]}>
         <FlatList
           ref={flatListRef}
           data={papers}
@@ -580,31 +596,33 @@ export default function HomeScreen() {
         />
       </View>
     </SafeAreaView>
-    </GestureHandlerRootView>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#fff',
+  },
+  safeArea: {
+    flex: 1,
   },
   headerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 6,
-    paddingHorizontal: 20,
-    backgroundColor: '#000',
-    borderBottomWidth: 0,
-    height: 50, // Reduced height
-    paddingTop: 16, // Add padding to position text lower
-    zIndex: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    height: 50,
+    paddingTop: 8,
+    zIndex: 2,
   },
   headerLogo: {
     fontSize: 24, // Reduced from 36px
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    // Color will be set by inline style
   },
   headerRight: {
     flexDirection: 'row',

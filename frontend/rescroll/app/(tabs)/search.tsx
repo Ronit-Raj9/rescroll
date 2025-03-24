@@ -19,6 +19,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Colors } from '@/constants/Colors';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -99,22 +100,25 @@ export default function SearchScreen() {
   const [searching, setSearching] = useState(false);
   const [results, setResults] = useState<SearchResult[]>([]);
   const [searchError, setSearchError] = useState<string | null>(null);
-  const [recentSearches, setRecentSearches] = useState<{query: string, timestamp: number}[]>(
-    SEARCH_SUGGESTIONS.map(query => ({ 
-      query, 
-      timestamp: Date.now() - Math.floor(Math.random() * 10000000) 
-    }))
-  );
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [sortingOption, setSortingOption] = useState<'relevance' | 'date' | 'citations'>('relevance');
+  const [showSearchTips, setShowSearchTips] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const [historyVisible, setHistoryVisible] = useState(false);
+  
+  // Get theme colors directly from ThemeContext
+  const { colorScheme } = useTheme();
+  const isDarkMode = colorScheme === 'dark';
+  const theme = isDarkMode ? 'dark' : 'light';
+  const colors = Colors[theme];
+  
+  // Animation values
+  const searchWidth = useRef(new Animated.Value(Dimensions.get('window').width - 80)).current;
+  const cancelOpacity = useRef(new Animated.Value(0)).current;
+  const searchInputRef = useRef<TextInput>(null);
+  
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const colors = Colors.light; // Always use light theme to match home page
-  
-  // Animated values for search bar expansion
-  const searchBarWidth = useRef(new Animated.Value(1)).current;
-  const searchBarOpacity = useRef(new Animated.Value(0)).current;
-  const cancelBtnOpacity = useRef(new Animated.Value(0)).current;
-  
   const numColumns = 2;
   const screenWidth = Dimensions.get('window').width;
   const itemWidth = (screenWidth - 48) / numColumns;
@@ -145,15 +149,15 @@ export default function SearchScreen() {
 
   // Handle search bar focus animation
   const handleSearchFocus = () => {
-    setIsSearchFocused(true);
+    setFocused(true);
     Animated.parallel([
-      Animated.timing(searchBarWidth, {
+      Animated.timing(searchWidth, {
         toValue: 0.85,
         duration: 250,
         useNativeDriver: false,
         easing: Easing.out(Easing.ease),
       }),
-      Animated.timing(cancelBtnOpacity, {
+      Animated.timing(cancelOpacity, {
         toValue: 1,
         duration: 200,
         useNativeDriver: false,
@@ -165,15 +169,15 @@ export default function SearchScreen() {
   // Handle search bar blur animation
   const handleSearchBlur = () => {
     if (query.length === 0) {
-      setIsSearchFocused(false);
+      setFocused(false);
       Animated.parallel([
-        Animated.timing(searchBarWidth, {
+        Animated.timing(searchWidth, {
           toValue: 1,
           duration: 250,
           useNativeDriver: false,
           easing: Easing.out(Easing.ease),
         }),
-        Animated.timing(cancelBtnOpacity, {
+        Animated.timing(cancelOpacity, {
           toValue: 0,
           duration: 200,
           useNativeDriver: false,
@@ -204,9 +208,9 @@ export default function SearchScreen() {
       const currentQuery = query;
       setRecentSearches(prev => {
         // Remove if it already exists
-        const filtered = prev.filter(item => item.query !== currentQuery);
+        const filtered = prev.filter(item => item !== currentQuery);
         // Add to the beginning with current timestamp
-        return [{ query: currentQuery, timestamp: Date.now() }, ...filtered.slice(0, 9)];
+        return [currentQuery, ...filtered.slice(0, 9)];
       });
     } catch (error) {
       console.error('Search error:', error);
@@ -236,7 +240,7 @@ export default function SearchScreen() {
 
   // Add a function to clear a specific recent search
   const removeRecentSearch = (query: string) => {
-    setRecentSearches(prev => prev.filter(item => item.query !== query));
+    setRecentSearches(prev => prev.filter(item => item !== query));
   };
 
   // Add a function to clear all recent searches
@@ -392,257 +396,303 @@ export default function SearchScreen() {
     </View>
   );
 
-  // Add state for search tips
-  const [showSearchTips, setShowSearchTips] = useState(false);
-
   // Add a function to toggle search tips
   const toggleSearchTips = () => {
     setShowSearchTips(!showSearchTips);
   };
 
+  // Update the styles that depend on theme
+  const dynamicStyles = {
+    searchContainer: {
+      backgroundColor: colors.background,
+      borderColor: colors.border,
+    },
+    searchInput: {
+      color: colors.text,
+      backgroundColor: isDarkMode ? colors.backgroundSecondary : colors.backgroundTertiary,
+    },
+    filterButton: {
+      backgroundColor: isDarkMode ? colors.backgroundSecondary : colors.backgroundTertiary,
+    },
+    activeFilterButton: {
+      backgroundColor: colors.primary,
+    },
+    filterButtonText: {
+      color: colors.text,
+    },
+    activeFilterButtonText: {
+      color: '#FFF',
+    },
+    resultCard: {
+      backgroundColor: isDarkMode ? colors.backgroundSecondary : colors.background,
+      shadowColor: isDarkMode ? '#000' : '#000',
+      borderColor: colors.border,
+    },
+    sectionHeader: {
+      color: colors.textSecondary,
+    },
+    divider: {
+      backgroundColor: colors.border,
+    },
+    searchTipsContainer: {
+      backgroundColor: isDarkMode ? colors.backgroundSecondary : colors.background,
+      borderColor: colors.border,
+    }
+  };
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      <ThemedView style={styles.container}>
-        <Stack.Screen options={{ headerShown: false }} />
-        
-        <View style={styles.header}>
-          <View style={styles.headerContent}>
-            <ThemedText style={styles.screenTitle}>Search</ThemedText>
-          </View>
-          
-          {/* Animated Expandable Search Bar */}
-          <View style={styles.searchOuterContainer}>
-            <Animated.View style={[
-              styles.searchContainer, 
-              { 
-                width: searchBarWidth.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: ['85%', '100%']
-                })
-              }
-            ]}>
-              <View style={styles.searchBar}>
-                <Feather name="search" size={20} color={colors.text} style={styles.searchIcon} />
-                <TextInput
-                  style={styles.searchInput}
-                  placeholder="Search papers, topics, or authors..."
-                  placeholderTextColor="#777"
-                  value={query}
-                  onChangeText={setQuery}
-                  onSubmitEditing={handleSearch}
-                  onFocus={handleSearchFocus}
-                  onBlur={handleSearchBlur}
-                  returnKeyType="search"
-                  autoCapitalize="none"
-                />
-                {query.length > 0 && (
-                  <TouchableOpacity 
-                    onPress={() => setQuery('')}
-                    style={styles.clearButton}
-                  >
-                    <Feather name="x" size={18} color="#777" />
-                  </TouchableOpacity>
-                )}
-              </View>
+    <ThemedView style={styles.container}>
+      <Stack.Screen 
+        options={{ 
+          headerTitle: 'Search',
+          headerShown: false
+        }} 
+      />
+      
+      <SafeAreaView 
+        style={{ 
+          flex: 1, 
+          backgroundColor: colors.background 
+        }}
+        edges={['top', 'left', 'right']}
+      >
+        {/* Header with search */}
+        <View style={[styles.header, { 
+          backgroundColor: colors.background,
+          borderBottomColor: colors.border 
+        }]}>
+          {/* Search section */}
+          <View style={styles.searchSection}>
+            <Animated.View 
+              style={[
+                styles.searchContainer, 
+                {
+                  backgroundColor: colors.backgroundSecondary,
+                  borderColor: colors.border,
+                  width: focused ? '85%' : '100%'
+                }
+              ]}
+            >
+              <IconSymbol name="magnifyingglass" size={18} color={colors.icon} />
+              <TextInput
+                ref={searchInputRef}
+                style={[
+                  styles.searchInput,
+                  { color: colors.text }
+                ]}
+                placeholder="Search papers, authors, topics..."
+                placeholderTextColor={colors.textSecondary}
+                value={query}
+                onChangeText={setQuery}
+                onFocus={handleSearchFocus}
+                onBlur={handleSearchBlur}
+                onSubmitEditing={handleSearch}
+                returnKeyType="search"
+                clearButtonMode="while-editing"
+              />
             </Animated.View>
             
-            {/* Cancel Button - appears when search is focused */}
-            <Animated.View style={{ opacity: cancelBtnOpacity }}>
+            {/* Cancel button */}
+            <Animated.View 
+              style={[
+                styles.cancelButtonContainer,
+                { opacity: cancelOpacity }
+              ]}
+            >
               <TouchableOpacity 
-                style={styles.cancelButton} 
                 onPress={handleCancelPress}
+                style={styles.cancelButton}
               >
-                <ThemedText style={styles.cancelButtonText}>Cancel</ThemedText>
+                <ThemedText style={styles.cancelButtonText}>
+                  Cancel
+                </ThemedText>
               </TouchableOpacity>
             </Animated.View>
           </View>
         </View>
-
-        {!results.length && !searching ? (
-          <ScrollView style={styles.contentContainer} showsVerticalScrollIndicator={false}>
-            {/* Recent Searches Section */}
-            <View style={styles.sectionContainer}>
-              <View style={styles.sectionHeaderRow}>
-                <ThemedText style={styles.sectionTitle}>Recent Searches</ThemedText>
-                {recentSearches.length > 0 && (
-                  <TouchableOpacity onPress={clearAllRecentSearches}>
-                    <ThemedText style={styles.clearAllText}>Clear All</ThemedText>
-                  </TouchableOpacity>
-                )}
-              </View>
-              
-              {recentSearches.length === 0 ? (
-                <View style={styles.emptyStateContainer}>
-                  <Feather name="search" size={24} color="#aaa" />
-                  <ThemedText style={styles.emptyStateText}>No recent searches</ThemedText>
-                </View>
-              ) : (
-                recentSearches.map((item, index) => (
-                  <View key={`search-${item.query}-${item.timestamp}`} style={styles.recentSearchRow}>
-                    <TouchableOpacity
-                      style={styles.suggestionItem}
-                      onPress={() => {
-                        setQuery(item.query);
-                        handleSearch();
-                      }}
-                    >
-                      <Feather name="clock" size={16} color="#777" style={styles.suggestionIcon} />
-                      <View style={styles.suggestionTextContainer}>
-                        <ThemedText style={styles.suggestionText}>{item.query}</ThemedText>
-                        <ThemedText style={styles.timestampText}>{formatTimeAgo(item.timestamp)}</ThemedText>
-                      </View>
-                    </TouchableOpacity>
-                    
-                    <TouchableOpacity 
-                      style={styles.removeButton} 
-                      onPress={() => removeRecentSearch(item.query)}
-                    >
-                      <Feather name="x" size={16} color="#aaa" />
-                    </TouchableOpacity>
-                  </View>
-                ))
-              )}
-            </View>
-
-            {/* Trending Topics Section */}
-            <View style={styles.sectionContainer}>
-              <ThemedText style={styles.sectionTitle}>Trending Topics</ThemedText>
-              <View style={styles.tagsContainer}>
-                {[
-                  { name: 'Machine Learning', color: '#E6F7FF', textColor: '#0070F3' },
-                  { name: 'Climate Science', color: '#E6FFED', textColor: '#05A66B' },
-                  { name: 'Quantum Computing', color: '#F3E8FF', textColor: '#6C5CE7' },
-                  { name: 'Neuroscience', color: '#FFF3E0', textColor: '#FF9800' },
-                  { name: 'Genomics', color: '#FFE0E0', textColor: '#FF4D4F' },
-                  { name: 'Renewable Energy', color: '#E6FFFB', textColor: '#13C2C2' },
-                  { name: 'AI Ethics', color: '#FFF0F6', textColor: '#EB2F96' },
-                  { name: 'COVID-19', color: '#F9F0FF', textColor: '#722ED1' },
-                ].map((tag, index) => (
-                  <TouchableOpacity
-                    key={`topic-${tag.name}`}
-                    style={[styles.topicTag, { backgroundColor: tag.color }]}
-                    onPress={() => {
-                      setQuery(tag.name);
-                      handleSearch();
-                    }}
-                  >
-                    <ThemedText style={[styles.topicTagText, { color: tag.textColor }]}>
-                      {tag.name}
-                    </ThemedText>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-
-            {/* Search Tips Section */}
-            <View style={styles.sectionContainer}>
-              <View style={styles.sectionHeaderRow}>
-                <ThemedText style={styles.sectionTitle}>Search Tips</ThemedText>
-                <TouchableOpacity onPress={toggleSearchTips}>
-                  <ThemedText style={styles.clearAllText}>
-                    {showSearchTips ? 'Hide' : 'Show'}
-                  </ThemedText>
-                </TouchableOpacity>
-              </View>
-
-              {showSearchTips && (
-                <View style={styles.searchTipsContainer}>
-                  <View style={styles.searchTipItem}>
-                    <Feather name="hash" size={16} color={Colors.light.primary} style={styles.tipIcon} />
-                    <View>
-                      <ThemedText style={styles.tipTitle}>Use keywords</ThemedText>
-                      <ThemedText style={styles.tipText}>Try "machine learning" or "climate science"</ThemedText>
-                    </View>
-                  </View>
-
-                  <View style={styles.searchTipItem}>
-                    <Feather name="user" size={16} color={Colors.light.primary} style={styles.tipIcon} />
-                    <View>
-                      <ThemedText style={styles.tipTitle}>Find by author</ThemedText>
-                      <ThemedText style={styles.tipText}>Search for "author:Smith" to find papers by Smith</ThemedText>
-                    </View>
-                  </View>
-
-                  <View style={styles.searchTipItem}>
-                    <Feather name="calendar" size={16} color={Colors.light.primary} style={styles.tipIcon} />
-                    <View>
-                      <ThemedText style={styles.tipTitle}>Filter by year</ThemedText>
-                      <ThemedText style={styles.tipText}>Add "year:2023" to find recent papers</ThemedText>
-                    </View>
-                  </View>
-
-                  <View style={styles.searchTipItem}>
-                    <Feather name="file-text" size={16} color={Colors.light.primary} style={styles.tipIcon} />
-                    <View>
-                      <ThemedText style={styles.tipTitle}>Journal specific</ThemedText>
-                      <ThemedText style={styles.tipText}>Use "journal:Nature" to narrow by publication</ThemedText>
-                    </View>
-                  </View>
-                </View>
-              )}
-            </View>
-          </ScrollView>
-        ) : (
-          <>
+        
+        {/* Rest of the screen content */}
+        <View style={[styles.contentContainer, { backgroundColor: colors.background }]}>
+          {/* Filter tabs */}
+          {query.length > 0 && results.length > 0 && (
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              style={[styles.filterScrollView, { borderBottomColor: colors.border }]}
+              contentContainerStyle={styles.filterContainer}
+            >
+              {renderFilterSection()}
+            </ScrollView>
+          )}
+          
+          {/* Main content */}
+          <View style={[styles.resultsContainer, { backgroundColor: colors.background }]}>
             {searching ? (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color={colors.primary} />
-                <ThemedText style={styles.loadingText}>Searching...</ThemedText>
               </View>
-            ) : (
-              <>
-                {/* Render filter section when there are results */}
+            ) : results.length > 0 ? (
+              <View style={{ flex: 1 }}>
                 {renderFilterSection()}
-                <ThemedText style={styles.resultsHeader}>Articles</ThemedText>
                 <FlatList
                   data={results}
-                  renderItem={renderResultItem}
                   keyExtractor={(item) => item.id}
-                  contentContainerStyle={styles.resultsContainer}
-                  numColumns={numColumns}
-                  key={`search-results-${numColumns}`}
+                  renderItem={renderResultItem}
+                  contentContainerStyle={{ paddingVertical: 16 }}
+                  ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
                   showsVerticalScrollIndicator={false}
                 />
-
-                {/* No results component */}
-                {!searching && query && results.length === 0 && (
-                  <View style={styles.noResultsContainer}>
-                    <Feather name="search" size={50} color="#aaa" />
-                    <ThemedText style={styles.noResultsTitle}>No results found</ThemedText>
-                    <ThemedText style={styles.noResultsText}>
-                      We couldn't find any papers matching "{query}"
-                    </ThemedText>
-                    <View style={styles.noResultsSuggestions}>
-                      <ThemedText style={styles.noResultsSubtitle}>Try:</ThemedText>
-                      <View style={styles.bulletPoint}>
-                        <View style={styles.bullet} />
-                        <ThemedText style={styles.noResultsTip}>Using more general keywords</ThemedText>
+              </View>
+            ) : query.length > 0 ? (
+              <View style={styles.emptyResultsContainer}>
+                <IconSymbol name="magnifyingglass" size={40} color={colors.textSecondary} />
+                <ThemedText style={styles.emptyResultsText}>No results found</ThemedText>
+                <ThemedText style={styles.emptyResultsSubText}>
+                  Try different keywords or check your search terms
+                </ThemedText>
+              </View>
+            ) : (
+              <ScrollView contentContainerStyle={{ paddingTop: 16 }}>
+                {/* Recent searches */}
+                {recentSearches.length > 0 && (
+                  <View style={styles.sectionContainer}>
+                    <View style={styles.sectionHeaderContainer}>
+                      <ThemedText style={[styles.sectionHeader, dynamicStyles.sectionHeader]}>Recent Searches</ThemedText>
+                      <TouchableOpacity onPress={clearAllRecentSearches}>
+                        <ThemedText style={styles.clearAllText}>Clear All</ThemedText>
+                      </TouchableOpacity>
+                    </View>
+                    {recentSearches.map((search, index) => (
+                      <TouchableOpacity 
+                        key={index}
+                        style={styles.recentSearchItem}
+                        onPress={() => {
+                          setQuery(search);
+                          handleSearch();
+                        }}
+                      >
+                        <View style={styles.recentSearchLeft}>
+                          <Feather name="clock" size={16} color={isDarkMode ? colors.textSecondary : "#777"} />
+                          <ThemedText style={styles.recentSearchText}>{search}</ThemedText>
+                        </View>
+                        <TouchableOpacity 
+                          style={styles.removeButton}
+                          onPress={() => removeRecentSearch(search)}
+                        >
+                          <Feather name="x" size={16} color={isDarkMode ? colors.textSecondary : "#999"} />
+                        </TouchableOpacity>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+                
+                <View style={styles.section}>
+                  <ThemedText style={[styles.sectionHeader, dynamicStyles.sectionHeader]}>Suggested Searches</ThemedText>
+                  {SEARCH_SUGGESTIONS.map((suggestion, index) => (
+                    <TouchableOpacity 
+                      key={index}
+                      style={styles.suggestionItem}
+                      onPress={() => {
+                        setQuery(suggestion);
+                        handleSearch();
+                      }}
+                    >
+                      <Feather name="trending-up" size={16} color={isDarkMode ? colors.primary : "#6C5CE7"} />
+                      <ThemedText style={styles.suggestionText}>{suggestion}</ThemedText>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                
+                <View style={styles.section}>
+                  <View style={styles.sectionHeaderContainer}>
+                    <ThemedText style={[styles.sectionHeader, dynamicStyles.sectionHeader]}>Search Tips</ThemedText>
+                    <TouchableOpacity onPress={toggleSearchTips}>
+                      <ThemedText style={styles.showMoreText}>
+                        {showSearchTips ? 'Show Less' : 'Show More'}
+                      </ThemedText>
+                    </TouchableOpacity>
+                  </View>
+                  
+                  <View style={[styles.searchTipsContainer, dynamicStyles.searchTipsContainer]}>
+                    <View style={styles.searchTipItem}>
+                      <View style={[styles.searchTipIcon, { backgroundColor: colors.primaryLight }]}>
+                        <Feather name="type" size={16} color={colors.primary} />
                       </View>
-                      <View style={styles.bulletPoint}>
-                        <View style={styles.bullet} />
-                        <ThemedText style={styles.noResultsTip}>Check your spelling</ThemedText>
-                      </View>
-                      <View style={styles.bulletPoint}>
-                        <View style={styles.bullet} />
-                        <ThemedText style={styles.noResultsTip}>Try a different search term</ThemedText>
+                      <View style={styles.searchTipContent}>
+                        <ThemedText style={styles.searchTipTitle}>Use quotes for exact phrases</ThemedText>
+                        <ThemedText style={styles.searchTipDescription}>
+                          Example: "quantum computing"
+                        </ThemedText>
                       </View>
                     </View>
+                    
+                    <View style={[styles.divider, dynamicStyles.divider]} />
+                    
+                    <View style={styles.searchTipItem}>
+                      <View style={[styles.searchTipIcon, { backgroundColor: colors.primaryLight }]}>
+                        <Feather name="plus" size={16} color={colors.primary} />
+                      </View>
+                      <View style={styles.searchTipContent}>
+                        <ThemedText style={styles.searchTipTitle}>Combine keywords with AND</ThemedText>
+                        <ThemedText style={styles.searchTipDescription}>
+                          Example: neural networks AND healthcare
+                        </ThemedText>
+                      </View>
+                    </View>
+                    
+                    {showSearchTips && (
+                      <>
+                        <View style={[styles.divider, dynamicStyles.divider]} />
+                        
+                        <View style={styles.searchTipItem}>
+                          <View style={[styles.searchTipIcon, { backgroundColor: colors.primaryLight }]}>
+                            <Feather name="minus" size={16} color={colors.primary} />
+                          </View>
+                          <View style={styles.searchTipContent}>
+                            <ThemedText style={styles.searchTipTitle}>Exclude terms with NOT</ThemedText>
+                            <ThemedText style={styles.searchTipDescription}>
+                              Example: climate change NOT politics
+                            </ThemedText>
+                          </View>
+                        </View>
+                        
+                        <View style={[styles.divider, dynamicStyles.divider]} />
+                        
+                        <View style={styles.searchTipItem}>
+                          <View style={[styles.searchTipIcon, { backgroundColor: colors.primaryLight }]}>
+                            <Feather name="user" size={16} color={colors.primary} />
+                          </View>
+                          <View style={styles.searchTipContent}>
+                            <ThemedText style={styles.searchTipTitle}>Search by author</ThemedText>
+                            <ThemedText style={styles.searchTipDescription}>
+                              Example: author:"Jane Smith"
+                            </ThemedText>
+                          </View>
+                        </View>
+                        
+                        <View style={[styles.divider, dynamicStyles.divider]} />
+                        
+                        <View style={styles.searchTipItem}>
+                          <View style={[styles.searchTipIcon, { backgroundColor: colors.primaryLight }]}>
+                            <Feather name="calendar" size={16} color={colors.primary} />
+                          </View>
+                          <View style={styles.searchTipContent}>
+                            <ThemedText style={styles.searchTipTitle}>Filter by date range</ThemedText>
+                            <ThemedText style={styles.searchTipDescription}>
+                              Example: neural networks year:2020-2023
+                            </ThemedText>
+                          </View>
+                        </View>
+                      </>
+                    )}
                   </View>
-                )}
-
-                {/* Error message */}
-                {searchError && (
-                  <View style={styles.errorContainer}>
-                    <Feather name="alert-circle" size={24} color="#e74c3c" />
-                    <ThemedText style={styles.errorText}>{searchError}</ThemedText>
-                  </View>
-                )}
-              </>
+                </View>
+              </ScrollView>
             )}
-          </>
-        )}
-      </ThemedView>
-    </SafeAreaView>
+          </View>
+        </View>
+      </SafeAreaView>
+    </ThemedView>
   );
 }
 
@@ -653,54 +703,33 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 16,
-    paddingBottom: 16,
-    backgroundColor: '#fff',
+    paddingBottom: 12,
+    backgroundColor: 'white',
   },
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  screenTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  searchOuterContainer: {
+  searchSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 10,
   },
   searchContainer: {
-    marginTop: 5,
-  },
-  searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f0f0f0',
-    borderRadius: 25,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  searchIcon: {
-    marginRight: 10,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    height: 40,
+    borderWidth: 1,
+    borderColor: '#EBEBEB',
+    flex: 1,
   },
   searchInput: {
     flex: 1,
+    height: 40,
     fontSize: 16,
-    color: '#333',
-    height: 22,
     padding: 0,
   },
-  clearButton: {
-    padding: 4,
+  cancelButtonContainer: {
+    paddingHorizontal: 10,
+    paddingVertical: 8,
   },
   cancelButton: {
     paddingHorizontal: 10,
@@ -712,74 +741,24 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flex: 1,
+  },
+  filterScrollView: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#EBEBEB',
+  },
+  filterContainer: {
     paddingHorizontal: 16,
-  },
-  sectionContainer: {
-    marginBottom: 24,
-    marginTop: 10,
-  },
-  sectionHeaderRow: {
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 16,
-  },
-  clearAllText: {
-    color: Colors.light.primary,
-    fontSize: 14,
-  },
-  emptyStateContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 30,
-    backgroundColor: '#f9f9f9',
-    borderRadius: 12,
-  },
-  emptyStateText: {
-    color: '#aaa',
-    marginTop: 8,
-    fontSize: 14,
-  },
-  recentSearchRow: {
+    paddingVertical: 12,
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 2,
   },
-  suggestionTextContainer: {
+  resultsContainer: {
     flex: 1,
-  },
-  timestampText: {
-    fontSize: 12,
-    color: '#aaa',
-    marginTop: 2,
-  },
-  removeButton: {
-    padding: 10,
+    paddingHorizontal: 16,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#555',
-  },
-  resultsHeader: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 16,
-    paddingHorizontal: 16,
-  },
-  resultsContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
   },
   resultCard: {
     backgroundColor: '#fff',
@@ -814,39 +793,6 @@ const styles = StyleSheet.create({
   resultMeta: {
     fontSize: 11,
     color: '#777',
-  },
-  tagsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginTop: 8,
-  },
-  topicTag: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
-    marginRight: 10,
-    marginBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  topicTagText: {
-    fontWeight: '500',
-    fontSize: 14,
-  },
-  filterContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    marginHorizontal: 16,
-    marginTop: 16,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
   },
   filterHeader: {
     flexDirection: 'row',
@@ -924,99 +870,133 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '500',
   },
+  section: {
+    marginBottom: 24,
+    marginTop: 10,
+  },
+  sectionHeaderContainer: {
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  sectionHeader: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 16,
+  },
+  clearAllText: {
+    color: Colors.light.primary,
+    fontSize: 14,
+  },
+  recentSearchItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 2,
+  },
+  recentSearchLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  recentSearchText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  removeButton: {
+    padding: 10,
+  },
   suggestionItem: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
     paddingVertical: 12,
   },
-  suggestionIcon: {
-    marginRight: 12,
-  },
   suggestionText: {
     fontSize: 16,
     color: '#333',
   },
-  searchTipsContainer: {
-    backgroundColor: '#f9f9f9',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
+  showMoreText: {
+    color: Colors.light.primary,
+    fontSize: 14,
   },
   searchTipItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     marginBottom: 12,
   },
-  tipIcon: {
+  searchTipIcon: {
     marginRight: 12,
     marginTop: 2,
   },
-  tipTitle: {
+  searchTipContent: {
+    flex: 1,
+  },
+  searchTipTitle: {
     fontSize: 15,
     fontWeight: '600',
     marginBottom: 2,
   },
-  tipText: {
+  searchTipDescription: {
     fontSize: 14,
     color: '#555',
   },
-  noResultsContainer: {
+  divider: {
+    height: 1,
+    backgroundColor: '#F0F0F0',
+  },
+  errorContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
   },
-  noResultsTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  noResultsText: {
-    fontSize: 16,
-    color: '#555',
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  noResultsSuggestions: {
-    alignSelf: 'flex-start',
-    width: '100%',
-  },
-  noResultsSubtitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 12,
-  },
-  bulletPoint: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  bullet: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: Colors.light.primary,
-    marginRight: 8,
-  },
-  noResultsTip: {
-    fontSize: 14,
-    color: '#999',
-    fontStyle: 'italic',
-    marginTop: 8,
-  },
-  errorContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ffebee',
-    padding: 16,
-    marginTop: 16,
-    borderRadius: 8,
-  },
   errorText: {
     color: '#e74c3c',
-    marginLeft: 8,
+    marginTop: 16,
+    marginBottom: 24,
+    fontSize: 16,
+  },
+  retryButton: {
+    backgroundColor: Colors.light.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  retryText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  defaultContent: {
     flex: 1,
+  },
+  searchTipsContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    marginBottom: 16,
+  },
+  emptyResultsContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  emptyResultsText: {
+    color: '#777',
+    marginTop: 16,
+    marginBottom: 24,
+    fontSize: 16,
+  },
+  emptyResultsSubText: {
+    color: '#555',
+    fontSize: 14,
+  },
+  sectionContainer: {
+    marginBottom: 24,
+    marginTop: 10,
   },
 }); 

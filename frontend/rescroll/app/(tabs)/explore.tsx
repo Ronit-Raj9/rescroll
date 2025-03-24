@@ -1,28 +1,35 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Stack } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Colors } from '@/constants/Colors';
 
 export default function ExploreScreen() {
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme as 'light' | 'dark'];
+  const { colorScheme } = useTheme();
+  const isDarkMode = colorScheme === 'dark';
+  const colors = Colors[isDarkMode ? 'dark' : 'light'];
+  
+  // Add debug logging
+  useEffect(() => {
+    console.log('[ExploreScreen] Theme colors loaded:', colorScheme);
+    console.log('[ExploreScreen] Background color:', colors.background);
+  }, [colorScheme, colors]);
 
   return (
     <ThemedView style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
       
-      <View style={styles.header}>
+      <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <ThemedText style={styles.screenTitle}>Explore</ThemedText>
       </View>
       
       <View style={styles.content}>
         <IconSymbol name="safari" size={60} color={colors.primary} />
         <ThemedText style={styles.comingSoonText}>Explore Coming Soon</ThemedText>
-        <ThemedText style={styles.descriptionText}>
+        <ThemedText style={[styles.descriptionText, { color: colors.textSecondary }]}>
           Discover new research topics and trending papers in your field of interest
         </ThemedText>
       </View>
@@ -39,7 +46,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#EFEFEF',
   },
   screenTitle: {
     fontSize: 24,
@@ -59,7 +65,6 @@ const styles = StyleSheet.create({
   },
   descriptionText: {
     fontSize: 16,
-    color: '#888',
     textAlign: 'center',
     maxWidth: '80%',
   }

@@ -1,10 +1,11 @@
 import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
 import { Feather, MaterialCommunityIcons, Ionicons, FontAwesome5, MaterialIcons } from '@expo/vector-icons';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring, interpolateColor, interpolate } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, interpolate, interpolateColor } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
 import { Colors } from '@/constants/Colors';
+import { useTheme } from '@/contexts/ThemeContext';
 
 type IconFamily = 'Ionicons' | 'Feather' | 'MaterialCommunityIcons' | 'FontAwesome5' | 'MaterialIcons';
 
@@ -22,18 +23,22 @@ interface AIIconProps {
 
 /**
  * AI-inspired Icon component that adds modern effects to vector icons
+ * Updated for higher contrast and better visibility
  */
 export default function AIIcon({
   family,
   name,
   size,
-  color = Colors.light.text,
+  color,
   focused = false,
   style,
   gradientColors = ['#5E72EB', '#FF9190'],
-  glowColor = 'rgba(94, 114, 235, 0.3)',
+  glowColor = 'rgba(94, 114, 235, 0.5)', // Increased opacity for more vibrant glow
   animated = true,
 }: AIIconProps) {
+  const { colorScheme } = useTheme();
+  const defaultColor = color || Colors[colorScheme === 'dark' ? 'dark' : 'light'].text;
+
   // Animation value for focus effect
   const animatedValue = useSharedValue(focused ? 1 : 0);
 
@@ -50,57 +55,48 @@ export default function AIIcon({
     }, [focused, animated])
   );
 
-  // Animated style for the icon container
-  const animatedStyle = useAnimatedStyle(() => {
-    // FIXED: Using interpolate instead of interpolateColor for scale values
+  // Animation styles for the container
+  const containerAnimatedStyle = useAnimatedStyle(() => {
     const scale = interpolate(
       animatedValue.value,
       [0, 1],
-      [1, 1.1]
+      [1, 1.1], // Slightly increased scale for more emphasis
     );
-    
+
     return {
       transform: [{ scale }],
     };
   });
 
+  // Animation styles for the icon - no longer interpolating color
+  const iconAnimatedStyle = useAnimatedStyle(() => {
+    return {};
+  });
+
   // Render the appropriate icon based on the family
   const renderIcon = () => {
+    const iconStyle = [styles.icon, iconAnimatedStyle];
+    const iconSize = focused ? size * 1.05 : size; // Slightly larger when focused
+    const iconColor = focused ? Colors[colorScheme === 'dark' ? 'dark' : 'light'].primary : defaultColor;
+
     switch (family) {
       case 'Ionicons':
-        return <Ionicons name={name as any} size={size} color={color} />;
+        return <Animated.Text style={iconStyle}><Ionicons name={name as any} size={iconSize} color={iconColor} /></Animated.Text>;
       case 'Feather':
-        return <Feather name={name as any} size={size} color={color} />;
+        return <Animated.Text style={iconStyle}><Feather name={name as any} size={iconSize} color={iconColor} /></Animated.Text>;
       case 'MaterialCommunityIcons':
-        return <MaterialCommunityIcons name={name as any} size={size} color={color} />;
+        return <Animated.Text style={iconStyle}><MaterialCommunityIcons name={name as any} size={iconSize} color={iconColor} /></Animated.Text>;
       case 'FontAwesome5':
-        return <FontAwesome5 name={name as any} size={size} color={color} />;
+        return <Animated.Text style={iconStyle}><FontAwesome5 name={name as any} size={iconSize} color={iconColor} /></Animated.Text>;
       case 'MaterialIcons':
-        return <MaterialIcons name={name as any} size={size} color={color} />;
+        return <Animated.Text style={iconStyle}><MaterialIcons name={name as any} size={iconSize} color={iconColor} /></Animated.Text>;
       default:
-        return <Ionicons name="help-circle" size={size} color={color} />;
+        return <Animated.Text style={iconStyle}><Ionicons name={name as any} size={iconSize} color={iconColor} /></Animated.Text>;
     }
   };
 
-  // If the icon is focused, wrap it in a gradient and add a glow effect
-  if (focused) {
-    return (
-      <Animated.View style={[styles.focusedContainer, animatedStyle, style]}>
-        <LinearGradient
-          colors={gradientColors}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.gradient}>
-          {renderIcon()}
-        </LinearGradient>
-        <View style={[styles.glow, { backgroundColor: glowColor }]} />
-      </Animated.View>
-    );
-  }
-
-  // If not focused, just render the icon
   return (
-    <Animated.View style={[styles.container, animatedStyle, style]}>
+    <Animated.View style={[styles.container, containerAnimatedStyle, style]}>
       {renderIcon()}
     </Animated.View>
   );
@@ -108,26 +104,29 @@ export default function AIIcon({
 
 const styles = StyleSheet.create({
   container: {
+    width: 28,
+    height: 28,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  focusedContainer: {
+  gradientWrapper: {
+    width: '100%',
+    height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
   },
   gradient: {
-    borderRadius: 12,
-    padding: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  glow: {
     position: 'absolute',
-    width: '120%',
-    height: '120%',
+    width: '150%', // Slightly smaller for more compact tab bar
+    height: '150%', // Slightly smaller for more compact tab bar
     borderRadius: 16,
-    opacity: 0.6,
-    zIndex: -1,
+    opacity: 0.9, // Increased opacity for better visibility
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 8, // Slightly reduced shadow
+    shadowOpacity: 0.5,
+  },
+  icon: {
+    zIndex: 10,
   },
 }); 

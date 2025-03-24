@@ -22,11 +22,12 @@ import Animated, {
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useColorScheme, useIsDarkMode } from '@/hooks/useColorScheme';
 
 // Keys for AsyncStorage
 const PROFILE_IMAGE_STORAGE_KEY = 'rescroll_profile_image';
 const USERNAME_STORAGE_KEY = 'rescroll_username';
-const DARK_MODE_STORAGE_KEY = 'rescroll_dark_mode';
 const NOTIFICATIONS_ENABLED_KEY = 'rescroll_notifications_enabled';
 const NEWS_LANGUAGE_KEY = 'rescroll_news_language';
 const INTEREST_TAGS_KEY = 'rescroll_interest_tags';
@@ -154,10 +155,16 @@ export default function ProfileSettingsScreen() {
   const appContext = useContext(AppContext);
   const [isMounted, setIsMounted] = useState(false);
   
+  // Theme-related hooks
+  const { colorScheme } = useTheme();
+  const isDarkMode = colorScheme === 'dark';
+  const { toggleTheme } = useTheme();
+  const theme = isDarkMode ? 'dark' : 'light';
+  const colors = Colors[theme];
+  
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [username, setUsername] = useState('John Researcher');
-  const [userBio, setUserBio] = useState('PhD Candidate in Quantum Physics. Passionate about making science accessible to everyone.');
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [username, setUsername] = useState('Researcher');
+  const [userBio, setUserBio] = useState('Exploring the frontiers of science and technology. Interested in machine learning, quantum computing, and renewable energy.');
   const [notifications, setNotifications] = useState(true);
   const [selectedLanguage, setSelectedLanguage] = useState('en');
   const [showImageOptions, setShowImageOptions] = useState(false);
@@ -225,14 +232,6 @@ export default function ProfileSettingsScreen() {
         const savedBio = await AsyncStorage.getItem(BIO_STORAGE_KEY);
         if (savedBio) {
           setUserBio(savedBio);
-        }
-        
-        // Load dark mode setting
-        const darkModeSetting = await AsyncStorage.getItem(DARK_MODE_STORAGE_KEY);
-        if (darkModeSetting !== null) {
-          const isDark = darkModeSetting === 'true';
-          setIsDarkMode(isDark);
-          switchProgress.value = isDark ? 1 : 0;
         }
         
         // Load notifications setting
@@ -581,39 +580,47 @@ export default function ProfileSettingsScreen() {
   }, [scrollY]);
   
   const handleDarkModeToggle = useCallback((value: boolean) => {
-    setIsDarkMode(value);
+    // Update the animation
     switchProgress.value = withTiming(value ? 1 : 0, { 
       duration: 250,
       easing: Easing.bezier(0.25, 0.1, 0.25, 1)
     });
     
-    AsyncStorage.setItem(DARK_MODE_STORAGE_KEY, value ? 'true' : 'false');
-    // In a production app, we would update the app theme here
-  }, [switchProgress]);
+    // Toggle the theme using our ThemeContext
+    toggleTheme();
+    
+    // Note: We don't need to manually save to AsyncStorage anymore
+    // as the ThemeContext handles that for us
+  }, [switchProgress, toggleTheme]);
   
   const backgroundStyle = useAnimatedStyle(() => {
-    const backgroundColor = interpolateColor(
-      switchProgress.value,
-      [0, 1],
-      ['#FFFFFF', '#121212']
-    );
-    
     return {
-      backgroundColor
+      backgroundColor: interpolateColor(
+        switchProgress.value,
+        [0, 1],
+        [Colors.light.background, Colors.dark.background]
+      )
     };
   });
   
   const textColorStyle = useAnimatedStyle(() => {
-    const color = interpolateColor(
-      switchProgress.value,
-      [0, 1],
-      ['#000000', '#FFFFFF']
-    );
-    
     return {
-      color
+      color: interpolateColor(
+        switchProgress.value,
+        [0, 1],
+        [Colors.light.text, Colors.dark.text]
+      )
     };
   });
+
+  // Update switch progress when isDarkMode changes
+  useEffect(() => {
+    // Update the animation value to match the current theme
+    switchProgress.value = withTiming(isDarkMode ? 1 : 0, { 
+      duration: 250,
+      easing: Easing.bezier(0.25, 0.1, 0.25, 1)
+    });
+  }, [isDarkMode, switchProgress]);
 
   const handleSendMessage = () => {
     if (chatInput.trim() === '') return;
@@ -686,68 +693,69 @@ export default function ProfileSettingsScreen() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaView style={{ flex: 1 }}>
-        <Animated.View style={[styles.container, backgroundStyle]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
         <Stack.Screen options={{ headerShown: false }} />
         
-        {/* Header with back button */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-              <Feather name="chevron-left" size={24} color={isDarkMode ? "#FFF" : "#000"} />
-          </TouchableOpacity>
-            <Animated.Text style={[styles.headerTitle, textColorStyle]}>Profile</Animated.Text>
-          <View style={{ width: 32 }} />
-        </View>
-        
-          <Animated.ScrollView 
-          style={styles.contentContainer}
-          showsVerticalScrollIndicator={false}
-            onScroll={handleScroll}
-            scrollEventThrottle={16}
-        >
-            <Animated.View style={contentAnimatedStyle}>
-          {/* Profile Header Section */}
-          <View style={styles.profileHeader}>
-            {/* Profile Avatar */}
-                <View style={styles.avatarSection}>
-            <Animated.View style={[styles.avatarContainer, avatarScaleStyle]}>
-              <TouchableOpacity 
-                style={styles.avatarWrapper}
-                onPress={handleAvatarPress} 
-                      onLongPress={handleAvatarLongPress}
-                      delayLongPress={500}
-                activeOpacity={0.8}
-              >
-                {profileImage ? (
-                  <Image source={{ uri: profileImage }} style={styles.avatarImage} />
-                ) : (
-                  <LinearGradient
-                    colors={['#8E2DE2', '#4A00E0']}
-                    style={styles.avatarPlaceholder}
+        <Animated.View style={[styles.container, backgroundStyle]}>
+          {/* Header with back button */}
+          <View style={styles.header}>
+            <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+                <Feather name="chevron-left" size={24} color={isDarkMode ? "#FFF" : "#000"} />
+            </TouchableOpacity>
+              <Animated.Text style={[styles.headerTitle, textColorStyle]}>Profile</Animated.Text>
+            <View style={{ width: 32 }} />
+          </View>
+          
+            <Animated.ScrollView 
+            style={styles.contentContainer}
+            showsVerticalScrollIndicator={false}
+              onScroll={handleScroll}
+              scrollEventThrottle={16}
+          >
+              <Animated.View style={contentAnimatedStyle}>
+            {/* Profile Header Section */}
+            <View style={styles.profileHeader}>
+              {/* Profile Avatar */}
+                  <View style={styles.avatarSection}>
+                <Animated.View style={[styles.avatarContainer, avatarScaleStyle]}>
+                  <TouchableOpacity 
+                    style={styles.avatarWrapper}
+                    onPress={handleAvatarPress} 
+                          onLongPress={handleAvatarLongPress}
+                          delayLongPress={500}
+                    activeOpacity={0.8}
                   >
-                    <ThemedText style={styles.avatarPlaceholderText}>
-                      {username.substring(0, 2).toUpperCase()}
+                    {profileImage ? (
+                      <Image source={{ uri: profileImage }} style={styles.avatarImage} />
+                    ) : (
+                      <LinearGradient
+                        colors={['#8E2DE2', '#4A00E0']}
+                        style={styles.avatarPlaceholder}
+                      >
+                        <ThemedText style={styles.avatarPlaceholderText}>
+                          {username.substring(0, 2).toUpperCase()}
+                        </ThemedText>
+                      </LinearGradient>
+                    )}
+                    <View style={styles.editAvatarButton}>
+                      <Feather name="edit-2" size={12} color="#FFF" />
+                    </View>
+                  </TouchableOpacity>
+                </Animated.View>
+                
+                {showTooltip && (
+                  <Animated.View 
+                    style={styles.tooltip}
+                    entering={FadeIn.duration(300)}
+                    exiting={FadeOut.duration(300)}
+                  >
+                    <ThemedText style={styles.tooltipText}>
+                      Tap to view • Long press to edit
                     </ThemedText>
-                  </LinearGradient>
+                  </Animated.View>
                 )}
-                <View style={styles.editAvatarButton}>
-                  <Feather name="edit-2" size={12} color="#FFF" />
-                </View>
-              </TouchableOpacity>
-            </Animated.View>
-                  
-                  {showTooltip && (
-                    <Animated.View 
-                      style={styles.tooltip}
-                      entering={FadeIn.duration(300)}
-                      exiting={FadeOut.duration(300)}
-                    >
-                      <ThemedText style={styles.tooltipText}>
-                        Tap to view • Long press to edit
-                      </ThemedText>
-                    </Animated.View>
-                  )}
-                </View>
+              </View>
             
             {/* Name and Bio */}
             <View style={styles.profileInfo}>
@@ -836,16 +844,17 @@ export default function ProfileSettingsScreen() {
             
             <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
-                <View style={[styles.settingIcon, { backgroundColor: '#F3E8FF' }]}>
-                  <Feather name="moon" size={18} color="#6C5CE7" />
+                <View style={[styles.settingIcon, { backgroundColor: isDarkMode ? colors.backgroundSecondary : '#F3E8FF' }]}>
+                  <Feather name="moon" size={18} color={isDarkMode ? colors.primary : '#6C5CE7'} />
                 </View>
-                <ThemedText style={styles.settingText}>Dark Mode</ThemedText>
+                <ThemedText style={[styles.settingText, { color: colors.text }]}>Dark Mode</ThemedText>
               </View>
               <Switch
                 value={isDarkMode}
-                    onValueChange={handleDarkModeToggle}
-                trackColor={{ false: '#E0E0E0', true: Colors.light.primary }}
+                onValueChange={handleDarkModeToggle}
+                trackColor={{ false: colors.backgroundTertiary, true: colors.primary }}
                 thumbColor={'#FFFFFF'}
+                ios_backgroundColor={colors.backgroundTertiary}
               />
             </View>
             
@@ -924,332 +933,332 @@ export default function ProfileSettingsScreen() {
               <Feather name="chevron-right" size={18} color="#999" />
             </TouchableOpacity>
           </View>
-            </Animated.View>
-          </Animated.ScrollView>
-        
-        {/* Profile Picture Options Bottom Sheet */}
-        {showImageOptions && (
-          <Modal
-            transparent={true}
-            animationType="slide"
-            visible={showImageOptions}
-            onRequestClose={() => setShowImageOptions(false)}
+          </Animated.View>
+        </Animated.ScrollView>
+      
+      {/* Profile Picture Options Bottom Sheet */}
+      {showImageOptions && (
+        <Modal
+          transparent={true}
+          animationType="slide"
+          visible={showImageOptions}
+          onRequestClose={() => setShowImageOptions(false)}
+        >
+          <TouchableOpacity 
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setShowImageOptions(false)}
           >
-            <TouchableOpacity 
-              style={styles.modalOverlay}
-              activeOpacity={1}
-              onPress={() => setShowImageOptions(false)}
-            >
-              <View style={styles.bottomSheet}>
-                <View style={styles.bottomSheetHeader}>
-                  <ThemedText style={styles.bottomSheetTitle}>Profile Picture</ThemedText>
-                  <TouchableOpacity onPress={() => setShowImageOptions(false)}>
-                    <Feather name="x" size={24} color="#999" />
-                  </TouchableOpacity>
-                </View>
-                
-                <TouchableOpacity style={styles.bottomSheetOption} onPress={takePicture}>
-                  <Feather name="camera" size={22} color="#333" />
-                  <ThemedText style={styles.bottomSheetOptionText}>Take Photo</ThemedText>
+            <View style={styles.bottomSheet}>
+              <View style={styles.bottomSheetHeader}>
+                <ThemedText style={styles.bottomSheetTitle}>Profile Picture</ThemedText>
+                <TouchableOpacity onPress={() => setShowImageOptions(false)}>
+                  <Feather name="x" size={24} color="#999" />
                 </TouchableOpacity>
-                
-                <TouchableOpacity style={styles.bottomSheetOption} onPress={handleChangeProfilePicture}>
-                  <Feather name="image" size={22} color="#333" />
-                  <ThemedText style={styles.bottomSheetOptionText}>Choose from Library</ThemedText>
-                </TouchableOpacity>
-                
-                {profileImage && (
-                  <TouchableOpacity style={styles.bottomSheetOption} onPress={removeProfilePicture}>
-                    <Feather name="trash-2" size={22} color="#FF4D4F" />
-                    <ThemedText style={[styles.bottomSheetOptionText, { color: '#FF4D4F' }]}>
-                      Remove Photo
-                    </ThemedText>
-                  </TouchableOpacity>
-                )}
-                  
-                  <TouchableOpacity style={styles.bottomSheetOption} onPress={handleViewProfileImage}>
-                    <Feather name="maximize-2" size={22} color="#333" />
-                    <ThemedText style={styles.bottomSheetOptionText}>View Full Image</ThemedText>
-                  </TouchableOpacity>
-              </View>
-            </TouchableOpacity>
-          </Modal>
-        )}
-        
-        {/* Interest Selector Modal */}
-        {showInterestSelector && (
-          <Modal
-              visible={showInterestSelector}
-            transparent={true}
-            animationType="slide"
-            onRequestClose={() => setShowInterestSelector(false)}
-          >
-              <View style={styles.modalContainer}>
-                <View style={styles.interestSelectorContainer}>
-                  <View style={styles.interestSelectorHeader}>
-                    <ThemedText style={styles.interestSelectorTitle}>Select Research Interests</ThemedText>
-                  <TouchableOpacity onPress={() => setShowInterestSelector(false)}>
-                      <Feather name="x" size={24} color="#000" />
-                  </TouchableOpacity>
-                </View>
-                
-                  <ScrollView style={styles.interestSelectorContent}>
-                <View style={styles.interestTagsGrid}>
-                      {PREDEFINED_TAGS.map((tag) => {
-                    const isSelected = selectedInterests.some(interest => interest.id === tag.id);
-                    return (
-                      <TouchableOpacity
-                        key={tag.id}
-                        style={[
-                              styles.interestSelectorTag,
-                          { backgroundColor: tag.color },
-                          isSelected && styles.interestTagSelected
-                        ]}
-                        onPress={() => toggleInterest(tag)}
-                      >
-                        <ThemedText
-                          style={[
-                                styles.interestSelectorTagText,
-                            { color: tag.textColor }
-                          ]}
-                        >
-                          {tag.name}
-                        </ThemedText>
-                        {isSelected && (
-                              <View style={styles.selectedIndicator}>
-                                <Feather name="check" size={12} color="#FFF" />
-                          </View>
-                        )}
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-                  </ScrollView>
-                
-                <TouchableOpacity 
-                    style={styles.doneButton}
-                  onPress={() => setShowInterestSelector(false)}
-                >
-                    <ThemedText style={styles.doneButtonText}>Done</ThemedText>
-                </TouchableOpacity>
-              </View>
-              </View>
-            </Modal>
-          )}
-          
-          {/* Help Center Bot Modal */}
-          <Modal
-            visible={showHelpCenter}
-            transparent={false}
-            animationType="slide"
-            onRequestClose={() => setShowHelpCenter(false)}
-          >
-            <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-              <View style={styles.helpCenterHeader}>
-                <TouchableOpacity 
-                  onPress={() => setShowHelpCenter(false)} 
-                  style={styles.helpCenterBackButton}
-                >
-                  <Feather name="chevron-left" size={24} color="#000" />
-            </TouchableOpacity>
-                <ThemedText style={styles.helpCenterTitle}>Help Center</ThemedText>
-                <View style={{ width: 40 }} />
               </View>
               
-              <View style={styles.helpCenterContainer}>
-                <ScrollView 
-                  ref={chatScrollRef}
-                  style={styles.chatContainer}
-                  contentContainerStyle={styles.chatContentContainer}
-                >
-                  {chatMessages.map((message) => (
-                    <View 
-                      key={message.id} 
-                      style={[
-                        styles.chatBubble, 
-                        message.isBot ? styles.botBubble : styles.userBubble
-                      ]}
-                    >
-                      {message.isBot && (
-                        <View style={styles.botAvatarContainer}>
-                          <Feather name="help-circle" size={16} color="#fff" />
-                        </View>
-                      )}
-                      <View style={styles.messageContent}>
-                        <ThemedText 
-                          style={[
-                            styles.chatText, 
-                            message.isBot ? styles.botText : styles.userText
-                          ]}
-                        >
-                          {message.text}
-                        </ThemedText>
-                      </View>
-                    </View>
-                  ))}
-                </ScrollView>
-                
-                <KeyboardAvoidingView
-                  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                  style={styles.inputContainer}
-                >
-                  <TextInput
-                    style={styles.chatInput}
-                    value={chatInput}
-                    onChangeText={setChatInput}
-                    placeholder="Ask a question..."
-                    placeholderTextColor="#999"
-                    onSubmitEditing={handleSendMessage}
-                    returnKeyType="send"
-                  />
-                  <TouchableOpacity style={styles.sendButton} onPress={handleSendMessage}>
-                    <Feather name="send" size={18} color="#fff" />
-                  </TouchableOpacity>
-                </KeyboardAvoidingView>
-              </View>
-            </SafeAreaView>
-          </Modal>
-          
-          {/* Privacy Policy Modal */}
-          <Modal
-            visible={showPrivacyPolicy}
-            transparent={false}
-            animationType="slide"
-            onRequestClose={() => setShowPrivacyPolicy(false)}
-          >
-            <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-              <View style={styles.privacyHeader}>
-                <TouchableOpacity 
-                  onPress={() => setShowPrivacyPolicy(false)} 
-                  style={styles.privacyBackButton}
-                >
-                  <Feather name="chevron-left" size={24} color="#000" />
-                </TouchableOpacity>
-                <ThemedText style={styles.privacyTitle}>Privacy Policy</ThemedText>
-                <View style={{ width: 40 }} />
-              </View>
+              <TouchableOpacity style={styles.bottomSheetOption} onPress={takePicture}>
+                <Feather name="camera" size={22} color="#333" />
+                <ThemedText style={styles.bottomSheetOptionText}>Take Photo</ThemedText>
+              </TouchableOpacity>
               
-              <ScrollView style={styles.privacyContainer}>
-                <View style={styles.privacyContent}>
-                  <ThemedText style={styles.privacySection}>Last Updated: May 1, 2023</ThemedText>
-                  
-                  <ThemedText style={styles.privacyHeading}>1. Introduction</ThemedText>
-                  <ThemedText style={styles.privacyText}>
-                    Welcome to Rescroll. We respect your privacy and are committed to protecting your personal data. This privacy policy will inform you about how we collect, use, and disclose your information when you use our application.
-                  </ThemedText>
-                  
-                  <ThemedText style={styles.privacyHeading}>2. Data We Collect</ThemedText>
-                  <ThemedText style={styles.privacyText}>
-                    We collect information that you provide directly to us, such as when you create an account, update your profile, or interact with features in the app. This includes your name, email address, profile picture, and any other information you choose to provide.
-                  </ThemedText>
-                  
-                  <ThemedText style={styles.privacyHeading}>3. How We Use Your Data</ThemedText>
-                  <ThemedText style={styles.privacyText}>
-                    We use the information we collect to provide, maintain, and improve our services, to develop new features, and to protect Rescroll and our users. We also use the data to communicate with you about updates, security alerts, and support messages.
-                  </ThemedText>
-                  
-                  <ThemedText style={styles.privacyHeading}>4. Data Sharing and Disclosure</ThemedText>
-                  <ThemedText style={styles.privacyText}>
-                    We do not share your personal information with third parties except in limited circumstances, such as when required by law, to protect our rights, or with your explicit consent.
-                  </ThemedText>
-                  
-                  <ThemedText style={styles.privacyHeading}>5. Data Security</ThemedText>
-                  <ThemedText style={styles.privacyText}>
-                    We implement appropriate security measures to protect your personal information from unauthorized access, alteration, disclosure, or destruction.
-                  </ThemedText>
-                  
-                  <ThemedText style={styles.privacyHeading}>6. Your Rights</ThemedText>
-                  <ThemedText style={styles.privacyText}>
-                    Depending on your location, you may have certain rights regarding your personal information, such as the right to access, correct, or delete your data.
-                  </ThemedText>
-                  
-                  <ThemedText style={styles.privacyHeading}>7. Changes to This Policy</ThemedText>
-                  <ThemedText style={styles.privacyText}>
-                    We may update our privacy policy from time to time. We will notify you of any changes by posting the new privacy policy on this page and updating the "Last Updated" date.
-                  </ThemedText>
-                  
-                  <ThemedText style={styles.privacyHeading}>8. Contact Us</ThemedText>
-                  <ThemedText style={styles.privacyText}>
-                    If you have any questions about this privacy policy or our data practices, please contact us at privacy@rescroll.com.
-                  </ThemedText>
-                </View>
-              </ScrollView>
-            </SafeAreaView>
-          </Modal>
-          
-          {/* Language Selector Modal */}
-          <Modal
-            visible={showLanguageSelector}
-            transparent={true}
-            animationType="slide"
-            onRequestClose={() => setShowLanguageSelector(false)}
-          >
-            <View style={styles.languageModalContainer}>
-              <View style={styles.languageModalContent}>
-                <View style={styles.languageModalHeader}>
-                  <ThemedText style={styles.languageModalTitle}>Select Language</ThemedText>
-                  <TouchableOpacity onPress={() => setShowLanguageSelector(false)}>
-                    <Feather name="x" size={24} color="#000" />
-                  </TouchableOpacity>
-                </View>
-                
-                <FlatList
-                  data={Object.values(LanguageService.languages)}
-                  keyExtractor={(item) => item.code}
-                  style={styles.languageList}
-                  renderItem={({ item }) => (
-                    <TouchableOpacity 
-                      style={[
-                        styles.languageItem,
-                        selectedLanguage === item.code && styles.selectedLanguageItem
-                      ]}
-                      onPress={() => {
-                        selectLanguage(item.code);
-                        setShowLanguageSelector(false);
-                      }}
-                    >
-                      <View style={styles.languageInfo}>
-                        <ThemedText style={styles.languageName}>{item.name}</ThemedText>
-                        <ThemedText style={styles.languageNative}>{item.native}</ThemedText>
-                      </View>
-                      {selectedLanguage === item.code && (
-                        <Feather name="check" size={18} color={Colors.light.primary} />
-                      )}
-                    </TouchableOpacity>
-                  )}
-                />
-              </View>
-            </View>
-          </Modal>
-          
-          {/* Full Screen Image Viewer Modal */}
-          <Modal
-            visible={showFullScreenImage}
-            transparent={true}
-            animationType="fade"
-            onRequestClose={() => setShowFullScreenImage(false)}
-          >
-            <View style={styles.fullScreenImageContainer}>
-              <TouchableOpacity 
-                style={styles.fullScreenCloseButton}
-                onPress={() => setShowFullScreenImage(false)}
-              >
-                <Feather name="x" size={24} color="#fff" />
+              <TouchableOpacity style={styles.bottomSheetOption} onPress={handleChangeProfilePicture}>
+                <Feather name="image" size={22} color="#333" />
+                <ThemedText style={styles.bottomSheetOptionText}>Choose from Library</ThemedText>
               </TouchableOpacity>
               
               {profileImage && (
-                <Image 
-                  source={{ uri: profileImage }} 
-                  style={styles.fullScreenImage}
-                  resizeMode="contain"
-                />
+                <TouchableOpacity style={styles.bottomSheetOption} onPress={removeProfilePicture}>
+                  <Feather name="trash-2" size={22} color="#FF4D4F" />
+                  <ThemedText style={[styles.bottomSheetOptionText, { color: '#FF4D4F' }]}>
+                    Remove Photo
+                  </ThemedText>
+                </TouchableOpacity>
               )}
+                
+                <TouchableOpacity style={styles.bottomSheetOption} onPress={handleViewProfileImage}>
+                  <Feather name="maximize-2" size={22} color="#333" />
+                  <ThemedText style={styles.bottomSheetOptionText}>View Full Image</ThemedText>
+                </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </Modal>
+      )}
+      
+      {/* Interest Selector Modal */}
+      {showInterestSelector && (
+        <Modal
+            visible={showInterestSelector}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setShowInterestSelector(false)}
+        >
+            <View style={styles.modalContainer}>
+              <View style={styles.interestSelectorContainer}>
+                <View style={styles.interestSelectorHeader}>
+                  <ThemedText style={styles.interestSelectorTitle}>Select Research Interests</ThemedText>
+                <TouchableOpacity onPress={() => setShowInterestSelector(false)}>
+                    <Feather name="x" size={24} color="#000" />
+                </TouchableOpacity>
+              </View>
+              
+                <ScrollView style={styles.interestSelectorContent}>
+              <View style={styles.interestTagsGrid}>
+                    {PREDEFINED_TAGS.map((tag) => {
+                  const isSelected = selectedInterests.some(interest => interest.id === tag.id);
+                  return (
+                    <TouchableOpacity
+                      key={tag.id}
+                      style={[
+                            styles.interestSelectorTag,
+                        { backgroundColor: tag.color },
+                        isSelected && styles.interestTagSelected
+                      ]}
+                      onPress={() => toggleInterest(tag)}
+                    >
+                      <ThemedText
+                        style={[
+                              styles.interestSelectorTagText,
+                          { color: tag.textColor }
+                        ]}
+                      >
+                        {tag.name}
+                      </ThemedText>
+                      {isSelected && (
+                            <View style={styles.selectedIndicator}>
+                              <Feather name="check" size={12} color="#FFF" />
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+                </ScrollView>
+              
+              <TouchableOpacity 
+                  style={styles.doneButton}
+                onPress={() => setShowInterestSelector(false)}
+              >
+                  <ThemedText style={styles.doneButtonText}>Done</ThemedText>
+              </TouchableOpacity>
+            </View>
             </View>
           </Modal>
-        </Animated.View>
-    </SafeAreaView>
-    </GestureHandlerRootView>
-  );
+        )}
+        
+        {/* Help Center Bot Modal */}
+        <Modal
+          visible={showHelpCenter}
+          transparent={false}
+          animationType="slide"
+          onRequestClose={() => setShowHelpCenter(false)}
+        >
+          <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+            <View style={styles.helpCenterHeader}>
+              <TouchableOpacity 
+                onPress={() => setShowHelpCenter(false)} 
+                style={styles.helpCenterBackButton}
+              >
+                <Feather name="chevron-left" size={24} color="#000" />
+          </TouchableOpacity>
+              <ThemedText style={styles.helpCenterTitle}>Help Center</ThemedText>
+              <View style={{ width: 40 }} />
+            </View>
+            
+            <View style={styles.helpCenterContainer}>
+              <ScrollView 
+                ref={chatScrollRef}
+                style={styles.chatContainer}
+                contentContainerStyle={styles.chatContentContainer}
+              >
+                {chatMessages.map((message) => (
+                  <View 
+                    key={message.id} 
+                    style={[
+                      styles.chatBubble, 
+                      message.isBot ? styles.botBubble : styles.userBubble
+                    ]}
+                  >
+                    {message.isBot && (
+                      <View style={styles.botAvatarContainer}>
+                        <Feather name="help-circle" size={16} color="#fff" />
+                      </View>
+                    )}
+                    <View style={styles.messageContent}>
+                      <ThemedText 
+                        style={[
+                          styles.chatText, 
+                          message.isBot ? styles.botText : styles.userText
+                        ]}
+                      >
+                        {message.text}
+                      </ThemedText>
+                    </View>
+                  </View>
+                ))}
+              </ScrollView>
+              
+              <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={styles.inputContainer}
+              >
+                <TextInput
+                  style={styles.chatInput}
+                  value={chatInput}
+                  onChangeText={setChatInput}
+                  placeholder="Ask a question..."
+                  placeholderTextColor="#999"
+                  onSubmitEditing={handleSendMessage}
+                  returnKeyType="send"
+                />
+                <TouchableOpacity style={styles.sendButton} onPress={handleSendMessage}>
+                  <Feather name="send" size={18} color="#fff" />
+                </TouchableOpacity>
+              </KeyboardAvoidingView>
+            </View>
+          </SafeAreaView>
+        </Modal>
+        
+        {/* Privacy Policy Modal */}
+        <Modal
+          visible={showPrivacyPolicy}
+          transparent={false}
+          animationType="slide"
+          onRequestClose={() => setShowPrivacyPolicy(false)}
+        >
+          <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+            <View style={styles.privacyHeader}>
+              <TouchableOpacity 
+                onPress={() => setShowPrivacyPolicy(false)} 
+                style={styles.privacyBackButton}
+              >
+                <Feather name="chevron-left" size={24} color="#000" />
+              </TouchableOpacity>
+              <ThemedText style={styles.privacyTitle}>Privacy Policy</ThemedText>
+              <View style={{ width: 40 }} />
+            </View>
+            
+            <ScrollView style={styles.privacyContainer}>
+              <View style={styles.privacyContent}>
+                <ThemedText style={styles.privacySection}>Last Updated: May 1, 2023</ThemedText>
+                
+                <ThemedText style={styles.privacyHeading}>1. Introduction</ThemedText>
+                <ThemedText style={styles.privacyText}>
+                  Welcome to Rescroll. We respect your privacy and are committed to protecting your personal data. This privacy policy will inform you about how we collect, use, and disclose your information when you use our application.
+                </ThemedText>
+                
+                <ThemedText style={styles.privacyHeading}>2. Data We Collect</ThemedText>
+                <ThemedText style={styles.privacyText}>
+                  We collect information that you provide directly to us, such as when you create an account, update your profile, or interact with features in the app. This includes your name, email address, profile picture, and any other information you choose to provide.
+                </ThemedText>
+                
+                <ThemedText style={styles.privacyHeading}>3. How We Use Your Data</ThemedText>
+                <ThemedText style={styles.privacyText}>
+                  We use the information we collect to provide, maintain, and improve our services, to develop new features, and to protect Rescroll and our users. We also use the data to communicate with you about updates, security alerts, and support messages.
+                </ThemedText>
+                
+                <ThemedText style={styles.privacyHeading}>4. Data Sharing and Disclosure</ThemedText>
+                <ThemedText style={styles.privacyText}>
+                  We do not share your personal information with third parties except in limited circumstances, such as when required by law, to protect our rights, or with your explicit consent.
+                </ThemedText>
+                
+                <ThemedText style={styles.privacyHeading}>5. Data Security</ThemedText>
+                <ThemedText style={styles.privacyText}>
+                  We implement appropriate security measures to protect your personal information from unauthorized access, alteration, disclosure, or destruction.
+                </ThemedText>
+                
+                <ThemedText style={styles.privacyHeading}>6. Your Rights</ThemedText>
+                <ThemedText style={styles.privacyText}>
+                  Depending on your location, you may have certain rights regarding your personal information, such as the right to access, correct, or delete your data.
+                </ThemedText>
+                
+                <ThemedText style={styles.privacyHeading}>7. Changes to This Policy</ThemedText>
+                <ThemedText style={styles.privacyText}>
+                  We may update our privacy policy from time to time. We will notify you of any changes by posting the new privacy policy on this page and updating the "Last Updated" date.
+                </ThemedText>
+                
+                <ThemedText style={styles.privacyHeading}>8. Contact Us</ThemedText>
+                <ThemedText style={styles.privacyText}>
+                  If you have any questions about this privacy policy or our data practices, please contact us at privacy@rescroll.com.
+                </ThemedText>
+              </View>
+            </ScrollView>
+          </SafeAreaView>
+        </Modal>
+        
+        {/* Language Selector Modal */}
+        <Modal
+          visible={showLanguageSelector}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setShowLanguageSelector(false)}
+        >
+          <View style={styles.languageModalContainer}>
+            <View style={styles.languageModalContent}>
+              <View style={styles.languageModalHeader}>
+                <ThemedText style={styles.languageModalTitle}>Select Language</ThemedText>
+                <TouchableOpacity onPress={() => setShowLanguageSelector(false)}>
+                  <Feather name="x" size={24} color="#000" />
+                </TouchableOpacity>
+              </View>
+              
+              <FlatList
+                data={Object.values(LanguageService.languages)}
+                keyExtractor={(item) => item.code}
+                style={styles.languageList}
+                renderItem={({ item }) => (
+                  <TouchableOpacity 
+                    style={[
+                      styles.languageItem,
+                      selectedLanguage === item.code && styles.selectedLanguageItem
+                    ]}
+                    onPress={() => {
+                      selectLanguage(item.code);
+                      setShowLanguageSelector(false);
+                    }}
+                  >
+                    <View style={styles.languageInfo}>
+                      <ThemedText style={styles.languageName}>{item.name}</ThemedText>
+                      <ThemedText style={styles.languageNative}>{item.native}</ThemedText>
+                    </View>
+                    {selectedLanguage === item.code && (
+                      <Feather name="check" size={18} color={Colors.light.primary} />
+                    )}
+                  </TouchableOpacity>
+                )}
+              />
+            </View>
+          </View>
+        </Modal>
+        
+        {/* Full Screen Image Viewer Modal */}
+        <Modal
+          visible={showFullScreenImage}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowFullScreenImage(false)}
+        >
+          <View style={styles.fullScreenImageContainer}>
+            <TouchableOpacity 
+              style={styles.fullScreenCloseButton}
+              onPress={() => setShowFullScreenImage(false)}
+            >
+              <Feather name="x" size={24} color="#fff" />
+            </TouchableOpacity>
+            
+            {profileImage && (
+              <Image 
+                source={{ uri: profileImage }} 
+                style={styles.fullScreenImage}
+                resizeMode="contain"
+              />
+            )}
+          </View>
+        </Modal>
+      </Animated.View>
+  </SafeAreaView>
+  </GestureHandlerRootView>
+);
 }
 
 const styles = StyleSheet.create({

@@ -1,7 +1,29 @@
-import { useColorScheme as useNativeColorScheme } from 'react-native';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useColorScheme as useDeviceColorScheme } from 'react-native';
 
-// Simple hook that always returns 'light' mode
+/**
+ * A custom hook that returns the current color scheme ('light' or 'dark') based on
+ * the user's theme preference or system setting
+ */
 export function useColorScheme() {
-  // Always return 'light' as we're removing the dark mode feature
-  return 'light';
+  const { colorScheme } = useTheme();
+  return colorScheme;
 }
+
+/**
+ * A custom hook that returns whether the current color scheme is dark
+ */
+export function useIsDarkMode() {
+  const { colorScheme } = useTheme();
+  return colorScheme === 'dark';
+}
+
+/**
+ * A custom hook that returns the device's color scheme regardless of user preferences
+ */
+export function useDeviceTheme() {
+  return useDeviceColorScheme();
+}
+
+// Important for default export to work correctly
+export default useColorScheme;

@@ -18,6 +18,8 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import { AppContext } from './_layout';
 import { Swipeable, GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
+import { useTheme } from '@/contexts/ThemeContext';
+import { Colors } from '@/constants/Colors';
 
 // Define notification types
 export type NotificationType = 
@@ -185,6 +187,15 @@ export default function NotificationsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [groupedNotifications, setGroupedNotifications] = useState<{ title: string, data: Notification[] }[]>([]);
   const [isMounted, setIsMounted] = useState(false);
+  const { colorScheme } = useTheme();
+  const isDarkMode = colorScheme === 'dark';
+  const colors = Colors[isDarkMode ? 'dark' : 'light'];
+  
+  // Add logging to debug color theme
+  useEffect(() => {
+    console.log('[NotificationsScreen] Theme colors loaded:', colorScheme);
+    console.log('[NotificationsScreen] Background color:', colors.background);
+  }, [colorScheme, colors]);
   
   // Set mounted state after component mounts to prevent early navigation
   useEffect(() => {
@@ -292,108 +303,89 @@ export default function NotificationsScreen() {
     }, 1000);
   }, []);
 
-  // Get icon for notification type
+  // Add notification type icon mapping with theme colors
   const getNotificationIcon = (type: NotificationType) => {
-    switch(type) {
+    switch (type) {
       case 'like':
-        return <IconSymbol name="heart" size={22} color="#FF3B30" />;
+        return <IconSymbol name="heart.fill" size={24} color={colors.error} />; 
       case 'share':
-        return <IconSymbol name="square.and.arrow.up" size={22} color="#007AFF" />;
-      case 'annotation':
-        return <IconSymbol name="doc.text" size={22} color="#FF9500" />;
-      case 'highlight':
-        return <IconSymbol name="doc.text" size={22} color="#5856D6" />;
-      case 'follow':
-        return <IconSymbol name="person.circle" size={22} color="#34C759" />;
-      case 'citation':
-        return <IconSymbol name="bookmark.fill" size={22} color="#AF52DE" />;
-      case 'new_paper':
-        return <IconSymbol name="doc.text" size={22} color="#5AC8FA" />;
+        return <IconSymbol name="square.and.arrow.up" size={24} color={colors.info} />;
       case 'comment':
-        return <IconSymbol name="bell" size={22} color="#FF2D55" />;
+        return <IconSymbol name="text.bubble" size={24} color={colors.primary} />;
+      case 'annotation':
+        return <IconSymbol name="pencil" size={24} color={colors.warning} />;
+      case 'highlight':
+        return <IconSymbol name="doc.text" size={24} color={colors.success} />;
+      case 'follow':
+        return <IconSymbol name="person.circle" size={24} color={colors.primary} />;
+      case 'citation':
+        return <IconSymbol name="doc.text" size={24} color={colors.secondary} />;
+      case 'new_paper':
+        return <IconSymbol name="doc.text" size={24} color={colors.info} />;
       default:
-        return <IconSymbol name="bell" size={22} color="#8E8E93" />;
+        return <IconSymbol name="bell" size={24} color={colors.icon} />;
     }
   };
 
-  // Render a notification item with swipe-to-delete
+  // Render notification item
   const renderNotificationItem = ({ item }: { item: Notification }) => {
-    // Reference to the swipeable component
     const swipeableRef = useRef<Swipeable>(null);
+    const scale = useRef(new Animated.Value(1)).current;
     
-    // Action to perform when card is tapped - using a proper navigation approach
     const handlePress = () => {
-      console.log('[NotificationsScreen] Notification tapped, marking as read');
-      markAsRead(item.id);
+      // If unread, mark as read
+      if (!item.read) {
+        markAsRead(item.id);
+      }
       
-      // Only navigate if the component is mounted
-      if (isMounted) {
-        console.log('[NotificationsScreen] Component is mounted, attempting navigation to /(tabs)');
-        
-        // Wait until the end of the current event loop to navigate
-        // This prevents navigation during render/animation cycles
-        setTimeout(() => {
-          console.log('[NotificationsScreen] Delayed navigation executing now');
-          try {
-            // Use a state-based approach for navigation to avoid the refresh
-            console.log('[NotificationsScreen] Using router.replace with params');
-            router.replace({
-              pathname: '/(tabs)',
-              // Adding a timestamp helps ensure the route is considered "different"
-              params: { 
-                t: Date.now(),
-                source: 'notification'
-              }
-            });
-          } catch (error) {
-            console.error('[NotificationsScreen] Navigation error:', error);
-            router.push('/(tabs)');
-          }
-        }, 50);
-      } else {
-        console.log('[NotificationsScreen] Component not mounted, skipping navigation');
+      // Navigate to the related content depending on notification type
+      if (item.entityId && item.entityType) {
+        if (item.entityType === 'paper') {
+          router.push(`/paper/${item.entityId}` as any);
+        } else if (item.entityType === 'user') {
+          router.push('/(tabs)');
+        }
       }
     };
     
-    // Right swipe actions (delete)
+    // Render delete button for swipe action
     const renderRightActions = (
       progress: Animated.AnimatedInterpolation<number>, 
       dragX: Animated.AnimatedInterpolation<number>
     ) => {
       const trans = dragX.interpolate({
-        inputRange: [-80, 0],
-        outputRange: [0, 80],
+        inputRange: [-100, 0],
+        outputRange: [0, 100],
         extrapolate: 'clamp',
       });
       
       return (
-        <View style={styles.rightAction}>
-          <Animated.View
-            style={[
-              styles.actionButton,
-              {
-                transform: [{ translateX: trans }],
-              },
-            ]}>
-            <TouchableOpacity
-              onPress={() => {
-                swipeableRef.current?.close();
-                deleteNotification(item.id);
-              }}
-              style={styles.deleteButton}>
-              <IconSymbol name="xmark" size={22} color="#FFFFFF" />
-            </TouchableOpacity>
-          </Animated.View>
-        </View>
+        <Animated.View 
+          style={[
+            styles.deleteButtonContainer, 
+            {
+              transform: [{ translateX: trans }],
+            }
+          ]}
+        >
+          <TouchableOpacity 
+            style={[styles.deleteButton, { backgroundColor: colors.error }]} 
+            onPress={() => {
+              deleteNotification(item.id);
+              swipeableRef.current?.close();
+            }}
+          >
+            <IconSymbol name="xmark" size={20} color="#FFFFFF" />
+          </TouchableOpacity>
+        </Animated.View>
       );
     };
-    
-    // Animated press effect
-    const scale = useRef(new Animated.Value(1)).current;
     
     const onPressIn = () => {
       Animated.spring(scale, {
         toValue: 0.97,
+        friction: 5,
+        tension: 40,
         useNativeDriver: true,
       }).start();
     };
@@ -427,25 +419,26 @@ export default function NotificationsScreen() {
             onPressOut={onPressOut}
             style={[
               styles.notificationItem,
-              !item.read && styles.unreadNotification
+              { backgroundColor: colors.card },
+              !item.read && [styles.unreadNotification, { backgroundColor: colors.backgroundSecondary }]
             ]}
           >
-            {!item.read && <View style={styles.unreadDot} />}
+            {!item.read && <View style={[styles.unreadDot, { backgroundColor: colors.primary }]} />}
             
             <View style={styles.notificationIconContainer}>
               {getNotificationIcon(item.type)}
             </View>
             
             <View style={styles.notificationContent}>
-              <ThemedText style={styles.notificationTitle}>
+              <ThemedText style={[styles.notificationTitle, { color: colors.text }]}>
                 {item.title}
               </ThemedText>
               
-              <ThemedText style={styles.notificationMessage}>
+              <ThemedText style={[styles.notificationMessage, { color: colors.textSecondary }]}>
                 {item.message}
               </ThemedText>
               
-              <ThemedText style={styles.notificationTime}>
+              <ThemedText style={[styles.notificationTime, { color: colors.textTertiary }]}>
                 {formatRelativeTime(item.timestamp)}
               </ThemedText>
             </View>
@@ -457,66 +450,93 @@ export default function NotificationsScreen() {
   
   // Render section header
   const renderSectionHeader = ({ section }: { section: { title: string } }) => (
-    <View style={styles.sectionHeader}>
-      <ThemedText style={styles.sectionHeaderText}>{section.title}</ThemedText>
+    <View style={[styles.sectionHeader, { backgroundColor: colors.backgroundSecondary }]}>
+      <ThemedText style={[styles.sectionHeaderText, { color: colors.textSecondary }]}>{section.title}</ThemedText>
     </View>
   );
   
   // Render empty state
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
-      <IconSymbol name="bell.slash" size={60} color="#8E8E93" />
-      <ThemedText style={styles.emptyText}>No notifications</ThemedText>
-      <ThemedText style={styles.emptySubtext}>
+      <IconSymbol name="bell.slash" size={60} color={colors.textSecondary} />
+      <ThemedText style={[styles.emptyText, { color: colors.text }]}>No notifications</ThemedText>
+      <ThemedText style={[styles.emptySubtext, { color: colors.textSecondary }]}>
         You're all caught up!
       </ThemedText>
     </View>
   );
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <ThemedView style={styles.container}>
-        <StatusBar style="light" />
-        
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-            <IconSymbol 
-              name="arrow.right" 
-              size={24} 
-              color="#FFFFFF" 
-              style={{ transform: [{ scaleX: -1 }] }} 
-            />
-          </TouchableOpacity>
-          
-          <ThemedText style={styles.headerTitle}>Notifications</ThemedText>
-          
-          <TouchableOpacity onPress={markAllAsRead} style={styles.markAllButton}>
-            <ThemedText style={styles.markAllText}>Mark all as read</ThemedText>
-          </TouchableOpacity>
+    <ThemedView style={styles.container}>
+      <Stack.Screen 
+        options={{
+          headerShown: true,
+          title: 'Notifications',
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={handleBack}
+              style={styles.backButton}
+              hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+            >
+              <IconSymbol name="arrow.right" size={24} color={colors.text} style={{ transform: [{ scaleX: -1 }] }} />
+            </TouchableOpacity>
+          ),
+          headerRight: () => (
+            <View style={styles.headerRightContainer}>
+              {notifications.filter(n => !n.read).length > 0 && (
+                <TouchableOpacity
+                  onPress={markAllAsRead}
+                  style={styles.markAllButton}
+                  hitSlop={{ top: 15, bottom: 15, left: 15, right: 20 }}
+                >
+                  <ThemedText style={[styles.markAllText, { color: colors.primary }]}>
+                    Mark all as read
+                  </ThemedText>
+                </TouchableOpacity>
+              )}
+            </View>
+          ),
+          headerStyle: {
+            backgroundColor: colors.background,
+          },
+          headerTitleStyle: {
+            color: colors.text,
+          },
+        }}
+      />
+      
+      <StatusBar style={isDarkMode ? 'light' : 'dark'} />
+      
+      {loading ? (
+        <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
-        
-        {/* Notifications List */}
-        {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#3498db" />
-          </View>
-        ) : (
+      ) : notifications.length === 0 ? (
+        renderEmpty()
+      ) : (
+        <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.background }}>
           <SectionList
             sections={groupedNotifications}
             keyExtractor={(item) => item.id}
             renderItem={renderNotificationItem}
             renderSectionHeader={renderSectionHeader}
-            contentContainerStyle={styles.notificationsList}
-            stickySectionHeadersEnabled
-            onRefresh={onRefresh}
+            contentContainerStyle={[
+              styles.notificationList,
+              { backgroundColor: colors.background }
+            ]}
+            onRefresh={() => {
+              setRefreshing(true);
+              // Simulated refresh
+              setTimeout(() => {
+                setRefreshing(false);
+              }, 1000);
+            }}
             refreshing={refreshing}
-            ListEmptyComponent={renderEmpty}
-            showsVerticalScrollIndicator={false}
+            stickySectionHeadersEnabled={true}
           />
-        )}
-      </ThemedView>
-    </GestureHandlerRootView>
+        </GestureHandlerRootView>
+      )}
+    </ThemedView>
   );
 }
 
@@ -525,7 +545,6 @@ const { width } = Dimensions.get('window');
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
   },
   header: {
     flexDirection: 'row',
@@ -534,14 +553,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: Platform.OS === 'ios' ? 50 : 20,
     paddingBottom: 10,
-    backgroundColor: '#000',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.1)',
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#FFF',
   },
   backButton: {
     padding: 5,
@@ -550,8 +566,8 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   markAllText: {
-    color: '#3498db',
     fontSize: 14,
+    fontWeight: '500',
   },
   notificationsList: {
     paddingBottom: 20,
@@ -559,66 +575,57 @@ const styles = StyleSheet.create({
   },
   notificationContainer: {
     width: '100%',
+    overflow: 'hidden',
   },
   notificationItem: {
     flexDirection: 'row',
-    padding: 16,
-    backgroundColor: '#1A1A1A',
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.05)',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     position: 'relative',
+    borderBottomWidth: 1,
   },
   unreadNotification: {
-    backgroundColor: '#111',
+    borderLeftWidth: 3,
   },
   unreadDot: {
     position: 'absolute',
     top: 20,
-    left: 6,
+    left: 8,
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#3498db',
   },
   notificationIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    alignItems: 'center',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: 'center',
+    alignItems: 'center',
     marginRight: 12,
   },
   notificationContent: {
     flex: 1,
+    justifyContent: 'center',
   },
   notificationTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#FFF',
+    fontSize: 15,
+    fontWeight: '600',
     marginBottom: 4,
   },
   notificationMessage: {
     fontSize: 14,
-    lineHeight: 20,
-    color: '#CCC',
-    marginBottom: 6,
+    marginBottom: 4,
   },
   notificationTime: {
     fontSize: 12,
-    color: '#999',
   },
   sectionHeader: {
-    paddingVertical: 8,
     paddingHorizontal: 16,
-    backgroundColor: '#000',
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.1)',
+    paddingVertical: 8,
   },
   sectionHeaderText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#999',
   },
   rightAction: {
     backgroundColor: '#dd2c00',
@@ -642,21 +649,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyContainer: {
-    alignItems: 'center',
+    flex: 1,
     justifyContent: 'center',
-    padding: 50,
-    marginTop: 50,
+    alignItems: 'center',
+    paddingTop: 100,
   },
   emptyText: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
-    color: '#FFF',
-    marginTop: 20,
-    marginBottom: 10,
+    marginTop: 16,
   },
   emptySubtext: {
-    fontSize: 16,
-    color: '#999',
+    fontSize: 14,
+    marginTop: 8,
     textAlign: 'center',
+  },
+  deleteButtonContainer: {
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+  },
+  headerRightContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  notificationList: {
+    paddingBottom: 20,
+    minHeight: '100%',
   },
 }); 

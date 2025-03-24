@@ -8,13 +8,26 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 // Get screen width for animations
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-export default function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+// Update props to include colorScheme
+interface CustomTabBarProps extends BottomTabBarProps {
+  colorScheme?: 'light' | 'dark';
+}
+
+export default function CustomTabBar({ 
+  state, 
+  descriptors, 
+  navigation, 
+  colorScheme = 'light' 
+}: CustomTabBarProps) {
   // Get safe area insets for proper padding
   const insets = useSafeAreaInsets();
   
-  // Tab size calculations
+  // Use the colorScheme to determine theme
+  const colors = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  
+  // Tab size calculations - indicator is smaller for a more refined look
   const TAB_WIDTH = SCREEN_WIDTH / state.routes.length;
-  const INDICATOR_SIZE = TAB_WIDTH * 0.5;
+  const INDICATOR_SIZE = TAB_WIDTH * 0.4;
 
   // Indicator position animation
   const indicatorAnimatedStyle = useAnimatedStyle(() => {
@@ -45,12 +58,23 @@ export default function CustomTabBar({ state, descriptors, navigation }: BottomT
   };
 
   return (
-    <View style={[styles.tabBar, { paddingBottom: insets.bottom || Spacing.sm }]}>
+    <View style={[
+      styles.tabBar, 
+      { 
+        paddingBottom: (insets.bottom || Spacing.sm) / 2, // Reduced padding
+        backgroundColor: colors.background,
+        borderTopColor: colors.border,
+        height: 65 + (insets.bottom || 0) / 2, // Match the height in layout
+      }
+    ]}>
       {/* Background indicator for active tab */}
       <Animated.View
         style={[
           styles.activeTabIndicator,
-          { width: INDICATOR_SIZE },
+          { 
+            width: INDICATOR_SIZE,
+            backgroundColor: colors.primary,
+          },
           indicatorAnimatedStyle,
         ]}
       />
@@ -91,21 +115,24 @@ export default function CustomTabBar({ state, descriptors, navigation }: BottomT
             style={styles.tabButton}
             activeOpacity={0.7}
           >
-            {/* Use the tabBarIcon from the options if available */}
-            {options.tabBarIcon ? 
-              options.tabBarIcon({ 
-                focused: isFocused, 
-                color: isFocused ? Colors.light.tabIconSelected : Colors.light.tabIconDefault,
-                size: 24 
-              }) : null}
+            <View style={styles.iconContainer}>
+              {/* Use the tabBarIcon from the options if available */}
+              {options.tabBarIcon ? 
+                options.tabBarIcon({ 
+                  focused: isFocused, 
+                  // All icons use the primary color when selected for consistency
+                  color: isFocused ? colors.primary : colors.tabIconDefault,
+                  size: 22 // Smaller size
+                }) : null}
+            </View>
             <Text
               style={[
                 styles.tabLabel,
                 {
                   color: isFocused
-                    ? Colors.light.tabIconSelected
-                    : Colors.light.tabIconDefault,
-                  opacity: isFocused ? 1 : 0.8,
+                    ? colors.primary
+                    : colors.tabIconDefault,
+                  opacity: isFocused ? 1 : 0.9, // Increased opacity for inactive tabs
                 },
               ]}
             >
@@ -121,26 +148,25 @@ export default function CustomTabBar({ state, descriptors, navigation }: BottomT
 const styles = StyleSheet.create({
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: Colors.light.card,
-    borderTopWidth: 1,
-    borderTopColor: Colors.light.border,
     position: 'relative',
     ...Shadows.md,
   },
   tabButton: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: Spacing.sm,
+    justifyContent: 'flex-start', // Changed to align from top
+    paddingTop: Spacing.sm - 2, // Reduced top padding to lift icons
+    paddingBottom: Spacing.xs,
+  },
+  iconContainer: {
+    marginBottom: 2, // Small space between icon and text
   },
   tabLabel: {
-    fontSize: 12,
-    marginTop: 2,
+    fontSize: 11, // Smaller font size
     fontWeight: '500',
   },
   activeTabIndicator: {
-    height: 4,
-    backgroundColor: Colors.light.primary,
+    height: 3, // Thinner indicator
     position: 'absolute',
     top: 0,
     borderBottomLeftRadius: BorderRadius.md,

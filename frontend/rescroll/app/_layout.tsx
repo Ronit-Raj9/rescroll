@@ -3,9 +3,10 @@ import { useEffect, useState, createContext, useMemo } from 'react';
 import { useFonts } from 'expo-font';
 import { Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
 import { LogBox } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 
 // Prevent warning logs for the demo
 LogBox.ignoreLogs(['Warning: ...']);
@@ -68,38 +69,40 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <AppContext.Provider value={contextValue}>
-        <ThemeProvider value={DefaultTheme}>
-          <Stack screenOptions={{ 
-            headerShown: false,
-            animation: 'slide_from_right',
-          }}>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="paper-details" options={{ headerShown: false }} />
-            <Stack.Screen 
-              name="profile-settings" 
-              options={{ 
-                headerShown: true,
-                title: "Profile Settings",
-                presentation: 'modal',
-                animation: 'slide_from_bottom',
-              }} 
-            />
-            <Stack.Screen 
-              name="notifications" 
-              options={{ headerShown: false }} 
-            />
-            <Stack.Screen 
-              name="design-demo" 
-              options={{ 
-                headerShown: true,
-                title: "Design System",
-                animation: 'slide_from_right',
-              }} 
-            />
-          </Stack>
-        </ThemeProvider>
-      </AppContext.Provider>
+      <ThemeProvider>
+        <AppContext.Provider value={contextValue}>
+          <NavigationThemeProvider value={DefaultTheme}>
+            <Stack screenOptions={{ 
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}>
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="paper-details" options={{ headerShown: false }} />
+              <Stack.Screen 
+                name="profile-settings" 
+                options={{ 
+                  headerShown: true,
+                  title: "Profile Settings",
+                  presentation: 'modal',
+                  animation: 'slide_from_bottom',
+                }} 
+              />
+              <Stack.Screen 
+                name="notifications" 
+                options={{ headerShown: false }} 
+              />
+              <Stack.Screen 
+                name="design-demo" 
+                options={{ 
+                  headerShown: true,
+                  title: "Design System",
+                  animation: 'slide_from_right',
+                }} 
+              />
+            </Stack>
+          </NavigationThemeProvider>
+        </AppContext.Provider>
+      </ThemeProvider>
     </GestureHandlerRootView>
   );
 }

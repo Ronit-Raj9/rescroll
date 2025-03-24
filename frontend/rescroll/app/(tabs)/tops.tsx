@@ -18,6 +18,8 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Feather } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/hooks/useColorScheme';
+import { useTheme } from '@/contexts/ThemeContext';
 
 // Add type definitions at the top of the file
 interface Report {
@@ -200,268 +202,306 @@ const ReportCard = ({
   onNavigate: (id: string) => void;
 }) => {
   const [expanded, setExpanded] = useState(false);
-  const { width: windowWidth } = useWindowDimensions();
-  const isLargeScreen = windowWidth > 768;
+  const rotationValue = useRef(new Animated.Value(0)).current;
+  const contentHeight = useRef(new Animated.Value(0)).current;
   
+  // Get theme colors
+  const colorScheme = useColorScheme();
+  const { colorScheme: themeMode } = useTheme();
+  const isDarkMode = themeMode === 'dark';
+  const colors = Colors[colorScheme || 'light'];
+
   const toggleAbstract = () => {
     setExpanded(!expanded);
+    
+    // Rotate the chevron icon
+    Animated.timing(rotationValue, {
+      toValue: expanded ? 0 : 1,
+      duration: 300,
+      easing: Easing.bezier(0.4, 0.0, 0.2, 1),
+      useNativeDriver: true,
+    }).start();
+    
+    // Expand/collapse the abstract
+    Animated.timing(contentHeight, {
+      toValue: expanded ? 0 : 1,
+      duration: 300,
+      easing: Easing.bezier(0.4, 0.0, 0.2, 1),
+      useNativeDriver: false,
+    }).start();
   };
+  
+  const rotateAnimation = rotationValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '180deg'],
+  });
+  
+  const abstractHeight = contentHeight.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 120],
+  });
   
   return (
     <TouchableOpacity 
       style={[
         styles.reportCard, 
-        isLargeScreen && styles.reportCardWide
-      ]}
+        { 
+          backgroundColor: isDarkMode ? colors.backgroundSecondary : '#FFF',
+          borderColor: isDarkMode ? colors.border : '#E5E5E5'
+        }
+      ]} 
       onPress={() => onNavigate(item.id)}
       activeOpacity={0.9}
     >
-      {/* Card Header with Journal and Date Info */}
-      <View style={styles.cardMetadata}>
-        <ThemedText style={styles.journalName}>{item.journal}</ThemedText>
-        <ThemedText style={styles.publishDate}>{item.date}</ThemedText>
-      </View>
-      
-      {/* Paper Title and Authors */}
-      <View style={styles.reportHeader}>
-        <ThemedText style={styles.reportTitle}>{item.title}</ThemedText>
-        <ThemedText style={styles.reportAuthors}>
-          {item.authors}
-        </ThemedText>
-      </View>
-      
-      {/* Paper Snippet/Abstract with "Read More" functionality */}
-      <View style={styles.abstractContainer}>
-        <ThemedText style={styles.reportSnippet} numberOfLines={expanded ? undefined : 3}>
-          {expanded && item.abstract ? item.abstract : item.snippet}
-        </ThemedText>
+      <View style={styles.cardContent}>
+        <Image 
+          source={{ uri: item.imageUrl }} 
+          style={styles.reportImage} 
+          resizeMode="cover"
+        />
         
-        {item.abstract && (
-          <TouchableOpacity 
-            style={styles.readMoreButton}
-            onPress={toggleAbstract}
-          >
-            <ThemedText style={styles.readMoreText}>
-              {expanded ? 'Show less' : 'Read abstract'}
-            </ThemedText>
+        <View style={styles.reportInfo}>
+          <ThemedText style={styles.reportTitle} numberOfLines={2}>
+            {item.title}
+          </ThemedText>
+          
+          <ThemedText style={[styles.reportAuthors, { color: isDarkMode ? colors.textSecondary : '#666' }]} numberOfLines={1}>
+            {item.authors}
+          </ThemedText>
+          
+          <View style={styles.reportMeta}>
+            <View style={styles.metaItem}>
+              <Feather 
+                name="calendar" 
+                size={14} 
+                color={isDarkMode ? colors.textSecondary : '#666'} 
+                style={styles.metaIcon} 
+              />
+              <ThemedText style={[styles.metaText, { color: isDarkMode ? colors.textSecondary : '#666' }]}>
+                {new Date(item.date).toLocaleDateString()}
+              </ThemedText>
+            </View>
+            
+            <View style={styles.metaItem}>
+              <Feather 
+                name="external-link" 
+                size={14} 
+                color={isDarkMode ? colors.textSecondary : '#666'} 
+                style={styles.metaIcon} 
+              />
+              <ThemedText style={[styles.metaText, { color: isDarkMode ? colors.textSecondary : '#666' }]}>
+                {item.journal || 'Journal'}
+              </ThemedText>
+            </View>
+          </View>
+        </View>
+      </View>
+      
+      <View style={[styles.reportStats, { borderTopColor: isDarkMode ? colors.border : '#F0F0F0' }]}>
+        <View style={styles.statsItem}>
+          <Feather 
+            name="file-text" 
+            size={16} 
+            color={isDarkMode ? colors.textSecondary : '#555'} 
+            style={styles.statsIcon} 
+          />
+          <ThemedText style={[styles.statsText, { color: isDarkMode ? colors.textSecondary : '#555' }]}>
+            {item.citations} citations
+          </ThemedText>
+        </View>
+        
+        <View style={styles.statsItem}>
+          <Feather 
+            name="heart" 
+            size={16} 
+            color={isDarkMode ? colors.textSecondary : '#555'} 
+            style={styles.statsIcon} 
+          />
+          <ThemedText style={[styles.statsText, { color: isDarkMode ? colors.textSecondary : '#555' }]}>
+            {item.likes} saves
+          </ThemedText>
+        </View>
+        
+        <TouchableOpacity 
+          style={styles.expandButton} 
+          onPress={toggleAbstract}
+          hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+        >
+          <Animated.View style={{ transform: [{ rotate: rotateAnimation }] }}>
             <Feather 
-              name={expanded ? 'chevron-up' : 'chevron-down'} 
-              size={16} 
-              color={Colors.light.primary}
-              style={{ marginLeft: 4 }} 
+              name="chevron-down" 
+              size={20} 
+              color={isDarkMode ? colors.textSecondary : '#555'} 
             />
-          </TouchableOpacity>
-        )}
+          </Animated.View>
+        </TouchableOpacity>
       </View>
       
-      {/* Stats row with improved visual metrics */}
-      <View style={styles.metricsContainer}>
-        <View style={styles.metricItem}>
-          <View style={styles.metricIconContainer}>
-            <Feather name="file-text" size={16} color="#fff" />
-          </View>
-          <View>
-            <ThemedText style={styles.metricValue}>{item.citations}</ThemedText>
-            <ThemedText style={styles.metricLabel}>Citations</ThemedText>
-          </View>
-        </View>
-        
-        <View style={styles.metricDivider} />
-        
-        <View style={styles.metricItem}>
-          <View style={[styles.metricIconContainer, { backgroundColor: '#e74c3c' }]}>
-            <Feather name="heart" size={16} color="#fff" />
-          </View>
-          <View>
-            <ThemedText style={styles.metricValue}>{item.likes}</ThemedText>
-            <ThemedText style={styles.metricLabel}>Likes</ThemedText>
-          </View>
-        </View>
-        
-        <View style={styles.metricDivider} />
-        
-        <View style={styles.metricItem}>
-          <TouchableOpacity 
-            style={styles.readButton}
-            onPress={() => onNavigate(item.id)}
-          >
-            <ThemedText style={styles.readButtonText}>Read Paper</ThemedText>
-            <Feather name="arrow-right" size={16} color="#fff" style={{ marginLeft: 5 }} />
-          </TouchableOpacity>
-        </View>
-      </View>
-      
-      {/* Action Buttons */}
-      <View style={styles.reportActions}>
-        <TouchableOpacity style={styles.actionButton}>
-          <Feather name="heart" size={20} color="#666" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton}>
-          <Feather name="bookmark" size={20} color="#666" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton}>
-          <Feather name="share-2" size={20} color="#666" />
-        </TouchableOpacity>
-      </View>
+      {item.abstract && (
+        <Animated.View style={[styles.abstractContainer, { height: abstractHeight }]}>
+          <ThemedText style={[styles.abstractText, { color: isDarkMode ? colors.textSecondary : '#555' }]} numberOfLines={4}>
+            {item.abstract}
+          </ThemedText>
+        </Animated.View>
+      )}
     </TouchableOpacity>
   );
 };
 
 export default function TopsScreen() {
-  const [activeCategory, setActiveCategory] = useState('1'); // Default to Trending
+  const [activeCategory, setActiveCategory] = useState('1');
+  const scrollViewRef = useRef<ScrollView>(null);
   const router = useRouter();
-  const scrollX = useRef(new Animated.Value(0)).current;
-  
-  // Get window dimensions for responsive layout
-  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
-  const isLargeScreen = windowWidth > 768;
-  
-  // Use dimensions in animated calculations
-  const tabIndicatorPosition = scrollX.interpolate({
-    inputRange: TOP_CATEGORIES.map((_, i) => i * windowWidth),
-    outputRange: TOP_CATEGORIES.map((_, i) => i * (windowWidth / TOP_CATEGORIES.length)),
-    extrapolate: 'clamp',
-  });
 
-  const flatListRef = useRef<FlatList>(null);
+  // Get theme colors directly from ThemeContext
+  const { colorScheme } = useTheme();
+  const isDarkMode = colorScheme === 'dark';
+  const theme = isDarkMode ? 'dark' : 'light';
+  const colors = Colors[theme];
+  
+  const categoryData = TOP_CATEGORIES.map(item => ({
+    ...item,
+    active: item.id === activeCategory
+  }));
   
   const handleTabPress = (id: string) => {
     setActiveCategory(id);
   };
-
+  
   const handleNavigateToReport = (id: string) => {
     router.push(`/report/${id}`);
   };
-
+  
   const getReportData = (category: string) => {
     switch(category) {
-      case '1': return TRENDING_REPORTS;
-      case '2': return MOST_CITED_REPORTS;
-      case '3': return RECENT_REPORTS;
-      case '4': return RECOMMENDED_REPORTS;
-      default: return TRENDING_REPORTS;
+      case '1': // Trending
+        return TRENDING_REPORTS;
+      case '2': // Most Cited
+        return MOST_CITED_REPORTS;
+      case '3': // Recent
+        return RECENT_REPORTS;
+      case '4': // For You
+        return RECOMMENDED_REPORTS;
+      default:
+        return TRENDING_REPORTS;
     }
   };
-
-  const handleScroll = Animated.event(
-    [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-    { useNativeDriver: false }
-  );
-
-  // Update to use the standalone ReportCard component
+  
   const renderReportCard = ({ item }: { item: Report }) => {
     return <ReportCard item={item} onNavigate={handleNavigateToReport} />;
   };
-
+  
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFF' }}>
     <ThemedView style={styles.container}>
-      <Stack.Screen options={{ 
-        title: 'Top Papers',
-        headerStyle: {
-          backgroundColor: 'transparent',
-        },
-        headerShadowVisible: false,
-      }} />
-
-      <View style={styles.categoryContainer}>
-          <ScrollView 
-          horizontal
-          showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.categoriesScrollContent}
-          >
-            {TOP_CATEGORIES.map((item) => (
-              <TouchableOpacity 
-                key={`category-${item.id}`}
-                style={[
-                  styles.categoryButton,
-                  activeCategory === item.id && styles.activeCategoryButton
-                ]} 
-                onPress={() => handleTabPress(item.id)}
-              >
-                <Feather 
-                  name={item.icon as React.ComponentProps<typeof Feather>['name']} 
-                  size={18} 
-                  color={activeCategory === item.id ? '#FFFFFF' : '#666'} 
-                  style={styles.categoryIcon} 
-                />
-                <ThemedText 
+      <Stack.Screen options={{ headerShown: false }} />
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+        <View style={[styles.header, { backgroundColor: colors.background }]}>
+          <ThemedText style={[styles.headerTitle, { color: colors.text }]}>Top Papers</ThemedText>
+        </View>
+        
+        <View style={styles.content}>
+          {/* Category Tabs */}
+          <View style={[
+            styles.categoryTabs, 
+            { 
+              backgroundColor: colors.background,
+              borderBottomColor: isDarkMode ? colors.border : '#e0e0e0' 
+            }
+          ]}>
+            <ScrollView
+              ref={scrollViewRef}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.categoryTabsContent}
+            >
+              {categoryData.map((category) => (
+                <TouchableOpacity
+                  key={category.id}
                   style={[
-                    styles.categoryButtonText, 
-                    activeCategory === item.id && styles.activeCategoryButtonText
+                    styles.categoryTab,
+                    category.active && { 
+                      backgroundColor: colors.primary,
+                      borderColor: colors.primary
+                    },
+                    !category.active && { 
+                      backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+                      borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'
+                    }
                   ]}
+                  onPress={() => handleTabPress(category.id)}
                 >
-                  {item.name}
-                </ThemedText>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-      </View>
-
-      <FlatList
-          data={getReportData(activeCategory)}
-        renderItem={renderReportCard}
-        keyExtractor={item => item.id}
-          contentContainerStyle={[
-            styles.reportsList,
-            isLargeScreen && styles.reportsListWide
-          ]}
-          showsVerticalScrollIndicator={false}
-          numColumns={isLargeScreen ? 2 : 1}
-          key={`reports-list-${isLargeScreen ? 'large' : 'small'}`}
-          columnWrapperStyle={isLargeScreen ? { justifyContent: 'space-between' } : undefined}
-      />
+                  <Feather
+                    name={category.icon as any}
+                    size={16}
+                    color={category.active ? '#fff' : colors.text}
+                    style={styles.categoryIcon}
+                  />
+                  <ThemedText
+                    style={[
+                      styles.categoryName,
+                      { color: category.active ? '#fff' : colors.text }
+                    ]}
+                  >
+                    {category.name}
+                  </ThemedText>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+          
+          {/* Report List */}
+          <FlatList
+            data={getReportData(activeCategory)}
+            renderItem={renderReportCard}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.reportList}
+            showsVerticalScrollIndicator={false}
+          />
+        </View>
+      </SafeAreaView>
     </ThemedView>
-    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
-  categoryContainer: {
-    paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
+  header: {
+    padding: 16,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  content: {
+    flex: 1,
+  },
+  categoryTabs: {
+    padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
   },
-  categoriesScrollContent: {
+  categoryTabsContent: {
     paddingHorizontal: 16,
   },
-  categoryButton: {
+  categoryTab: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 8,
     paddingHorizontal: 14,
     marginRight: 10,
     borderRadius: 20,
-    backgroundColor: '#F0F0F0',
-  },
-  activeCategoryButton: {
-    backgroundColor: Colors.light.primary,
+    borderWidth: 2,
   },
   categoryIcon: {
     marginRight: 6,
   },
-  categoryButtonText: {
+  categoryName: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#666',
   },
-  activeCategoryButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-  reportsList: {
+  reportList: {
     padding: 15,
-  },
-  reportsListWide: {
-    paddingHorizontal: 24,
-    maxWidth: 1200,
-    alignSelf: 'center',
-    width: '100%',
   },
   reportCard: {
     backgroundColor: '#fff',
@@ -474,116 +514,70 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 2,
   },
-  reportCardWide: {
-    width: '48%', // Leave some space between cards
-    marginHorizontal: 0,
-    marginBottom: 24,
-  },
-  cardMetadata: {
+  cardContent: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
   },
-  journalName: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: Colors.light.primary,
+  reportImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 10,
+    marginRight: 15,
   },
-  publishDate: {
-    fontSize: 12,
-    color: '#888',
-  },
-  reportHeader: {
-    marginBottom: 12,
+  reportInfo: {
+    flex: 1,
   },
   reportTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 6,
-    color: '#333',
-    lineHeight: 24,
   },
   reportAuthors: {
     fontSize: 14,
     color: '#555',
     marginBottom: 4,
   },
-  abstractContainer: {
-    marginBottom: 16,
-  },
-  reportSnippet: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
-  },
-  readMoreButton: {
+  reportMeta: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  readMoreText: {
-    fontSize: 14,
-    color: Colors.light.primary,
-    fontWeight: '500',
-  },
-  metricsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    marginVertical: 16,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
+    marginBottom: 12,
   },
-  metricItem: {
+  metaItem: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  metricIconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#6c5ce7',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 8,
+  metaIcon: {
+    marginRight: 6,
   },
-  metricValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  metricLabel: {
+  metaText: {
     fontSize: 12,
     color: '#888',
   },
-  metricDivider: {
-    width: 1,
-    height: 40,
-    backgroundColor: '#e0e0e0',
-  },
-  readButton: {
+  reportStats: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: Colors.light.primary,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  readButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  reportActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
     paddingTop: 10,
   },
-  actionButton: {
+  statsItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statsIcon: {
+    marginRight: 8,
+  },
+  statsText: {
+    fontSize: 14,
+    color: '#555',
+  },
+  expandButton: {
     padding: 5,
-    marginLeft: 15,
+  },
+  abstractContainer: {
+    marginTop: 10,
+  },
+  abstractText: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 20,
   },
 }); 
