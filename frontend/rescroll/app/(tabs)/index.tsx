@@ -1,494 +1,791 @@
-import React, { useState, useRef, useCallback, useContext } from 'react';
+import React, { useRef, useCallback, useContext, useMemo, useState, useEffect } from 'react';
 import {
   StyleSheet,
   View,
   FlatList,
   Dimensions,
-  Image,
   TouchableOpacity,
   ActivityIndicator,
+  Alert,
+  Platform,
+  Animated,
+  LayoutChangeEvent,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Stack, useRouter } from 'expo-router';
+import { useRouter, Tabs } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { AppContext } from '../../app/_layout';
+import { LinearGradient } from 'expo-linear-gradient';
+import { IconSymbolName } from '@/components/ui/IconSymbol';
+import { Image } from 'expo-image';
+import { usePapers, Paper, ViewState } from '@/hooks/usePapers';
+import { useResponsiveSize } from '@/hooks/useResponsiveSize';
+import { useAccessibility } from '@/hooks/useAccessibility';
+import { GestureHandlerRootView, PanGestureHandler, State, TapGestureHandler } from 'react-native-gesture-handler';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const ITEM_HEIGHT = SCREEN_HEIGHT - 150; // Adjust to allow more space for tab bar and header
-
-interface Paper {
-  id: string;
-  title: string;
-  authors: string;
-  achievement: string;
-  summary: string;
-  imageUrl: string;
-  likes: number;
-  saves: number;
-  comments: number;
-  isLiked: boolean;
-  isSaved: boolean;
-}
 
 // Add these high-quality fallback images
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1518818608552-195ed130cda4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80';
 
-// Create a separate PaperCard component to use hooks properly
-const PaperCard = ({ 
+// Optimized button component to reduce unnecessary renders
+const ActionButton = React.memo(({ 
+  onPress, 
+  iconName, 
+  iconColor,
+  accessibilityLabel,
+}: { 
+  onPress: () => void; 
+  iconName: IconSymbolName; 
+  iconColor: string;
+  accessibilityLabel: string;
+}) => (
+  <TouchableOpacity 
+    style={styles.actionButton} 
+    onPress={onPress}
+    activeOpacity={0.7}
+    accessible={true}
+    accessibilityLabel={accessibilityLabel}
+    accessibilityRole="button"
+  >
+    <IconSymbol
+      name={iconName}
+      size={28}
+      color={iconColor}
+    />
+  </TouchableOpacity>
+));
+
+// Paper card component with optimized implementation for Instagram Reels-like experience
+const PaperCard = React.memo(({ 
   item, 
   onLike, 
   onSave,
-  itemHeight 
+  onShare,
+  itemHeight,
+  responsiveSize,
+  accessibility,
 }: { 
   item: Paper;
   onLike: (id: string) => void;
   onSave: (id: string) => void;
+  onShare: (id: string) => void;
   itemHeight: number;
+  responsiveSize: ReturnType<typeof useResponsiveSize>;
+  accessibility: ReturnType<typeof useAccessibility>;
 }) => {
-  const [imageError, setImageError] = useState(false);
+  const [imageError, setImageError] = React.useState(false);
+  const [imageLoading, setImageLoading] = React.useState(true);
   const colors = Colors.light;
   
+  // Animation for double-tap like
+  const [showLikeAnimation, setShowLikeAnimation] = useState(false);
+  const scaleAnim = useRef(new Animated.Value(0)).current;
+  
+  // Create memoized event handlers to prevent recreation on each render
+  const handleLikePress = useCallback(() => {
+    onLike(item.id);
+    if (accessibility.isScreenReaderEnabled) {
+      accessibility.announceToScreenReader(
+        item.isLiked ? 'Removed like' : 'Added like'
+      );
+    }
+  }, [onLike, item.id, item.isLiked, accessibility]);
+  
+  const handleSavePress = useCallback(() => {
+    onSave(item.id);
+    if (accessibility.isScreenReaderEnabled) {
+      accessibility.announceToScreenReader(
+        item.isSaved ? 'Removed from saved items' : 'Saved to your library'
+      );
+    }
+  }, [onSave, item.id, item.isSaved, accessibility]);
+  
+  const handleSharePress = useCallback(() => {
+    onShare(item.id);
+  }, [onShare, item.id]);
+
+  // Handler for double tap
+  const doubleTapRef = useRef(null);
+  
+  const onSingleTap = useCallback((event: { nativeEvent: { state: number } }) => {
+    if (event.nativeEvent.state === State.ACTIVE) {
+      // Single tap behavior if needed
+    }
+  }, []);
+  
+  const onDoubleTap = useCallback((event: { nativeEvent: { state: number } }) => {
+    if (event.nativeEvent.state === State.ACTIVE) {
+      onLike(item.id);
+      // Show heart animation
+      setShowLikeAnimation(true);
+      scaleAnim.setValue(0);
+      Animated.sequence([
+        Animated.timing(scaleAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.delay(500),
+        Animated.timing(scaleAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        setShowLikeAnimation(false);
+      });
+    }
+  }, [item.id, onLike, scaleAnim]);
+  
+  // Calculate number of summary lines based on screen size
+  const summaryLines = 8; // Increase to ensure full visibility of text
+  
+  // Use imageUrl property from Paper type
+  const imageUrl = item.imageUrl || FALLBACK_IMAGE;
+  
+  // Add more detailed logging to diagnose layout issues
+  useEffect(() => {
+    console.log('PaperCard mounted, title length:', item.title?.length);
+    console.log('PaperCard mounted, summary length:', item.summary?.length);
+  }, [item.title, item.summary]);
+  
+  // Get element layout measurements 
+  const onAchievementLayout = (event: LayoutChangeEvent) => {
+    const {x, y, width, height} = event.nativeEvent.layout;
+    console.log('Achievement badge layout:', {x, y, width, height});
+  };
+  
+  const onTitleLayout = (event: LayoutChangeEvent) => {
+    const {x, y, width, height} = event.nativeEvent.layout;
+    console.log('Title layout:', {x, y, width, height});
+  };
+  
+  const onSummaryLayout = (event: LayoutChangeEvent) => {
+    const {x, y, width, height} = event.nativeEvent.layout;
+    console.log('Summary layout:', {x, y, width, height});
+  };
+  
   return (
-    <View style={[styles.cardContainer, { height: itemHeight }]}>
-      <View style={styles.cardContent}>
-        <View style={styles.imagePlaceholder} />
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <View 
+        style={[styles.fullScreenCard, { height: itemHeight }]}
+        accessible={true}
+        accessibilityRole="none"
+        accessibilityLabel={`Research paper: ${item.title} by ${item.authors}`}
+      >
+        <TapGestureHandler
+          waitFor={doubleTapRef}
+          onHandlerStateChange={onSingleTap}
+        >
+          <TapGestureHandler
+            ref={doubleTapRef}
+            numberOfTaps={2}
+            onHandlerStateChange={onDoubleTap}
+          >
+            <View style={styles.fullCardContent}>
+              {/* Main background image with improved caching */}
         <Image 
-          source={{ uri: imageError ? FALLBACK_IMAGE : item.imageUrl }}
-          style={styles.cardImage} 
-          resizeMode="cover"
+                source={{ uri: imageError ? FALLBACK_IMAGE : imageUrl }}
+                style={styles.fullCardImage}
+                contentFit="cover"
+                transition={300}
           onError={() => setImageError(true)}
+                onLoadStart={() => setImageLoading(true)}
+                onLoad={() => setImageLoading(false)}
+                cachePolicy="memory-disk"
         />
-        <View style={styles.overlay}>
-          <View style={styles.paperDetails}>
-            <View style={styles.achievementContainer}>
-              <IconSymbol name="star.fill" size={14} color={colors.primary} />
-              <ThemedText style={styles.achievementText}>{item.achievement}</ThemedText>
+        
+        {/* Dark overlay for better readability */}
+        <View style={styles.darkOverlay} />
+        
+              {/* Achievement badge positioned where it appears in the reference image */}
+              <View 
+                style={styles.achievementContainer}
+                onLayout={onAchievementLayout}
+              >
+                <IconSymbol 
+                  name="star.fill" 
+                  size={16} 
+                  color="#4D9DE0" 
+                  style={styles.achievementIcon} 
+                />
+                <ThemedText style={styles.achievementText} numberOfLines={2}>
+                  {item.achievement || "Demonstrated 200x speedup for specific optimization problems"}
+                </ThemedText>
+          </View>
+              
+              {/* Paper title and authors with proper spacing */}
+              <View 
+                style={styles.paperContentContainer}
+                onLayout={onTitleLayout}
+              >
+                <ThemedText 
+                  style={styles.paperTitle}
+                  numberOfLines={2}
+                  accessible={true}
+                  accessibilityLabel={`Title: ${item.title}`}
+                >
+                  {item.title || "Advances in Quantum Computing Algorithms"}
+              </ThemedText>
+
+                <ThemedText 
+                  style={styles.paperAuthors}
+                  numberOfLines={1}
+                  accessible={true}
+                  accessibilityLabel={`Authors: ${item.authors}`}
+                >
+                  {item.authors || "Patel, A. and Wong, S."}
+              </ThemedText>
             </View>
 
-            <ThemedText style={styles.paperTitle} numberOfLines={2}>
-              {item.title}
-            </ThemedText>
-            <ThemedText style={styles.paperAuthors} numberOfLines={1}>
-              {item.authors}
-            </ThemedText>
-
-            <ThemedText style={styles.paperSummary} numberOfLines={7}>
-              {item.summary}
-            </ThemedText>
-          </View>
-
-          <View style={styles.actionButtonsContainer}>
-            <TouchableOpacity style={styles.actionButton} onPress={() => onLike(item.id)}>
-              <IconSymbol
-                name="heart"
-                size={20}
-                color={item.isLiked ? colors.primary : '#555'}
-              />
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.actionButton} onPress={() => onSave(item.id)}>
-              <IconSymbol
-                name="bookmark.fill"
-                size={20}
-                color={item.isSaved ? colors.primary : '#555'}
-              />
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.actionButton}>
-              <IconSymbol name="square.and.arrow.up" size={20} color="#555" />
-            </TouchableOpacity>
-          </View>
-        </View>
+              {/* Summary with enhanced styling */}
+              <View 
+                style={styles.summaryContainer}
+                onLayout={onSummaryLayout}
+              >
+                <ThemedText 
+                  style={styles.summaryText}
+                  numberOfLines={summaryLines}
+                  accessible={true}
+                  accessibilityLabel={`Summary: ${item.summary}`}
+                >
+                  {item.summary || "This work presents a new class of quantum algorithms that provide exponential speedup for certain optimization problems, potentially revolutionizing computational approaches to drug discovery and materials science."}
+                </ThemedText>
+              </View>
+              
+              {/* Action buttons aligned to match reference */}
+              <View style={styles.bottomActionsContainer}>
+                <ActionButton
+                  onPress={handleLikePress}
+                  iconName="heart" // Changed from safari to heart
+                  iconColor={item.isLiked ? "#FF5A5F" : "#FFFFFF"} // Red if liked
+                  accessibilityLabel="Like this paper"
+                />
+                <ActionButton
+                  onPress={handleSavePress}
+                  iconName={item.isSaved ? "bookmark.fill" : "bookmark"}
+                  iconColor="#FFFFFF"
+                  accessibilityLabel={item.isSaved ? "Remove from bookmarks" : "Add to bookmarks"}
+                />
+                <ActionButton
+                  onPress={handleSharePress}
+                  iconName="square.and.arrow.up"
+                  iconColor="#FFFFFF"
+                  accessibilityLabel="Share this paper"
+                />
+              </View>
+              
+              {/* Loading indicator */}
+              {imageLoading && (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="large" color={colors.primary} />
+                </View>
+              )}
+              
+              {/* Double-tap heart animation */}
+              {showLikeAnimation && (
+                <Animated.View style={[
+                  styles.heartAnimationContainer,
+                  {
+                    transform: [
+                      { scale: scaleAnim },
+                    ],
+                    opacity: scaleAnim
+                  }
+                ]}>
+                  <IconSymbol
+                    name="heart.fill"
+                    size={120}
+                    color="#FF5A5F"
+                  />
+                </Animated.View>
+              )}
+            </View>
+          </TapGestureHandler>
+        </TapGestureHandler>
       </View>
-    </View>
+    </GestureHandlerRootView>
   );
-};
-
-// Update the INITIAL_PAPERS with better image URLs
-const INITIAL_PAPERS: Paper[] = [
-  {
-    id: '1',
-    title: 'Novel Approaches to Deep Learning for Natural Language Processing',
-    authors: 'Johnson, K. and Smith, L.',
-    achievement: 'Increased accuracy by 15% over previous state-of-the-art models',
-    summary:
-      'This research introduces a novel transformer architecture that significantly enhances natural language understanding tasks through improved attention mechanisms and optimized training procedures.',
-    imageUrl: 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?ixlib=rb-4.0.3&auto=format&fit=crop&w=1080&q=80',
-    likes: 342,
-    saves: 89,
-    comments: 27,
-    isLiked: false,
-    isSaved: false,
-  },
-  {
-    id: '2',
-    title: 'Climate Change Impacts on Marine Ecosystems',
-    authors: 'Rivera, M. and Chen, H.',
-    achievement: 'First comprehensive study of polar ecosystem changes',
-    summary:
-      'This paper documents significant shifts in marine biodiversity patterns across polar regions as a result of climate change, with implications for global fisheries and conservation efforts.',
-    imageUrl: 'https://images.unsplash.com/photo-1559827291-72ee739d0d9a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1080&q=80',
-    likes: 287,
-    saves: 122,
-    comments: 19,
-    isLiked: false,
-    isSaved: false,
-  },
-  {
-    id: '3',
-    title: 'Advances in Quantum Computing Algorithms',
-    authors: 'Patel, A. and Wong, S.',
-    achievement: 'Demonstrated 200x speedup for specific optimization problems',
-    summary:
-      'This work presents a new class of quantum algorithms that provide exponential speedup for certain optimization problems, potentially revolutionizing computational approaches to drug discovery and materials science.',
-    imageUrl: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1080&q=80',
-    likes: 412,
-    saves: 156,
-    comments: 42,
-    isLiked: false,
-    isSaved: false,
-  },
-];
+});
 
 export default function HomeScreen() {
-  const [papers, setPapers] = useState<Paper[]>(INITIAL_PAPERS);
-  const [isLoading, setIsLoading] = useState(false);
-  const [hasMoreData, setHasMoreData] = useState(true);
-  const [viewIndex, setViewIndex] = useState(0);
-  const colorScheme = useColorScheme();
-  const colors = Colors.light; // Always use light theme
-  const flatListRef = useRef<FlatList>(null);
   const router = useRouter();
-  const { navigateTo } = useContext(AppContext);
-
-  const loadMorePapers = useCallback(() => {
-    if (isLoading || !hasMoreData) return;
-    setIsLoading(true);
-
-    // Collection of AI-generated science images with higher quality
-    const aiGeneratedImages = [
-      'https://images.unsplash.com/photo-1507413245164-6160d8298b31?ixlib=rb-4.0.3&auto=format&fit=crop&w=1080&q=80',
-      'https://images.unsplash.com/photo-1581093588401-fbb62a02f120?ixlib=rb-4.0.3&auto=format&fit=crop&w=1080&q=80',
-      'https://images.unsplash.com/photo-1530973428-5bf2db2e4d71?ixlib=rb-4.0.3&auto=format&fit=crop&w=1080&q=80',
-      'https://images.unsplash.com/photo-1532094349884-543bc11b234d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1080&q=80',
-      'https://images.unsplash.com/photo-1532187643603-ba119ca4109e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1080&q=80',
-      'https://images.unsplash.com/photo-1624969862293-b749659a90b4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1080&q=80'
-    ];
-
-    // Simulate API call
-    setTimeout(() => {
-      const newPapers = papers.map((paper, index) => {
-        // Select a random image from the collection for each new paper
-        const randomImageIndex = Math.floor(Math.random() * aiGeneratedImages.length);
-        
-        return {
-          ...paper,
-          id: `${papers.length + index + 1}`,
-          imageUrl: aiGeneratedImages[randomImageIndex],
-        };
-      });
-      setPapers([...papers, ...newPapers]);
-      setIsLoading(false);
-
-      if (papers.length > 15) {
-        setHasMoreData(false);
+  const appContext = useContext(AppContext);
+  const flatListRef = useRef<FlatList>(null);
+  const [isMounted, setIsMounted] = useState(false);
+  const { 
+    papers, 
+    viewState, 
+    fetchMorePapers, 
+    handleLikePaper, 
+    handleSavePaper 
+  } = usePapers();
+  const responsiveSize = useResponsiveSize();
+  const accessibility = useAccessibility();
+  
+  // Set mounted flag after component mounts
+  useEffect(() => {
+    setIsMounted(true);
+    
+    // Hide the header from _layout.tsx when this screen is focused
+    if (Platform.OS === 'web') {
+      // For web, we need to manually update the header style
+      const header = document.querySelector('.expo-router-head');
+      if (header) {
+        header.setAttribute('style', 'display: none;');
       }
-    }, 1500);
-  }, [papers, isLoading, hasMoreData]);
-
-  const handleViewableItemsChanged = useCallback(
-    ({ viewableItems }: { viewableItems: any[] }) => {
-      if (viewableItems.length > 0) {
-        setViewIndex(viewableItems[0].index);
+    }
+    
+    return () => {
+      // Clean up if needed
+      if (Platform.OS === 'web') {
+        const header = document.querySelector('.expo-router-head');
+        if (header) {
+          header.removeAttribute('style');
+        }
       }
-    },
-    []
-  );
+    };
+  }, []);
 
-  const viewabilityConfig = {
-    itemVisiblePercentThreshold: 90,
-  };
-
-  const handleLike = (paperId: string) => {
-    setPapers((prevPapers) =>
-      prevPapers.map((paper) =>
-        paper.id === paperId
-          ? {
-              ...paper,
-              isLiked: !paper.isLiked,
-              likes: paper.isLiked ? paper.likes - 1 : paper.likes + 1,
-            }
-          : paper
-      )
+  // Safe navigation helper - using proper route type
+  const navigateSafely = useCallback((route: '/notifications' | '/profile-settings' | '/(tabs)') => {
+    if (isMounted) {
+      router.push(route);
+    }
+  }, [isMounted, router]);
+  
+  // Full screen height for each card - ensure proper height to avoid cutting content
+  const itemHeight = SCREEN_HEIGHT - 130; // More space for navigation below
+  
+  // Add console logs to help debug positioning (these will appear in the developer console)
+  useEffect(() => {
+    console.log('Screen dimensions:', { width: SCREEN_WIDTH, height: SCREEN_HEIGHT });
+    console.log('Item height:', itemHeight);
+  }, [itemHeight]);
+  
+  // Event handlers
+  const handleLike = useCallback((id: string) => {
+    handleLikePaper(id);
+  }, [handleLikePaper]);
+  
+  const handleSave = useCallback((id: string) => {
+    handleSavePaper(id);
+  }, [handleSavePaper]);
+  
+  const handleShare = useCallback((id: string) => {
+    // Share functionality
+    Alert.alert(
+      "Share",
+      "Sharing paper with ID: " + id,
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "OK" }
+      ]
     );
-  };
+  }, []);
 
-  const handleSave = (paperId: string) => {
-    setPapers((prevPapers) =>
-      prevPapers.map((paper) =>
-        paper.id === paperId
-          ? {
-              ...paper,
-              isSaved: !paper.isSaved,
-              saves: paper.isSaved ? paper.saves - 1 : paper.saves + 1,
-            }
-          : paper
-      )
-    );
-  };
-
-  const navigateToNotifications = () => {
-    router.push('/notifications');
-  };
-
-  const navigateToProfile = () => {
-    navigateTo('/profile-settings');
-  };
-
-  // Update renderItem to use the separate PaperCard component
-  const renderPaperCard = ({ item }: { item: Paper }) => {
+  // Render each paper card
+  const renderPaperCard = useCallback(({ item }: { item: Paper }) => {
     return (
-      <PaperCard 
-        item={item} 
-        onLike={handleLike} 
-        onSave={handleSave} 
-        itemHeight={ITEM_HEIGHT}
+      <PaperCard
+        item={item}
+        onLike={handleLike}
+        onSave={handleSave}
+        onShare={handleShare}
+        itemHeight={itemHeight}
+        responsiveSize={responsiveSize}
+        accessibility={accessibility}
       />
     );
-  };
-
-  const renderFooter = () => {
-    if (!isLoading) return null;
+  }, [handleLike, handleSave, handleShare, itemHeight, responsiveSize, accessibility]);
+  
+  // Empty list placeholder when no papers are available
+  const renderEmptyList = useCallback(() => {
+    if (viewState === 'loading') {
+      return (
+        <View style={styles.emptyListContainer}>
+          <ActivityIndicator size="large" color={Colors.light.primary} />
+          <ThemedText style={styles.emptyListText}>
+            Loading research papers...
+          </ThemedText>
+        </View>
+      );
+    }
+    
+    if (viewState === 'error') {
+      return (
+        <View style={styles.emptyListContainer}>
+          <IconSymbol name="star.fill" size={48} color={Colors.light.error} />
+          <ThemedText style={styles.emptyListText}>
+            Something went wrong while loading papers.
+          </ThemedText>
+          <TouchableOpacity 
+            style={styles.retryButton}
+            onPress={() => fetchMorePapers()}
+          >
+            <ThemedText style={styles.retryButtonText}>
+              Retry
+            </ThemedText>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+    
     return (
-      <View style={styles.loaderContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <ThemedText style={styles.loadingText}>Loading more papers...</ThemedText>
+      <View style={styles.emptyListContainer}>
+        <IconSymbol name="magnifyingglass" size={48} color={Colors.light.textSecondary} />
+        <ThemedText style={styles.emptyListText}>
+          No research papers found
+        </ThemedText>
       </View>
     );
-  };
-
-  const renderEmptyList = () => (
-    <View style={styles.emptyContainer}>
-      <IconSymbol name="doc.text" size={60} color={colors.lightGray} />
-      <ThemedText style={styles.emptyText}>No papers available</ThemedText>
-      <ThemedText style={styles.emptySubtext}>Check back later for new research</ThemedText>
-    </View>
-  );
+  }, [viewState, fetchMorePapers]);
+  
+  // Get more papers when reaching the end of the list
+  const handleEndReached = useCallback(() => {
+    if (viewState !== 'loading' && papers.length > 0) {
+      fetchMorePapers();
+    }
+  }, [viewState, papers.length, fetchMorePapers]);
+  
+  // Loading indicator for pagination
+  const renderFooter = useCallback(() => {
+    if (viewState !== 'loading' || papers.length === 0) return null;
+    
+    return (
+      <View style={styles.footerLoader}>
+        <ActivityIndicator size="small" color={Colors.light.primary} />
+      </View>
+    );
+  }, [viewState, papers.length]);
+  
+  // Using keyExtractor for performance
+  const keyExtractor = useCallback((item: Paper) => item.id, []);
+  
+  // Safety check for papers data
+  if (!papers) return renderEmptyList();
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-      <ThemedView style={styles.container}>
-        <Stack.Screen options={{ headerShown: false }} />
-
-        <View style={styles.header}>
-          <View style={styles.headerContent}>
-            <ThemedText style={styles.screenTitle}>ReScroll</ThemedText>
-            <View style={styles.headerIcons}>
-              <TouchableOpacity 
-                style={styles.iconButton}
-                onPress={navigateToNotifications}
-              >
-                <IconSymbol name="bell" size={24} color={colors.text} />
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.iconButton}
-                onPress={navigateToProfile}
-              >
-                <IconSymbol name="person.circle" size={24} color={colors.text} />
-              </TouchableOpacity>
-            </View>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaView style={styles.container} edges={['top', 'right', 'left']}>
+        {/* Updated header with ReScroll logo and icons */}
+        <View style={styles.headerContainer}>
+          <ThemedText style={styles.headerLogo}>ReScroll</ThemedText>
+          <View style={styles.headerRight}>
+            <TouchableOpacity 
+              style={styles.headerIcon}
+              onPress={() => {
+                console.log('[HomeScreen] Notification bell clicked, isMounted:', isMounted);
+                if (isMounted) {
+                  console.log('[HomeScreen] Attempting navigation to /notifications');
+                  
+                  // Wait until the end of the current event loop to navigate
+                  setTimeout(() => {
+                    console.log('[HomeScreen] Delayed navigation executing now');
+                    try {
+                      // Add parameters to ensure it's considered a new route
+                      console.log('[HomeScreen] Using router.replace with params');
+                      router.replace({
+                        pathname: '/notifications',
+                        params: { 
+                          t: Date.now(),
+                          source: 'headerBell'
+                        }
+                      });
+                    } catch (error) {
+                      console.error('[HomeScreen] Navigation error:', error);
+                      console.log('[HomeScreen] Falling back to router.push');
+                      router.push('/notifications');
+                    }
+                  }, 50);
+                } else {
+                  console.log('[HomeScreen] Component not mounted, skipping navigation');
+                }
+              }}
+              accessibilityLabel="View notifications"
+            >
+              <View style={styles.notificationContainer}>
+                <IconSymbol name="bell" size={22} color="#E0E0E0" />
+                {appContext.unreadNotificationsCount > 0 && (
+                  <View style={styles.notificationBadge}>
+                    <ThemedText style={styles.notificationBadgeText}>
+                      {appContext.unreadNotificationsCount > 99 ? '99+' : appContext.unreadNotificationsCount}
+                    </ThemedText>
+                  </View>
+                )}
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.headerIcon}
+              onPress={() => {
+                console.log('[HomeScreen] Profile button clicked, isMounted:', isMounted);
+                if (isMounted) {
+                  console.log('[HomeScreen] Attempting navigation to /profile-settings');
+                  
+                  // Wait until the end of the current event loop to navigate
+                  setTimeout(() => {
+                    console.log('[HomeScreen] Delayed profile navigation executing now');
+                    try {
+                      // Add parameters to ensure it's considered a new route
+                      console.log('[HomeScreen] Using router.replace with params for profile');
+                      router.replace({
+                        pathname: '/profile-settings',
+                        params: { 
+                          t: Date.now(),
+                          source: 'headerProfile'
+                        }
+                      });
+                    } catch (error) {
+                      console.error('[HomeScreen] Profile navigation error:', error);
+                      console.log('[HomeScreen] Falling back to router.push');
+                      router.push('/profile-settings');
+                    }
+                  }, 50);
+                } else {
+                  console.log('[HomeScreen] Component not mounted, skipping profile navigation');
+                }
+              }}
+            >
+              <IconSymbol name="person.circle" size={22} color="#E0E0E0" />
+            </TouchableOpacity>
           </View>
         </View>
-
+        
+      <View style={styles.contentContainer}>
         <FlatList
           ref={flatListRef}
           data={papers}
-          renderItem={renderPaperCard}
-          keyExtractor={(item) => item.id}
+            renderItem={renderPaperCard}
+            keyExtractor={keyExtractor}
           showsVerticalScrollIndicator={false}
-          snapToInterval={ITEM_HEIGHT}
-          snapToAlignment="start"
-          decelerationRate="fast"
-          onEndReached={loadMorePapers}
-          onEndReachedThreshold={0.1}
-          ListFooterComponent={renderFooter}
-          ListEmptyComponent={renderEmptyList}
-          onViewableItemsChanged={handleViewableItemsChanged}
-          viewabilityConfig={viewabilityConfig}
+            snapToInterval={itemHeight}
+            snapToAlignment="start"
+            decelerationRate="fast"
+          pagingEnabled
+            onEndReached={handleEndReached}
+            onEndReachedThreshold={0.5}
+            ListFooterComponent={renderFooter}
+            ListEmptyComponent={renderEmptyList}
+            contentContainerStyle={
+              papers.length === 0 ? styles.emptyContentContainer : undefined
+            }
+            getItemLayout={(data, index) => ({
+              length: itemHeight,
+              offset: itemHeight * index,
+              index,
+            })}
         />
-      </ThemedView>
+      </View>
     </SafeAreaView>
+    </GestureHandlerRootView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#000',
   },
-  header: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-    backgroundColor: '#fff',
-  },
-  headerContent: {
+  headerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 20,
+    backgroundColor: '#000',
+    borderBottomWidth: 0,
+    height: 50, // Reduced height
+    paddingTop: 16, // Add padding to position text lower
+    zIndex: 10,
   },
-  screenTitle: {
-    fontSize: 20,
+  headerLogo: {
+    fontSize: 24, // Reduced from 36px
     fontWeight: 'bold',
+    color: '#FFFFFF',
   },
-  headerIcons: {
+  headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  iconButton: {
-    padding: 8,
-    marginLeft: 8,
+  headerIcon: {
+    marginLeft: 20,
+    padding: 5,
   },
-  cardContainer: {
+  contentContainer: {
+    flex: 1,
+    marginTop: 0,
+  },
+  fullScreenCard: {
     width: SCREEN_WIDTH,
-    backgroundColor: '#fff',
-    paddingHorizontal: 10,
-    paddingVertical: 10,
+    backgroundColor: '#000',
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 0,
   },
-  cardContent: {
+  fullCardContent: {
     flex: 1,
     position: 'relative',
-    backgroundColor: '#f0f0f0', // Light background for when images don't load
-    overflow: 'hidden',
-    borderRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    elevation: 8,
   },
-  imagePlaceholder: {
+  fullCardImage: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: '#111',
   },
-  cardImage: {
-    width: '100%',
-    height: '100%',
+  darkOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  paperContentContainer: {
     position: 'absolute',
-    left: 0,
-    top: 0,
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    padding: 16,
-    justifyContent: 'space-between',
-    borderRadius: 20,
-  },
-  paperDetails: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    paddingBottom: 60,
-  },
-  achievementContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 12,
-    alignSelf: 'flex-start',
-    marginBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.15,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  achievementText: {
-    color: '#333',
-    fontSize: 12,
-    marginLeft: 4,
-    fontWeight: '500',
+    top: '45%', // Adjusted to provide more spacing from achievement badge
+    left: 20,
+    right: 20,
+    zIndex: 5,
+    marginBottom: 20, // Add bottom margin for better spacing
   },
   paperTitle: {
-    color: '#fff',
-    fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 6,
-    lineHeight: 22,
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 3,
+    color: '#FFF',
+    marginBottom: 12, // Increased spacing after title
+    letterSpacing: 0,
+    fontSize: 26,
+    lineHeight: 32,
   },
   paperAuthors: {
-    color: '#eee',
-    fontSize: 13,
-    marginBottom: 10,
-    textAlign: 'left',
-    fontWeight: '500',
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
+    color: '#E0E0E0',
+    marginBottom: 6, // Increased spacing after authors
+    fontSize: 16,
+    lineHeight: 20,
   },
-  paperSummary: {
-    color: '#f0f0f0',
-    fontSize: 14,
-    lineHeight: 18,
-    marginBottom: 12,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    padding: 10,
-    borderRadius: 8,
-  },
-  actionButtonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+  achievementContainer: {
     position: 'absolute',
-    bottom: 15,
+    top: '32%', // Moved up slightly
+    left: 20,
+    right: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    maxWidth: '90%',
+    alignSelf: 'center',
+    zIndex: 4,
+  },
+  achievementIcon: {
+    marginRight: 10,
+  },
+  achievementText: {
+    color: '#fff',
+    fontSize: 16,
+    flex: 1,
+    fontWeight: '400',
+  },
+  summaryContainer: {
+    position: 'absolute',
+    top: '63%', // Further moved down to avoid collision
+    left: 20,
+    right: 20,
+    zIndex: 3,
+    maxHeight: '25%', // Limit height to prevent overflow
+  },
+  summaryText: {
+    color: '#E0E0E0',
+    lineHeight: 22,
+    fontSize: 15, // Slightly reduced font size
+    marginBottom: 10,
+  },
+  bottomActionsContainer: {
+    position: 'absolute',
+    bottom: 35, // Moved up slightly to avoid potential collision with summary
     left: 0,
     right: 0,
-    paddingHorizontal: 40,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingBottom: 0,
+    zIndex: 6,
   },
   actionButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: 'rgba(255,255,255,0.18)',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 4,
+    marginHorizontal: 15,
   },
-  loaderContainer: {
-    padding: 20,
+  loadingContainer: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
   },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#888',
-  },
-  emptyContainer: {
+  emptyListContainer: {
     flex: 1,
+    height: SCREEN_HEIGHT - 100,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: 16,
   },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginTop: 16,
-    marginBottom: 8,
+  emptyContentContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#888',
+  emptyListText: {
+    fontSize: 16,
     textAlign: 'center',
+    marginTop: 16,
+    color: '#FFF',
+  },
+  retryButton: {
+    marginTop: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: Colors.light.primary,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  footerLoader: {
+    paddingVertical: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: 60,
+  },
+  heartAnimationContainer: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  notificationContainer: {
+    position: 'relative',
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: '#FF3B30',
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 3,
+  },
+  notificationBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: 'bold',
   },
 });

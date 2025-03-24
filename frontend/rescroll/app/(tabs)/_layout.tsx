@@ -8,6 +8,7 @@ import { ThemedText } from '@/components/ThemedText';
 import CustomTabBar from '@/components/CustomTabBar';
 import { AppContext } from '../_layout';
 import { Feather } from '@expo/vector-icons';
+import AIIcon from '@/components/AIIcon';
 
 // Define the allowed tabs explicitly
 const ALLOWED_TABS = ['index', 'search', 'tops', 'library', 'explore'];
@@ -26,30 +27,9 @@ export default function TabLayout() {
   renderCountRef.current += 1;
   
   useEffect(() => {
-    console.log('========== DIAGNOSTIC LOGS: TAB LAYOUT ==========');
-    console.log('Tab Layout Rendered', renderCountRef.current);
-    console.log('Current pathname:', pathname);
-    console.log('Current segments:', segments);
-    
     // Store and compare navigation state to detect changes
     const currentNavState = navigation.getState ? navigation.getState() : 'Not available';
-    console.log('Previous nav state:', navigationStateRef.current);
-    console.log('Current nav state:', currentNavState);
     navigationStateRef.current = currentNavState;
-    
-    // Track route existence in a more reliable way
-    console.log('Available routes in (tabs) folder:');
-    // Only track the allowed tabs
-    ALLOWED_TABS.forEach(route => {
-      try {
-        console.log(`Route "${route}" is defined:`, !!router);
-        // Fix the type issue by using a simple string check instead of includes
-        const isCurrentlyAccessible = pathname?.indexOf(route) !== -1;
-        console.log(`Route "${route}" is currently accessible:`, isCurrentlyAccessible);
-      } catch (e: any) {
-        console.log(`Route "${route}" error:`, e.message);
-      }
-    });
     
     // Listen for tab navigation events
     const unsubscribe = navigation.addListener('state', (e) => {
@@ -66,7 +46,6 @@ export default function TabLayout() {
               route.name !== 'profile-settings' && 
               route.name !== 'design-demo' &&
               !route.name.startsWith('/')) {
-            console.warn(`Attempted to navigate to disallowed tab: ${route.name}`);
             // Use setTimeout to avoid navigation race conditions
             setTimeout(() => {
               router.replace('/(tabs)');
@@ -78,10 +57,10 @@ export default function TabLayout() {
     });
     
     return () => {
-      console.log('Tab Layout cleanup');
+      // Clean up the listener when the component unmounts
       unsubscribe();
     };
-  }, [pathname, segments, navigation, router]);
+  }, [navigation, pathname, router, segments]);
   
   return (
     <Tabs
@@ -110,7 +89,16 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol name="house.fill" size={26} color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <AIIcon 
+              family="Ionicons" 
+              name="home" 
+              size={26} 
+              color={color} 
+              focused={focused} 
+              gradientColors={['#4F8EF7', '#3b5998']}
+            />
+          ),
           headerRight: () => (
             <View style={styles.headerRightContainer}>
               <TouchableOpacity
@@ -127,14 +115,23 @@ export default function TabLayout() {
               </TouchableOpacity>
             </View>
           ),
-          headerShown: true,
+          headerShown: false,
         }}
       />
       <Tabs.Screen
         name="search"
         options={{
           title: 'Search',
-          tabBarIcon: ({ color }) => <Feather name="search" size={24} color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <AIIcon 
+              family="Ionicons" 
+              name="search" 
+              size={24} 
+              color={color} 
+              focused={focused} 
+              gradientColors={['#FF9190', '#FF6A88']}
+            />
+          ),
           headerShown: true,
         }}
       />
@@ -142,7 +139,16 @@ export default function TabLayout() {
         name="tops"
         options={{
           title: 'Top Papers',
-          tabBarIcon: ({ color }) => <IconSymbol name="star.fill" size={26} color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <AIIcon 
+              family="FontAwesome5" 
+              name="file-alt" 
+              size={24} 
+              color={color} 
+              focused={focused} 
+              gradientColors={['#43E97B', '#38F9D7']}
+            />
+          ),
           headerShown: true,
         }}
       />
@@ -150,7 +156,16 @@ export default function TabLayout() {
         name="library"
         options={{
           title: 'Bookmarks',
-          tabBarIcon: ({ color }) => <IconSymbol name="bookmark.fill" size={26} color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <AIIcon 
+              family="Ionicons" 
+              name="bookmark" 
+              size={24} 
+              color={color} 
+              focused={focused} 
+              gradientColors={['#A155FB', '#F59E0B']}
+            />
+          ),
           headerShown: true,
         }}
       />
@@ -158,7 +173,16 @@ export default function TabLayout() {
         name="explore"
         options={{
           title: 'Explore',
-          tabBarIcon: ({ color }) => <Feather name="compass" size={24} color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <AIIcon 
+              family="Ionicons" 
+              name="compass" 
+              size={26} 
+              color={color} 
+              focused={focused} 
+              gradientColors={['#FA709A', '#FEE140']}
+            />
+          ),
           headerShown: true,
         }}
       />
