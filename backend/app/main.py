@@ -10,6 +10,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from app.core.config import Settings
 from app.core.logging_config import LOGGING_CONFIG
 from app.api.v1.api import api_router
+from app.api.v1.endpoints import health
 from app.utils.api_error import ApiError
 from app.utils.api_response import ApiResponse
 
@@ -26,6 +27,8 @@ settings = Settings()
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
+    version=settings.VERSION,
+    description=settings.DESCRIPTION,
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
 
@@ -76,6 +79,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 
 # Include API router
 app.include_router(api_router, prefix=settings.API_V1_STR)
+app.include_router(health.router, prefix=settings.API_V1_STR)
 
 @app.get("/")
 async def root():
