@@ -1,22 +1,27 @@
-from typing import Optional
-from sqlalchemy.orm import Session
+from typing import Optional, List
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from app.core.security import get_password_hash, verify_password
 from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate
 
-def get_user_by_id(db: Session, id: int) -> Optional[User]:
-    return db.query(User).filter(User.id == id).first()
+async def get_user_by_id(db: AsyncSession, id: int) -> Optional[User]:
+    result = await db.execute(select(User).filter(User.id == id))
+    return result.scalar_one_or_none()
 
-def get_user_by_email(db: Session, email: str) -> Optional[User]:
-    return db.query(User).filter(User.email == email).first()
+async def get_user_by_email(db: AsyncSession, email: str) -> Optional[User]:
+    result = await db.execute(select(User).filter(User.email == email))
+    return result.scalar_one_or_none()
 
-def get_user_by_username(db: Session, username: str) -> Optional[User]:
-    return db.query(User).filter(User.username == username).first()
+async def get_user_by_username(db: AsyncSession, username: str) -> Optional[User]:
+    result = await db.execute(select(User).filter(User.username == username))
+    return result.scalar_one_or_none()
 
-def get_users(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(User).offset(skip).limit(limit).all()
+async def get_users(db: AsyncSession, skip: int = 0, limit: int = 100) -> List[User]:
+    result = await db.execute(select(User).offset(skip).limit(limit))
+    return result.scalars().all()
 
-def create_user(db: Session, user: UserCreate) -> User:
+async def create_user(db: AsyncSession, user: UserCreate) -> User:
     hashed_password = get_password_hash(user.password)
     db_user = User(
         email=user.email,
@@ -27,11 +32,11 @@ def create_user(db: Session, user: UserCreate) -> User:
         is_active=True,
     )
     db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
+    await db.commit()
+    await db.refresh(db_user)
     return db_user
 
-def update_user(db: Session, db_user: User, user_in: UserUpdate) -> User:
+async def update_user(db: AsyncSession, db_user: User, user_in: UserUpdate) -> User:
     update_data = user_in.dict(exclude_unset=True)
     if "password" in update_data:
         hashed_password = get_password_hash(update_data["password"])
@@ -42,18 +47,18 @@ def update_user(db: Session, db_user: User, user_in: UserUpdate) -> User:
         setattr(db_user, field, value)
     
     db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
+    await db.commit()
+    await db.refresh(db_user)
     return db_user
 
-def update_user_profile_image(db: Session, db_user: User, image_url: str) -> User:
+async def update_user_profile_image(db: AsyncSession, db_user: User, image_url: str) -> User:
     db_user.profile_image = image_url
     db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
+    await db.commit()
+    await db.refresh(db_user)
     return db_user
 
-def remove_profile_image(db: Session, db_user: User) -> User:
+async def remove_profile_image(db: AsyncSession, db_user: User) -> User:
     """
     Remove the profile image URL from a user record.
     
@@ -66,12 +71,12 @@ def remove_profile_image(db: Session, db_user: User) -> User:
     """
     db_user.profile_image = None
     db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
+    await db.commit()
+    await db.refresh(db_user)
     return db_user
 
-def authenticate_user(db: Session, email: str, password: str) -> Optional[User]:
-    user = get_user_by_email(db, email=email)
+async def authenticate_user(db: AsyncSession, email: str, password: str) -> Optional[User]:
+    user = await get_user_by_email(db, email=email)
     if not user:
         return None
     if not verify_password(password, user.hashed_password):

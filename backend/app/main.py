@@ -6,9 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from starlette.middleware.sessions import SessionMiddleware
-from motor.motor_asyncio import AsyncIOMotorClient
 
-from app.core.config import settings
+from app.core.config import Settings
 from app.core.logging_config import LOGGING_CONFIG
 from app.api.v1.api import api_router
 from app.utils.api_error import ApiError
@@ -22,18 +21,19 @@ logger = logging.getLogger("app")
 static_dir = Path("static")
 static_dir.mkdir(exist_ok=True)
 
+# Initialize settings
+settings = Settings()
+
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    version=settings.VERSION,
-    description=settings.DESCRIPTION,
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
 
 # Set all CORS enabled origins
-if settings.CORS_ORIGINS:
+if settings.BACKEND_CORS_ORIGINS:
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[str(origin) for origin in settings.CORS_ORIGINS],
+        allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -56,18 +56,6 @@ app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
-
-# MongoDB connection
-@app.on_event("startup")
-async def startup_db_client():
-    app.mongodb_client = AsyncIOMotorClient(settings.MONGODB_URL)
-    app.mongodb = app.mongodb_client[settings.DB_NAME]
-    logger.info("Connected to MongoDB")
-
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    app.mongodb_client.close()
-    logger.info("Disconnected from MongoDB")
 
 # Error handlers
 @app.exception_handler(ApiError)
@@ -93,7 +81,7 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 async def root():
     """Root endpoint to check API status."""
     logger.info("Root endpoint accessed")
-    return ApiResponse(data={"status": "ok", "message": "Welcome to Rescroll API"})
+    return {"status": "ok", "message": "Welcome to Rescroll API"}
 
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):

@@ -1,112 +1,132 @@
-from typing import Any, Optional, Dict
-from bson import ObjectId
-from motor.motor_asyncio import AsyncIOMotorDatabase
-
-from app.core.security import get_password_hash
+from typing import Optional, Tuple
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate
-from datetime import datetime
+from passlib.context import CryptContext
+from fastapi import HTTPException, status
+
+# Password context for hashing
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 class UserService:
-    def __init__(self, db: AsyncIOMotorDatabase):
+    def __init__(self, db: AsyncSession):
         self.db = db
+
+    def verify_password(self, plain_password: str, hashed_password: str) -> bool:
+        return pwd_context.verify(plain_password, hashed_password)
+
+    def get_password_hash(self, password: str) -> str:
+        return pwd_context.hash(password)
+
+    async def check_user_exists(self, email: str, username: str) -> Tuple[bool, bool]:
+        """
+        Check if a user with the given email or username exists.
+        Returns a tuple of (email_exists, username_exists)
+        """
+        query = select(User).where(
+            (User.email == email) | (User.username == username)
+        )
+        result = await self.db.execute(query)
+        existing_user = result.scalar_one_or_none()
         
-    async def create_user(self, user: UserCreate) -> Dict[str, Any]:
-        """
-        Create a new user in the database
-        """
-        # Check if user with email already exists
-        existing_user = await User.find_one({"email": user.email})
         if existing_user:
-            raise ValueError("User with this email already exists")
-            
-        # Check if username is taken
-        existing_username = await User.find_one({"username": user.username})
-        if existing_username:
-            raise ValueError("Username already taken")
-            
-        # Create user dict
-        user_dict = user.model_dump(exclude={"password"})
-        user_dict["hashed_password"] = get_password_hash(user.password)
-        user_dict["created_at"] = datetime.utcnow()
-        user_dict["updated_at"] = datetime.utcnow()
-        user_dict["is_active"] = True
-        user_dict["is_superuser"] = False
-        
-        # Insert user
-        result = await User.insert_one(user_dict)
-        user_dict["_id"] = result.inserted_id
-        
-        return user_dict
+            return (
+                existing_user.email == email,
+                existing_user.username == username
+            )
+        return False, False
 
-    async def get_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:
-        """
-        Get a user by email
-        """
-        return await User.find_one({"email": email})
-
-    async def get_user_by_id(self, user_id: str) -> Optional[Dict[str, Any]]:
-        """
-        Get a user by ID
-        """
-        if isinstance(user_id, str):
-            user_id = ObjectId(user_id)
-        return await User.find_one({"_id": user_id})
+    async def create_user(self, user_data: UserCreate) -> User:
+        # Check if user exists
+        email_exists, username_exists = await self.check_user_exists(
+            user_data.email, user_data.username
+        )
         
-    async def get_user_by_username(self, username: str) -> Optional[Dict[str, Any]]:
-        """
-        Get a user by username
-        """
-        return await User.find_one({"username": username})
-
-    async def update_user(self, user_id: str, user_data: UserUpdate) -> Optional[Dict[str, Any]]:
-        """
-        Update a user's information
-        """
-        # Convert to dict and remove None values
-        update_data = {k: v for k, v in user_data.model_dump().items() if v is not None}
+        if email_exists and username_exists:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Both email and username are already registered"
+            )
+        elif email_exists:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered"
+            )
+        elif username_exists:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Username already taken"
+            )
         
-        if not update_data:
-            return await self.get_user_by_id(user_id)
+        hashed_password = self.get_password_hash(user_data.password)
+        db_user = User(
+            email=user_data.email,
+            username=user_data.username,
+            full_name=user_data.full_name,
+            hashed_password=hashed_password,
+            is_active=True
+        )
+        self.db.add(db_user)
+        await self.db.commit()
+        await self.db.refresh(db_user)
+        return db_user
+
+    async def get_user_by_email(self, email: str) -> Optional[User]:
+        query = select(User).where(User.email == email)
+        result = await self.db.execute(query)
+        return result.scalars().first()
+
+    async def get_user_by_username(self, username: str) -> Optional[User]:
+        query = select(User).where(User.username == username)
+        result = await self.db.execute(query)
+        return result.scalars().first()
+
+    async def get_user_by_id(self, user_id: int) -> Optional[User]:
+        query = select(User).where(User.id == user_id)
+        result = await self.db.execute(query)
+        return result.scalars().first()
+
+    async def update_user(self, user_id: int, user_data: UserUpdate) -> Optional[User]:
+        user = await self.get_user_by_id(user_id)
+        if not user:
+            return None
+        
+        update_data = user_data.dict(exclude_unset=True)
+        
+        # Check for email and username uniqueness if they're being updated
+        if "email" in update_data or "username" in update_data:
+            email_exists, username_exists = await self.check_user_exists(
+                update_data.get("email", user.email),
+                update_data.get("username", user.username)
+            )
             
-        # Handle password update
+            if "email" in update_data and email_exists and update_data["email"] != user.email:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Email already registered"
+                )
+            if "username" in update_data and username_exists and update_data["username"] != user.username:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Username already taken"
+                )
+        
         if "password" in update_data:
-            update_data["hashed_password"] = get_password_hash(update_data.pop("password"))
-            
-        # Add updated timestamp
-        update_data["updated_at"] = datetime.utcnow()
+            update_data["hashed_password"] = self.get_password_hash(update_data.pop("password"))
         
-        # Update user
-        await User.update_one(
-            {"_id": ObjectId(user_id)}, 
-            {"$set": update_data}
-        )
+        for field, value in update_data.items():
+            setattr(user, field, value)
         
-        return await self.get_user_by_id(user_id)
+        await self.db.commit()
+        await self.db.refresh(user)
+        return user
 
-    async def delete_user(self, user_id: str) -> bool:
-        """
-        Delete a user
-        """
-        result = await User.delete_one({"_id": ObjectId(user_id)})
-        return result.deleted_count > 0
+    async def delete_user(self, user_id: int) -> bool:
+        user = await self.get_user_by_id(user_id)
+        if not user:
+            return False
         
-    async def activate_user(self, user_id: str) -> bool:
-        """
-        Activate a user account
-        """
-        result = await User.update_one(
-            {"_id": ObjectId(user_id)},
-            {"$set": {"is_active": True, "updated_at": datetime.utcnow()}}
-        )
-        return result.modified_count > 0
-        
-    async def deactivate_user(self, user_id: str) -> bool:
-        """
-        Deactivate a user account
-        """
-        result = await User.update_one(
-            {"_id": ObjectId(user_id)},
-            {"$set": {"is_active": False, "updated_at": datetime.utcnow()}}
-        )
-        return result.modified_count > 0
+        await self.db.delete(user)
+        await self.db.commit()
+        return True
