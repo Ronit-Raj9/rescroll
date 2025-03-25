@@ -7,12 +7,22 @@ import { DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-n
 import { LogBox } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import LoadingScreen from '@/components/LoadingScreen';
 
 // Prevent warning logs for the demo
 LogBox.ignoreLogs(['Warning: ...']);
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
+
+// Add this line to suppress these specific warnings
+// This should be placed before the component definition
+LogBox.ignoreLogs([
+  'findDOMNode is deprecated in StrictMode',
+  'Warning: findDOMNode is deprecated in StrictMode',
+  'Warning: findDOMNode',
+]);
 
 // Define the type for the app context
 type AppContextType = {
@@ -28,13 +38,63 @@ export const AppContext = createContext<AppContextType>({
   setUnreadNotificationsCount: () => {},
 });
 
-export default function RootLayout() {
+// Add this function to handle base64 decoding in React Native
+const safeBase64Decode = (str: string): string => {
+  try {
+    // For React Native environment
+    return decodeURIComponent(
+      Array.prototype.map
+        .call(
+          atob(str.replace(/-/g, '+').replace(/_/g, '/')), 
+          (c) => `%${('00' + c.charCodeAt(0).toString(16)).slice(-2)}`
+        )
+        .join('')
+    );
+  } catch (e) {
+    console.error('Error decoding base64:', e);
+    return '';
+  }
+};
+
+function RootLayoutNav() {
   const router = useRouter();
-  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(3); // Start with some mock notifications
+  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(3);
+  const { user, isLoading, getAuthToken } = useAuth();
   
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
+
+  // Update the token debugging code
+  useEffect(() => {
+    const checkTokenDebug = async () => {
+      if (!isLoading) {
+        try {
+          const token = await getAuthToken();
+          console.log('Auth token available on app load:', !!token);
+          if (token) {
+            const tokenParts = token.split('.');
+            if (tokenParts.length === 3) {
+              // Check token expiration
+              try {
+                const payload = JSON.parse(safeBase64Decode(tokenParts[1]));
+                const expiry = payload.exp * 1000; // Convert to milliseconds
+                const now = Date.now();
+                const timeLeft = expiry - now;
+                console.log(`Token valid for: ${Math.floor(timeLeft / 60000)} minutes`);
+              } catch (e) {
+                console.log('Could not parse token payload');
+              }
+            }
+          }
+        } catch (e) {
+          console.error('Error checking token:', e);
+        }
+      }
+    };
+    
+    checkTokenDebug();
+  }, [isLoading, getAuthToken]);
 
   // Improved navigation function with better error handling
   const navigateTo = (route: string) => {
@@ -63,8 +123,18 @@ export default function RootLayout() {
     }
   }, [loaded]);
 
-  if (!loaded) {
-    return null;
+  useEffect(() => {
+    if (!isLoading) {
+      if (!user) {
+        router.replace('/auth/login');
+      } else if (router.pathname === '/auth/login' || router.pathname === '/auth/signup') {
+        router.replace('/(tabs)');
+      }
+    }
+  }, [user, isLoading]);
+
+  if (!loaded || isLoading) {
+    return <LoadingScreen />;
   }
 
   return (
@@ -99,10 +169,25 @@ export default function RootLayout() {
                   animation: 'slide_from_right',
                 }} 
               />
+              <Stack.Screen 
+                name="auth" 
+                options={{ 
+                  headerShown: false,
+                  animation: 'fade',
+                }} 
+              />
             </Stack>
           </NavigationThemeProvider>
         </AppContext.Provider>
       </ThemeProvider>
     </GestureHandlerRootView>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <AuthProvider>
+      <RootLayoutNav />
+    </AuthProvider>
   );
 }

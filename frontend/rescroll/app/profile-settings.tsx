@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useCallback, useRef } from 'react';
-import { StyleSheet, View, TouchableOpacity, Image, TextInput, Alert, ScrollView, Platform, Modal, StatusBar, Switch, KeyboardAvoidingView, FlatList } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Image, TextInput, Alert, ScrollView, Platform, StatusBar, Switch, KeyboardAvoidingView, FlatList, ActivityIndicator } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/ThemedText';
@@ -21,9 +21,13 @@ import Animated, {
   FadeOut
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import SafeGestureHandler from '@/components/SafeGestureHandler';
+import SafeModal from '@/components/SafeModal';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useColorScheme, useIsDarkMode } from '@/hooks/useColorScheme';
+import { useAuth } from '@/contexts/AuthContext';
+import { getApiUrl } from '@/config/env';
+import ProfilePictureActions from '@/components/ProfilePictureActions';
 
 // Keys for AsyncStorage
 const PROFILE_IMAGE_STORAGE_KEY = 'rescroll_profile_image';
@@ -153,6 +157,7 @@ const PREDEFINED_TAGS: InterestTag[] = [
 export default function ProfileSettingsScreen() {
   const router = useRouter();
   const appContext = useContext(AppContext);
+  const { user, getAuthToken, signOut } = useAuth();
   const [isMounted, setIsMounted] = useState(false);
   
   // Theme-related hooks
@@ -163,7 +168,7 @@ export default function ProfileSettingsScreen() {
   const colors = Colors[theme];
   
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [username, setUsername] = useState('Researcher');
+  const [username, setUsername] = useState('');
   const [userBio, setUserBio] = useState('Exploring the frontiers of science and technology. Interested in machine learning, quantum computing, and renewable energy.');
   const [notifications, setNotifications] = useState(true);
   const [selectedLanguage, setSelectedLanguage] = useState('en');
@@ -179,6 +184,7 @@ export default function ProfileSettingsScreen() {
     {id: '1', text: 'Hello! How can I help you today?', isBot: true}
   ]);
   const [chatInput, setChatInput] = useState('');
+  const [isUpdatingUsername, setIsUpdatingUsername] = useState(false);
   const chatScrollRef = useRef<ScrollView>(null);
   
   // Animation values
@@ -195,6 +201,11 @@ export default function ProfileSettingsScreen() {
   
   // Add state for tooltip visibility
   const [showTooltip, setShowTooltip] = useState(false);
+  
+  // Add loading state for profile picture operations
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  
+  const apiUrl = getApiUrl();
   
   // Set mounted state after component mounts
   useEffect(() => {
@@ -216,16 +227,23 @@ export default function ProfileSettingsScreen() {
   useEffect(() => {
     const loadSavedData = async () => {
       try {
-        // Load saved profile image
-        const savedImage = await AsyncStorage.getItem(PROFILE_IMAGE_STORAGE_KEY);
-        if (savedImage) {
-          setProfileImage(savedImage);
+        // Set username from user data if available
+        if (user?.username) {
+          setUsername(user.username);
         }
         
-        // Load saved username
-        const savedUsername = await AsyncStorage.getItem(USERNAME_STORAGE_KEY);
-        if (savedUsername) {
-          setUsername(savedUsername);
+        // Set profile image from user data if available
+        if (user?.profile_image) {
+          console.log('Setting profile image from user data:', user.profile_image);
+          setProfileImage(user.profile_image);
+          await AsyncStorage.setItem(PROFILE_IMAGE_STORAGE_KEY, user.profile_image);
+        } else {
+          // Load saved profile image from storage as fallback
+        const savedImage = await AsyncStorage.getItem(PROFILE_IMAGE_STORAGE_KEY);
+        if (savedImage) {
+            console.log('Setting profile image from AsyncStorage:', savedImage);
+          setProfileImage(savedImage);
+        }
         }
         
         // Load bio
@@ -294,7 +312,7 @@ export default function ProfileSettingsScreen() {
     
     loadSavedData();
     requestPermissions();
-  }, []);
+  }, [user]);
   
   // Add additional check when the component is about to render
   useEffect(() => {
@@ -375,13 +393,46 @@ export default function ProfileSettingsScreen() {
   };
   
   const handleSaveName = async () => {
+    if (isUpdatingUsername) return;
+    
     setEditingName(false);
     nameUnderlineWidth.value = withTiming(0, { duration: 300, easing: Easing.in(Easing.cubic) });
     
     try {
+      setIsUpdatingUsername(true);
+      const token = await getAuthToken();
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch(`${apiUrl}/users/update`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: username,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to update username');
+      }
+
+      // Update local storage after successful API update
       await AsyncStorage.setItem(USERNAME_STORAGE_KEY, username);
+      Alert.alert('Success', 'Username updated successfully');
     } catch (error) {
       console.error('Error saving username:', error);
+      // Revert to previous username if update fails
+      if (user?.username) {
+        setUsername(user.username);
+      }
+      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to update username. Please try again.');
+    } finally {
+      setIsUpdatingUsername(false);
     }
   };
   
@@ -448,24 +499,120 @@ export default function ProfileSettingsScreen() {
     }
   };
   
-  const handleChangeProfilePicture = async () => {
-    setShowImageOptions(false);
-    
-    if (Platform.OS !== 'web') {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  // Update handleProfilePictureUpload function to handle platform differences
+  const handleProfilePictureUpload = async (imageUri: string) => {
+    setIsUploadingImage(true);
+    try {
+      // Get the filename from the URI
+      const filename = imageUri.split('/').pop() || 'image.jpg';
       
-      if (status !== 'granted') {
-        Alert.alert('Permission Required', 'Sorry, we need camera roll permissions to make this work!');
-        return;
+      // Determine mime type based on extension
+      const extension = filename.split('.').pop()?.toLowerCase() || 'jpg';
+      const mimeType = extension === 'jpg' || extension === 'jpeg' 
+        ? 'image/jpeg' 
+        : extension === 'png' 
+          ? 'image/png' 
+          : extension === 'gif' 
+            ? 'image/gif' 
+            : 'image/jpeg';
+      
+      console.log('Uploading image:', { imageUri, filename, mimeType });
+      
+      // Get token using the auth context method
+      const token = await getAuthToken();
+      console.log('Token available:', !!token);
+      
+      if (!token) {
+        console.error('Failed to get auth token. User might not be fully authenticated.');
+        throw new Error('Authentication required. Please log in again.');
       }
+      
+      // Create form data with platform-specific handling
+      const formData = new FormData();
+      
+      // Platform-specific handling
+      if (Platform.OS === 'web') {
+        try {
+          const response = await fetch(imageUri);
+          const blob = await response.blob();
+          formData.append('file', blob, filename);
+        } catch (error) {
+          console.error('Error processing image for web:', error);
+          throw new Error('Failed to process image for upload');
+        }
+      } else {
+        // For React Native on iOS/Android
+        formData.append('file', {
+          uri: Platform.OS === 'ios' ? imageUri.replace('file://', '') : imageUri,
+          name: filename,
+          type: mimeType,
+        } as any);
+      }
+      
+      console.log('Sending request to:', `${apiUrl}/users/me/profile-image`);
+      
+      // Send the request to the backend
+      const uploadResponse = await fetch(`${apiUrl}/users/me/profile-image`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+      
+      console.log('Upload response status:', uploadResponse.status);
+      
+      // Read the response as text first to help with debugging
+      const responseText = await uploadResponse.text();
+      console.log('Response text:', responseText);
+      
+      // If the response is not ok, throw an error
+      if (!uploadResponse.ok) {
+        let errorMessage = 'Failed to upload profile picture';
+        
+        // Try to parse the response as JSON for error details
+        try {
+          const errorData = JSON.parse(responseText);
+          errorMessage = errorData.detail || errorMessage;
+        } catch (e) {
+          // If JSON parsing fails, use the response text as the error message
+          if (responseText) {
+            errorMessage = responseText;
+          }
+        }
+        
+        throw new Error(errorMessage);
+      }
+      
+      // Parse the successful response as JSON
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (e) {
+        throw new Error('Invalid response from server');
+      }
+      
+      console.log('Upload successful, image URL:', data.image_url);
+      
+      // Update the UI with the new profile image URL
+      setProfileImage(data.image_url);
+      await AsyncStorage.setItem(PROFILE_IMAGE_STORAGE_KEY, data.image_url);
+      
+      Alert.alert('Success', 'Profile picture updated successfully');
+    } catch (error: any) {
+      console.error('Error uploading profile picture:', error);
+      Alert.alert('Error', error.message || 'Failed to upload profile picture. Please try again.');
+    } finally {
+      setIsUploadingImage(false);
+      setShowImageOptions(false);
     }
-    
-    pickImage();
   };
-  
+
+  // Update the image picker functions for better platform compatibility
   const takePicture = async () => {
     setShowImageOptions(false);
     
+    try {
     if (Platform.OS !== 'web') {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       
@@ -480,47 +627,104 @@ export default function ProfileSettingsScreen() {
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
+        base64: false,
     });
     
     if (!result.canceled && result.assets && result.assets.length > 0) {
       const imageUri = result.assets[0].uri;
-      setProfileImage(imageUri);
-      saveProfileImage(imageUri);
+        console.log('Selected image URI:', imageUri);
+        handleProfilePictureUpload(imageUri);
+      }
+    } catch (error) {
+      console.error('Error capturing image:', error);
+      Alert.alert('Error', 'Failed to capture image. Please try again.');
     }
   };
   
   const pickImage = async () => {
+    setShowImageOptions(false);
+    
+    try {
+      if (Platform.OS !== 'web') {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        
+        if (status !== 'granted') {
+          Alert.alert('Permission Required', 'Sorry, we need photo library permissions to make this work!');
+          return;
+        }
+      }
+      
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
+        base64: false,
     });
     
     if (!result.canceled && result.assets && result.assets.length > 0) {
       const imageUri = result.assets[0].uri;
-      setProfileImage(imageUri);
-      saveProfileImage(imageUri);
+        console.log('Selected image URI:', imageUri);
+        handleProfilePictureUpload(imageUri);
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      Alert.alert('Error', 'Failed to select image. Please try again.');
     }
   };
   
-  const removeProfilePicture = async () => {
-    setShowImageOptions(false);
+  const onProfileImageDeleted = useCallback(async () => {
+    console.log('[ProfileSettings] Profile image deleted callback received');
+    
+    // Update the state first for immediate UI update
     setProfileImage(null);
     
     try {
+      // Remove from AsyncStorage
       await AsyncStorage.removeItem(PROFILE_IMAGE_STORAGE_KEY);
+      console.log('[ProfileSettings] Profile image removed from AsyncStorage');
+      
+      // If we have a user context, update that too
+      if (user && user.profile_image) {
+        console.log('[ProfileSettings] Profile image removed from user object');
+        // Note: This would typically update the user context, but since we don't have
+        // direct access to update the user object, the next profile fetch will update it
+      }
+      
+      // Force a refresh of the avatar section
+      avatarScale.value = withSequence(
+        withSpring(0.9, { damping: 4, stiffness: 300 }),
+        withSpring(1, { damping: 10, stiffness: 200 })
+      );
     } catch (error) {
-      console.error('Error removing profile picture:', error);
+      console.error('[ProfileSettings] Error cleaning up after profile image deletion:', error);
     }
-  };
-  
-  const saveProfileImage = async (imageUri: string) => {
-    try {
-      await AsyncStorage.setItem(PROFILE_IMAGE_STORAGE_KEY, imageUri);
-    } catch (error) {
-      console.error('Error saving profile image:', error);
+  }, [user, avatarScale]);
+
+  // Update the avatar section in the render to show loading state
+  const renderAvatarContent = () => {
+    if (isUploadingImage) {
+      return (
+        <View style={[styles.avatarImage, styles.avatarLoadingContainer]}>
+          <ActivityIndicator size="large" color={Colors.light.primary} />
+        </View>
+      );
     }
+
+    if (profileImage) {
+      return <Image source={{ uri: profileImage }} style={styles.avatarImage} />;
+    }
+
+    return (
+      <LinearGradient
+        colors={['#8E2DE2', '#4A00E0']}
+        style={styles.avatarPlaceholder}
+      >
+        <ThemedText style={styles.avatarPlaceholderText}>
+          {username.substring(0, 2).toUpperCase()}
+        </ThemedText>
+      </LinearGradient>
+    );
   };
   
   // Available languages from the service
@@ -687,12 +891,61 @@ export default function ProfileSettingsScreen() {
   // Add new handler to view profile image in full screen
   const handleViewProfileImage = () => {
     if (profileImage) {
+      setShowImageOptions(false);
       setShowFullScreenImage(true);
     }
   };
 
+  // Add a debug function when component mounts
+  useEffect(() => {
+    const debugAuth = async () => {
+      try {
+        const token = await getAuthToken();
+        console.log('[ProfileSettings] Auth token available:', !!token);
+        console.log('[ProfileSettings] Token length:', token ? token.length : 0);
+        if (token) {
+          // Log partial token for debug purposes (first and last 10 chars)
+          const partialToken = token.length > 20 
+            ? `${token.substring(0, 10)}...${token.substring(token.length - 10)}`
+            : token;
+          console.log('[ProfileSettings] Token sample:', partialToken);
+        }
+        
+        console.log('[ProfileSettings] User data available:', !!user);
+        if (user) {
+          console.log('[ProfileSettings] Username:', user.username);
+          console.log('[ProfileSettings] Profile image from API:', user.profile_image);
+        }
+
+        // Check if profile image is stored locally
+        const storedImage = await AsyncStorage.getItem(PROFILE_IMAGE_STORAGE_KEY);
+        console.log('[ProfileSettings] Profile image in storage:', !!storedImage);
+      } catch (error) {
+        console.error('[ProfileSettings] Error checking auth state:', error);
+      }
+    };
+
+    debugAuth();
+  }, []);
+
+  // Make sure modal closure is handled properly
+  const closeImageOptions = useCallback(() => {
+    console.log('[ProfileSettings] Closing image options modal');
+    setShowImageOptions(false);
+  }, []);
+
+  // Add handleLogout function
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Error logging out:', error);
+      Alert.alert('Error', 'Failed to log out. Please try again.');
+    }
+  };
+
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <SafeGestureHandler style={{ flex: 1 }}>
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
         <Stack.Screen options={{ headerShown: false }} />
@@ -725,26 +978,18 @@ export default function ProfileSettingsScreen() {
                           onLongPress={handleAvatarLongPress}
                           delayLongPress={500}
                     activeOpacity={0.8}
+                    disabled={isUploadingImage}
                   >
-                    {profileImage ? (
-                      <Image source={{ uri: profileImage }} style={styles.avatarImage} />
-                    ) : (
-                      <LinearGradient
-                        colors={['#8E2DE2', '#4A00E0']}
-                        style={styles.avatarPlaceholder}
-                      >
-                        <ThemedText style={styles.avatarPlaceholderText}>
-                          {username.substring(0, 2).toUpperCase()}
-                        </ThemedText>
-                      </LinearGradient>
-                    )}
+                    {renderAvatarContent()}
+                    {!isUploadingImage && (
                     <View style={styles.editAvatarButton}>
                       <Feather name="edit-2" size={12} color="#FFF" />
                     </View>
+                    )}
                   </TouchableOpacity>
                 </Animated.View>
                 
-                {showTooltip && (
+                {showTooltip && !isUploadingImage && (
                   <Animated.View 
                     style={styles.tooltip}
                     entering={FadeIn.duration(300)}
@@ -932,62 +1177,53 @@ export default function ProfileSettingsScreen() {
               </View>
               <Feather name="chevron-right" size={18} color="#999" />
             </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.settingItem, { borderBottomWidth: 0 }]} 
+              onPress={handleLogout}
+            >
+              <View style={styles.settingItemLeft}>
+                <View style={[styles.settingIcon, { backgroundColor: '#FFF1F0' }]}>
+                  <Feather name="log-out" size={18} color="#FF4D4F" />
+                </View>
+                <ThemedText style={[styles.settingText, { color: '#FF4D4F' }]}>Logout</ThemedText>
+              </View>
+            </TouchableOpacity>
           </View>
           </Animated.View>
         </Animated.ScrollView>
       
       {/* Profile Picture Options Bottom Sheet */}
       {showImageOptions && (
-        <Modal
+        <SafeModal
           transparent={true}
           animationType="slide"
           visible={showImageOptions}
-          onRequestClose={() => setShowImageOptions(false)}
+          onRequestClose={closeImageOptions}
         >
           <TouchableOpacity 
             style={styles.modalOverlay}
             activeOpacity={1}
-            onPress={() => setShowImageOptions(false)}
+            onPress={closeImageOptions}
           >
             <View style={styles.bottomSheet}>
-              <View style={styles.bottomSheetHeader}>
-                <ThemedText style={styles.bottomSheetTitle}>Profile Picture</ThemedText>
-                <TouchableOpacity onPress={() => setShowImageOptions(false)}>
-                  <Feather name="x" size={24} color="#999" />
-                </TouchableOpacity>
+              <ProfilePictureActions
+                profileImage={profileImage}
+                onClose={closeImageOptions}
+                onTakePicture={takePicture}
+                onPickImage={pickImage}
+                onViewImage={handleViewProfileImage}
+                onImageDeleted={onProfileImageDeleted}
+                getAuthToken={getAuthToken}
+              />
               </View>
-              
-              <TouchableOpacity style={styles.bottomSheetOption} onPress={takePicture}>
-                <Feather name="camera" size={22} color="#333" />
-                <ThemedText style={styles.bottomSheetOptionText}>Take Photo</ThemedText>
               </TouchableOpacity>
-              
-              <TouchableOpacity style={styles.bottomSheetOption} onPress={handleChangeProfilePicture}>
-                <Feather name="image" size={22} color="#333" />
-                <ThemedText style={styles.bottomSheetOptionText}>Choose from Library</ThemedText>
-              </TouchableOpacity>
-              
-              {profileImage && (
-                <TouchableOpacity style={styles.bottomSheetOption} onPress={removeProfilePicture}>
-                  <Feather name="trash-2" size={22} color="#FF4D4F" />
-                  <ThemedText style={[styles.bottomSheetOptionText, { color: '#FF4D4F' }]}>
-                    Remove Photo
-                  </ThemedText>
-                </TouchableOpacity>
-              )}
-                
-                <TouchableOpacity style={styles.bottomSheetOption} onPress={handleViewProfileImage}>
-                  <Feather name="maximize-2" size={22} color="#333" />
-                  <ThemedText style={styles.bottomSheetOptionText}>View Full Image</ThemedText>
-                </TouchableOpacity>
-            </View>
-          </TouchableOpacity>
-        </Modal>
+        </SafeModal>
       )}
       
       {/* Interest Selector Modal */}
       {showInterestSelector && (
-        <Modal
+        <SafeModal
             visible={showInterestSelector}
           transparent={true}
           animationType="slide"
@@ -1043,11 +1279,11 @@ export default function ProfileSettingsScreen() {
               </TouchableOpacity>
             </View>
             </View>
-          </Modal>
+        </SafeModal>
         )}
         
         {/* Help Center Bot Modal */}
-        <Modal
+      <SafeModal
           visible={showHelpCenter}
           transparent={false}
           animationType="slide"
@@ -1117,10 +1353,10 @@ export default function ProfileSettingsScreen() {
               </KeyboardAvoidingView>
             </View>
           </SafeAreaView>
-        </Modal>
+      </SafeModal>
         
         {/* Privacy Policy Modal */}
-        <Modal
+      <SafeModal
           visible={showPrivacyPolicy}
           transparent={false}
           animationType="slide"
@@ -1184,10 +1420,10 @@ export default function ProfileSettingsScreen() {
               </View>
             </ScrollView>
           </SafeAreaView>
-        </Modal>
+      </SafeModal>
         
         {/* Language Selector Modal */}
-        <Modal
+      <SafeModal
           visible={showLanguageSelector}
           transparent={true}
           animationType="slide"
@@ -1229,10 +1465,10 @@ export default function ProfileSettingsScreen() {
               />
             </View>
           </View>
-        </Modal>
+      </SafeModal>
         
         {/* Full Screen Image Viewer Modal */}
-        <Modal
+      <SafeModal
           visible={showFullScreenImage}
           transparent={true}
           animationType="fade"
@@ -1254,10 +1490,10 @@ export default function ProfileSettingsScreen() {
               />
             )}
           </View>
-        </Modal>
+      </SafeModal>
       </Animated.View>
   </SafeAreaView>
-  </GestureHandlerRootView>
+</SafeGestureHandler>
 );
 }
 
@@ -1887,5 +2123,10 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 12,
     fontWeight: '500',
+  },
+  avatarLoadingContainer: {
+    backgroundColor: 'rgba(0,0,0,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 }); 

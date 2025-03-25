@@ -33,26 +33,31 @@ app = FastAPI(
 )
 
 # Set all CORS enabled origins
-if settings.BACKEND_CORS_ORIGINS:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-else:
-    # If no specific origins are set, allow all origins that need credentials
-    # Note: In production, you should specify exact origins instead of using wildcard
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["http://localhost:3000", "http://localhost:8000", "http://localhost:5173", 
-                      "http://127.0.0.1:3000", "http://127.0.0.1:8000", "http://127.0.0.1:5173",
-                      "http://localhost", "http://127.0.0.1"],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+origins = [
+    "http://localhost:19006",
+    "http://localhost:19000", 
+    "exp://localhost:19000",
+    "http://localhost:8081",
+    "http://localhost:8082",
+    "http://10.0.2.2:8081",
+    "http://10.0.2.2:8000",
+    "http://localhost:3000",
+    "http://localhost:8000",
+    "http://localhost:5173",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:8000",
+    "http://127.0.0.1:5173",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=3600,
+)
 
 # Add session middleware
 app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
