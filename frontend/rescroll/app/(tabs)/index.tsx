@@ -28,6 +28,7 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { useTheme } from '@/contexts/ThemeContext';
 import { ThemedView } from '@/components/ThemedView';
 import { Stack } from 'expo-router';
+import { PaperCardSkeleton } from '@/components/ui/Skeleton';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -415,7 +416,7 @@ export default function HomeScreen() {
     if (viewState === 'loading') {
       return (
         <View style={styles.emptyListContainer}>
-          <ActivityIndicator size="large" color={Colors.light.primary} />
+          <PaperCardSkeleton itemHeight={itemHeight} />
           <ThemedText style={styles.emptyListText}>
             Loading research papers...
           </ThemedText>
@@ -450,7 +451,7 @@ export default function HomeScreen() {
         </ThemedText>
       </View>
     );
-  }, [viewState, fetchMorePapers]);
+  }, [viewState, fetchMorePapers, itemHeight]);
   
   // Get more papers when reaching the end of the list
   const handleEndReached = useCallback(() => {
@@ -465,7 +466,9 @@ export default function HomeScreen() {
     
     return (
       <View style={styles.footerLoader}>
-        <ActivityIndicator size="small" color={Colors.light.primary} />
+        <View style={styles.footerSkeletonContainer}>
+          <PaperCardSkeleton itemHeight={200} />
+        </View>
       </View>
     );
   }, [viewState, papers.length]);
@@ -774,7 +777,13 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    height: 60,
+    height: 200,
+  },
+  footerSkeletonContainer: {
+    width: '100%',
+    height: 200,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   heartAnimationContainer: {
     position: 'absolute',
