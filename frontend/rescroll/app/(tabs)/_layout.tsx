@@ -95,10 +95,13 @@ export default function TabLayout() {
           backgroundColor: colors.background,
           borderBottomWidth: 1,
           borderBottomColor: colors.border,
+          elevation: 0, // Remove shadow on Android
+          shadowOpacity: 0, // Remove shadow on iOS
         },
         headerShadowVisible: false,
+        headerTintColor: colors.text,
         headerTitle: () => (
-          <ThemedText style={styles.headerTitle}>ReScroll</ThemedText>
+          <ThemedText style={[styles.headerTitle, { color: colors.text }]}>ReScroll</ThemedText>
         ),
       }}>
       {/* Only include the explicitly allowed tabs */}

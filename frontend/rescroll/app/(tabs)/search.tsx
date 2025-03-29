@@ -410,6 +410,7 @@ export default function SearchScreen() {
       backgroundColor: isDarkMode ? Colors.dark.backgroundSecondary : Colors.light.backgroundSecondary,
       borderBottomWidth: 1,
       borderBottomColor: isDarkMode ? Colors.dark.border : Colors.light.border,
+      marginTop: 8,
     },
     searchInput: {
       color: colors.text,
@@ -465,6 +466,7 @@ const styles = StyleSheet.create({
       backgroundColor: isDarkMode ? Colors.dark.backgroundSecondary : Colors.light.backgroundSecondary,
       borderBottomWidth: 1,
       borderBottomColor: isDarkMode ? Colors.dark.border : Colors.light.border,
+      marginTop: 8,
   },
   searchInput: {
     flex: 1,
@@ -479,8 +481,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   cancelButton: {
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    padding: 10,
+    marginLeft: 4,
   },
   cancelButtonText: {
     color: Colors.light.primary,
@@ -834,9 +836,7 @@ const styles = StyleSheet.create({
                 onPress={handleCancelPress}
                 style={styles.cancelButton}
               >
-                <ThemedText style={styles.cancelButtonText}>
-                  Cancel
-                </ThemedText>
+                <Feather name="x" size={20} color={colors.textSecondary} />
               </TouchableOpacity>
             </Animated.View>
           </View>
@@ -920,8 +920,25 @@ const styles = StyleSheet.create({
                 <View style={styles.section}>
                   <ThemedText style={[styles.sectionHeader, dynamicStyles.sectionHeader]}>Suggested Searches</ThemedText>
                   {SEARCH_SUGGESTIONS.map((suggestion, index) => (
-                    renderSuggestionItem({ item: suggestion }))
-                  )}
+                    <TouchableOpacity
+                      key={`suggestion-${index}`}
+                      style={[
+                        styles.suggestionItem,
+                        { backgroundColor: isDarkMode ? Colors.dark.backgroundSecondary : Colors.light.backgroundSecondary }
+                      ]}
+                      onPress={() => {
+                        setQuery(suggestion);
+                        handleSearch();
+                      }}
+                    >
+                      <Feather 
+                        name="clock" 
+                        size={16} 
+                        color={isDarkMode ? Colors.dark.textSecondary : Colors.light.textSecondary} 
+                      />
+                      <ThemedText style={styles.suggestionText}>{suggestion}</ThemedText>
+                    </TouchableOpacity>
+                  ))}
                 </View>
                 
                 <View style={styles.section}>
