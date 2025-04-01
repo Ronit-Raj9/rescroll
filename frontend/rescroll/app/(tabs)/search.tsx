@@ -53,7 +53,7 @@ const SEARCH_SUGGESTIONS = [
 ];
 
 // Mock data function - in a real app, this would connect to an API
-const searchResults = (query: string): Promise<SearchResult[]> => {
+const searchResults = (): Promise<SearchResult[]> => {
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve([
@@ -201,7 +201,7 @@ export default function SearchScreen() {
     setSearchError(null); // Reset any previous errors
     
     try {
-      const searchData = await searchResults(query);
+      const searchData = await searchResults();
       setResults(searchData);
       
       // Add to recent searches if it's not already there

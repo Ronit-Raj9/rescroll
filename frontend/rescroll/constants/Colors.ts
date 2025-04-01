@@ -201,6 +201,20 @@ export const Colors = {
     border: greyScale.element,
     icon: greyScale.textSecondary,
     tabIconDefault: greyScale.textSecondary,
+    
+    // Card and surface colors
+    card: supporting.white,
+    
+    // Status colors
+    error: '#FF3B30',
+    errorLight: 'rgba(255, 59, 48, 0.15)',
+    warning: '#FF9500',
+    success: '#34C759',
+    info: '#5AC8FA',
+    
+    // Gray variations
+    mediumGray: greyScale.textSecondary,
+    lightGray: greyScale.element,
   },
   dark: {
     // Text colors
@@ -227,5 +241,19 @@ export const Colors = {
     border: darkGreyScale.element,
     icon: darkGreyScale.textSecondary,
     tabIconDefault: darkGreyScale.textSecondary,
+    
+    // Card and surface colors
+    card: darkGreyScale.surface,
+    
+    // Status colors
+    error: '#FF453A',
+    errorLight: 'rgba(255, 69, 58, 0.25)',
+    warning: '#FF9F0A',
+    success: '#30D158',
+    info: '#64D2FF',
+    
+    // Gray variations
+    mediumGray: darkGreyScale.textSecondary,
+    lightGray: darkGreyScale.element,
   }
 };

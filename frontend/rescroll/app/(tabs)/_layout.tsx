@@ -44,7 +44,7 @@ export default function TabLayout() {
     navigationStateRef.current = currentNavState;
     
     // Listen for tab navigation events
-    const unsubscribe = navigation.addListener('state', (e) => {
+    const unsubscribe = navigation.addListener('state', () => {
       // Check if we're trying to navigate to a disabled tab
       const currentState = navigation.getState?.();
       if (currentState) {
