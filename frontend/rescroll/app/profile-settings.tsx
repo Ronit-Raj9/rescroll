@@ -1605,22 +1605,7 @@ export default function ProfileSettingsScreen() {
           </View>
           
           {/* AI Features Section */}
-          <View style={styles.sectionContainer}>
-            <ThemedText style={styles.sectionTitle}>AI Features</ThemedText>
-            
-            <TouchableOpacity
-              style={styles.settingItem}
-              onPress={() => router.push('/ai-icons')}
-            >
-              <View style={styles.settingItemLeft}>
-                <View style={[styles.settingIcon, { backgroundColor: '#F9F0FF' }]}>
-                  <Feather name="star" size={18} color="#722ED1" />
-                </View>
-                <ThemedText style={styles.settingText}>AI Icon Gallery</ThemedText>
-              </View>
-              <Feather name="chevron-right" size={18} color="#999" />
-            </TouchableOpacity>
-          </View>
+          
           
           <View style={styles.sectionContainer}>
             <ThemedText style={styles.sectionTitle}>Support</ThemedText>

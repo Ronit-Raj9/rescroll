@@ -327,22 +327,22 @@ export default function NotificationsScreen() {
     }
   };
 
-  // Render notification item
-  const renderNotificationItem = ({ item }: { item: Notification }) => {
-    const swipeableRef = useRef<Swipeable>(null);
-    const scale = useRef(new Animated.Value(1)).current;
+  // Convert to a proper React component to fix the hooks rules
+  const NotificationItem = React.memo(({ notification, onDismiss, onPress }) => {
+    const swipeRef = useRef(null);
+    const heightRef = useRef(new Animated.Value(1));
     
     const handlePress = () => {
       // If unread, mark as read
-      if (!item.read) {
-        markAsRead(item.id);
+      if (!notification.read) {
+        markAsRead(notification.id);
       }
       
       // Navigate to the related content depending on notification type
-      if (item.entityId && item.entityType) {
-        if (item.entityType === 'paper') {
-          router.push(`/paper/${item.entityId}` as any);
-        } else if (item.entityType === 'user') {
+      if (notification.entityId && notification.entityType) {
+        if (notification.entityType === 'paper') {
+          router.push(`/paper/${notification.entityId}` as any);
+        } else if (notification.entityType === 'user') {
           router.push('/(tabs)');
         }
       }
@@ -371,8 +371,8 @@ export default function NotificationsScreen() {
           <TouchableOpacity 
             style={[styles.deleteButton, { backgroundColor: colors.error }]} 
             onPress={() => {
-              deleteNotification(item.id);
-              swipeableRef.current?.close();
+              deleteNotification(notification.id);
+              swipeRef.current?.close();
             }}
           >
             <IconSymbol name="xmark" size={20} color="#FFFFFF" />
@@ -382,7 +382,7 @@ export default function NotificationsScreen() {
     };
     
     const onPressIn = () => {
-      Animated.spring(scale, {
+      Animated.spring(heightRef.current, {
         toValue: 0.97,
         friction: 5,
         tension: 40,
@@ -391,7 +391,7 @@ export default function NotificationsScreen() {
     };
     
     const onPressOut = () => {
-      Animated.spring(scale, {
+      Animated.spring(heightRef.current, {
         toValue: 1,
         friction: 5,
         tension: 40,
@@ -401,7 +401,7 @@ export default function NotificationsScreen() {
     
     return (
       <Swipeable
-        ref={swipeableRef}
+        ref={swipeRef}
         renderRightActions={renderRightActions}
         friction={2}
         rightThreshold={40}
@@ -409,7 +409,7 @@ export default function NotificationsScreen() {
         <Animated.View 
           style={[
             styles.notificationContainer,
-            { transform: [{ scale }] }
+            { transform: [{ scale: heightRef.current }] }
           ]}
         >
           <TouchableOpacity
@@ -420,33 +420,51 @@ export default function NotificationsScreen() {
             style={[
               styles.notificationItem,
               { backgroundColor: colors.card },
-              !item.read && [styles.unreadNotification, { backgroundColor: colors.backgroundSecondary }]
+              !notification.read && [styles.unreadNotification, { backgroundColor: colors.backgroundSecondary }]
             ]}
           >
-            {!item.read && <View style={[styles.unreadDot, { backgroundColor: colors.primary }]} />}
+            {!notification.read && <View style={[styles.unreadDot, { backgroundColor: colors.primary }]} />}
             
             <View style={styles.notificationIconContainer}>
-              {getNotificationIcon(item.type)}
+              {getNotificationIcon(notification.type)}
             </View>
             
             <View style={styles.notificationContent}>
               <ThemedText style={[styles.notificationTitle, { color: colors.text }]}>
-                {item.title}
+                {notification.title}
               </ThemedText>
               
               <ThemedText style={[styles.notificationMessage, { color: colors.textSecondary }]}>
-                {item.message}
+                {notification.message}
               </ThemedText>
               
               <ThemedText style={[styles.notificationTime, { color: colors.textTertiary }]}>
-                {formatRelativeTime(item.timestamp)}
+                {formatRelativeTime(notification.timestamp)}
               </ThemedText>
             </View>
           </TouchableOpacity>
         </Animated.View>
       </Swipeable>
     );
-  };
+  });
+
+  // Updated to use the component
+  const renderNotificationItem = ({ item }) => (
+    <NotificationItem 
+      notification={item} 
+      onDismiss={() => deleteNotification(item.id)} 
+      onPress={() => {
+        markAsRead(item.id);
+        if (item.entityId && item.entityType) {
+          if (item.entityType === 'paper') {
+            router.push(`/paper/${item.entityId}` as any);
+          } else if (item.entityType === 'user') {
+            router.push('/(tabs)');
+          }
+        }
+      }}
+    />
+  );
   
   // Render section header
   const renderSectionHeader = ({ section }: { section: { title: string } }) => (

@@ -4,6 +4,8 @@ import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { Colors, BorderRadius, Spacing, Shadows, Glows } from '@/constants/Colors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useHomeScroll } from '@/hooks/useHomeScroll';
+import { ThemedText } from '@/components/ThemedText';
 
 // Get screen width for animations
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -13,6 +15,21 @@ interface CustomTabBarProps extends BottomTabBarProps {
   colorScheme?: 'light' | 'dark';
 }
 
+// Use consistent blue gradient for all tab icons
+const BLUE_GRADIENT: [string, string] = ['#4F8EF7', '#3b5998'];
+
+/**
+ * BACKEND INTEGRATION NOTE:
+ * 
+ * This component handles the home button press functionality to:
+ * 1. Scroll to the top article
+ * 2. Refresh the article list
+ * 
+ * When the backend is integrated:
+ * - The scrollToTop function will work as is (no changes needed)
+ * - The refreshArticles function should be connected to a real API call as documented in usePapers.ts
+ * - Both functions come from useHomeScroll hook which communicates with the HomeScreen component
+ */
 export default function CustomTabBar({ 
   state, 
   descriptors, 
@@ -28,6 +45,8 @@ export default function CustomTabBar({
   // Tab size calculations - indicator is smaller for a more refined look
   const TAB_WIDTH = SCREEN_WIDTH / state.routes.length;
   const INDICATOR_SIZE = TAB_WIDTH * 0.4;
+
+  const { scrollToTop, refreshArticles } = useHomeScroll();
 
   // Indicator position animation
   const indicatorAnimatedStyle = useAnimatedStyle(() => {
@@ -94,6 +113,10 @@ export default function CustomTabBar({
 
           if (!isFocused && !event.defaultPrevented) {
             navigation.navigate(route.name);
+          } else if (isFocused && route.name === 'index') {
+            // When already on Home tab and it's pressed again, scroll to top and refresh
+            scrollToTop();
+            refreshArticles();
           }
         };
 
@@ -104,40 +127,35 @@ export default function CustomTabBar({
           });
         };
 
+        // Get the tab bar icon component
+        const TabBarIcon = options.tabBarIcon;
+
         return (
           <TouchableOpacity
             key={route.key}
             accessibilityRole="button"
             accessibilityState={isFocused ? { selected: true } : {}}
-            accessibilityLabel={options.tabBarAccessibilityLabel}
+            accessibilityLabel={`${label} tab`}
+            testID={`${label}-tab`}
             onPress={onPress}
             onLongPress={onLongPress}
             style={styles.tabButton}
             activeOpacity={0.7}
           >
-            <View style={styles.iconContainer}>
-              {/* Use the tabBarIcon from the options if available */}
-              {options.tabBarIcon ? 
-                options.tabBarIcon({ 
-                  focused: isFocused, 
-                  // All icons use the primary color when selected for consistency
-                  color: isFocused ? colors.primary : colors.tabIconDefault,
-                  size: 22 // Smaller size
-                }) : null}
-            </View>
-            <Text
-              style={[
-                styles.tabLabel,
-                {
-                  color: isFocused
-                    ? colors.primary
-                    : colors.tabIconDefault,
-                  opacity: isFocused ? 1 : 0.9, // Increased opacity for inactive tabs
-                },
-              ]}
-            >
+            {TabBarIcon && TabBarIcon({ 
+              focused: isFocused, 
+              color: isFocused ? colors.primary : colors.icon, 
+              size: 24 
+            })}
+            <ThemedText style={[
+              styles.tabLabel, 
+              { 
+                color: isFocused ? colors.primary : colors.icon,
+                marginTop: 4
+              }
+            ]}>
               {label}
-            </Text>
+            </ThemedText>
           </TouchableOpacity>
         );
       })}

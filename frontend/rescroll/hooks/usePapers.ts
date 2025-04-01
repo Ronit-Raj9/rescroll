@@ -88,52 +88,43 @@ export function usePapers() {
     setIsLoading(true);
     setErrorMessage(null);
 
-    // Simulated API fetch with error handling
-    const fetchPapers = () => {
-      return new Promise<Paper[]>((resolve, reject) => {
-        // Simulate network delay
-        setTimeout(() => {
-          try {
-            // Occasionally simulate an error for testing error handling
-            if (Math.random() < 0.1) {
-              throw new Error('Failed to load papers');
-            }
+    /**
+     * BACKEND INTEGRATION POINT:
+     * 
+     * Replace this mock implementation with an actual API call to fetch more papers.
+     * 
+     * 1. Create an API client that makes a GET request to your endpoint with pagination
+     * 2. Example API integration:
+     *    
+     *    import { fetchPapers } from '@/services/api';
+     *    
+     *    // In fetchMorePapers:
+     *    const currentPage = Math.ceil(papers.length / 10) + 1;
+     *    
+     *    fetchPapers({ page: currentPage, limit: 10 })
+     *      .then((response) => {
+     *        setPapers(prev => [...prev, ...response.data]);
+     *        setViewState('success');
+     *        setHasMoreData(response.hasMore);
+     *      })
+     *      .catch((error) => {
+     *        console.error('Error loading more papers:', error);
+     *        setViewState('error');
+     *        setErrorMessage(error.message || 'Failed to load more papers');
+     *      })
+     *      .finally(() => {
+     *        setIsLoading(false);
+     *      });
+     */
 
-            // Generate papers in batch for performance
-            const newPapers = Array.from({ length: 3 }).map((_, index) => {
-              // Generate a unique ID
-              const uniqueId = `${Date.now()}-${index}`;
-              
-              // Select a random image from the collection for each new paper
-              const randomImageIndex = Math.floor(Math.random() * AI_GENERATED_IMAGES.length);
-              
-              // Create new paper with unique data
-              return {
-                id: uniqueId,
-                title: `New Research on ${['AI', 'Climate', 'Medicine', 'Physics', 'Biology'][Math.floor(Math.random() * 5)]} - ${Math.floor(Math.random() * 100)}`,
-                authors: `${['Smith', 'Johnson', 'Lee', 'Wang', 'Chen'][Math.floor(Math.random() * 5)]}, ${['A.', 'M.', 'J.', 'L.', 'S.'][Math.floor(Math.random() * 5)]} and ${['Rodriguez', 'Miller', 'Zhang', 'Kim', 'Patel'][Math.floor(Math.random() * 5)]}, ${['B.', 'C.', 'D.', 'R.', 'T.'][Math.floor(Math.random() * 5)]}`,
-                achievement: `${['Discovered', 'Improved', 'Optimized', 'Developed', 'Analyzed'][Math.floor(Math.random() * 5)]} ${Math.floor(Math.random() * 100)}% ${['better', 'faster', 'more accurate', 'more efficient', 'novel'][Math.floor(Math.random() * 5)]} results`,
-                summary: `This research presents a groundbreaking approach to ${['artificial intelligence', 'climate modeling', 'disease treatment', 'quantum mechanics', 'genomics'][Math.floor(Math.random() * 5)]} that significantly enhances our understanding of ${['neural networks', 'atmospheric patterns', 'viral infections', 'particle interactions', 'genetic markers'][Math.floor(Math.random() * 5)]}.`,
-                imageUrl: AI_GENERATED_IMAGES[randomImageIndex],
-                likes: Math.floor(Math.random() * 500),
-                saves: Math.floor(Math.random() * 200),
-                comments: Math.floor(Math.random() * 50),
-                isLiked: false,
-                isSaved: false,
-              };
-            });
-            
-            resolve(newPapers);
-          } catch (error) {
-            reject(error);
-          }
-        }, 1000);
-      });
-    };
-    
-    // Execute the fetch and handle results
-    fetchPapers()
-      .then((newPapers) => {
+    // FOR DEVELOPMENT ONLY: Mock implementation with simulated data
+    // Remove this once connected to backend API
+    setTimeout(() => {
+      try {
+        // Generate 3 new mock papers
+        const newPapers = generateMockPapers(3);
+        
+        // Add new papers to existing papers
         setPapers(prev => [...prev, ...newPapers]);
         setViewState('success');
         
@@ -141,16 +132,107 @@ export function usePapers() {
         if (papers.length > 15) {
           setHasMoreData(false);
         }
-      })
-      .catch((error: Error) => {
-        console.error('Error loading papers:', error);
-        setViewState('error');
-        setErrorMessage(error.message || 'Failed to load papers');
-      })
-      .finally(() => {
+        
         setIsLoading(false);
-      });
+      } catch (error) {
+        // Prevent random errors in development mode
+        console.error('Error in mock loading:', error);
+        setViewState('success'); // Still show success to prevent disrupting development
+        setIsLoading(false);
+      }
+    }, 800);
   }, [papers.length, isLoading, hasMoreData]);
+
+  // Function to refresh papers (reset and reload)
+  const refreshPapers = useCallback(() => {
+    // Don't refresh if already loading
+    if (isLoading) return;
+
+    // Set loading state
+    setIsLoading(true);
+    setViewState('loading');
+    setErrorMessage(null);
+
+    /**
+     * BACKEND INTEGRATION POINT:
+     * 
+     * Replace this mock implementation with an actual API call to fetch papers.
+     * 
+     * 1. Create an API client that makes a GET request to your endpoint
+     * 2. Example API integration:
+     *    
+     *    import { fetchPapers } from '@/services/api';
+     *    
+     *    // In refreshPapers:
+     *    fetchPapers({ page: 1, limit: 10 })
+     *      .then((response) => {
+     *        setPapers(response.data);
+     *        setViewState('success');
+     *        setHasMoreData(response.hasMore);
+     *      })
+     *      .catch((error) => {
+     *        console.error('Error refreshing papers:', error);
+     *        setViewState('error');
+     *        setErrorMessage(error.message || 'Failed to refresh papers');
+     *      })
+     *      .finally(() => {
+     *        setIsLoading(false);
+     *      });
+     */
+
+    // FOR DEVELOPMENT ONLY: Mock implementation with simulated data
+    // Remove this once connected to backend API
+    setTimeout(() => {
+      try {
+        // Reset to initial state - we always want to show some data
+        setPapers(INITIAL_PAPERS);
+        setHasMoreData(true);
+        
+        // Generate 3 new mock papers
+        const newPapers = generateMockPapers(3);
+        
+        // Add new papers to the initial papers
+        setPapers(prev => [...prev, ...newPapers]);
+        setViewState('success');
+        setIsLoading(false);
+      } catch (error) {
+        // Prevent random errors in development mode
+        console.error('Error in mock refresh:', error);
+        setViewState('success'); // Still show success to prevent disrupting development
+        setPapers(INITIAL_PAPERS); // Ensure we always have some data to show
+        setIsLoading(false);
+      }
+    }, 800);
+  }, [isLoading]);
+
+  /**
+   * Helper function to generate mock papers for development
+   * DELETE THIS when connecting to real backend
+   */
+  const generateMockPapers = (count: number) => {
+    return Array.from({ length: count }).map((_, index) => {
+      // Generate a unique ID
+      const uniqueId = `${Date.now()}-${index}`;
+      
+      // Select a random image from the collection for each new paper
+      const randomImageIndex = Math.floor(Math.random() * AI_GENERATED_IMAGES.length);
+      
+      // Create new paper with unique data
+      return {
+        id: uniqueId,
+        title: `New Research on ${['AI', 'Climate', 'Medicine', 'Physics', 'Biology'][Math.floor(Math.random() * 5)]} - ${Math.floor(Math.random() * 100)}`,
+        authors: `${['Smith', 'Johnson', 'Lee', 'Wang', 'Chen'][Math.floor(Math.random() * 5)]}, ${['A.', 'M.', 'J.', 'L.', 'S.'][Math.floor(Math.random() * 5)]} and ${['Rodriguez', 'Miller', 'Zhang', 'Kim', 'Patel'][Math.floor(Math.random() * 5)]}, ${['B.', 'C.', 'D.', 'R.', 'T.'][Math.floor(Math.random() * 5)]}`,
+        achievement: `${['Discovered', 'Improved', 'Optimized', 'Developed', 'Analyzed'][Math.floor(Math.random() * 5)]} ${Math.floor(Math.random() * 100)}% ${['better', 'faster', 'more accurate', 'more efficient', 'novel'][Math.floor(Math.random() * 5)]} results`,
+        summary: `This research presents a groundbreaking approach to ${['artificial intelligence', 'climate modeling', 'disease treatment', 'quantum mechanics', 'genomics'][Math.floor(Math.random() * 5)]} that significantly enhances our understanding of ${['neural networks', 'atmospheric patterns', 'viral infections', 'particle interactions', 'genetic markers'][Math.floor(Math.random() * 5)]}.`,
+        imageUrl: AI_GENERATED_IMAGES[randomImageIndex],
+        likes: Math.floor(Math.random() * 500),
+        saves: Math.floor(Math.random() * 200),
+        comments: Math.floor(Math.random() * 50),
+        isLiked: false,
+        isSaved: false,
+      };
+    });
+  };
 
   // Function to retry after error
   const retryFetch = useCallback(() => {
@@ -205,6 +287,7 @@ export function usePapers() {
     viewState,
     errorMessage,
     fetchMorePapers,
+    refreshPapers,
     retryFetch,
     handleLikePaper,
     handleSavePaper,
