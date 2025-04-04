@@ -39,6 +39,11 @@ export default function LoginScreen() {
     }
   };
 
+  // Temporary bypass function
+  const handleGetStarted = () => {
+    router.replace('/(tabs)');
+  };
+
   return (
     <LinearGradient
       colors={['#4c669f', '#3b5998', '#192f6a']}
@@ -84,6 +89,14 @@ export default function LoginScreen() {
             ) : (
               <Text style={styles.buttonText}>Sign In</Text>
             )}
+          </TouchableOpacity>
+
+          {/* Temporary Get Started Button */}
+          <TouchableOpacity 
+            style={[styles.button, styles.getStartedButton]}
+            onPress={handleGetStarted}
+          >
+            <Text style={styles.getStartedButtonText}>Get Started (Temporary)</Text>
           </TouchableOpacity>
 
           <View style={styles.footer}>
@@ -150,6 +163,15 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#3b5998',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  getStartedButton: {
+    backgroundColor: '#4CAF50',
+    marginTop: 20,
+  },
+  getStartedButtonText: {
+    color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
   },

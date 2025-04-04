@@ -9,6 +9,9 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import LoadingScreen from '@/components/LoadingScreen';
+import { useColorScheme } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import React from 'react';
 
 // Prevent warning logs for the demo
 LogBox.ignoreLogs(['Warning: ...']);
@@ -24,18 +27,20 @@ LogBox.ignoreLogs([
   'Warning: findDOMNode',
 ]);
 
-// Define the type for the app context
+// Define the AppContext type
 type AppContextType = {
-  navigateTo: (route: string) => void;
+  navigateTo: (path: string) => void;
   unreadNotificationsCount: number;
   setUnreadNotificationsCount: (count: number) => void;
+  isInitialized: boolean;
 };
 
-// Create the context with a default value
-export const AppContext = createContext<AppContextType>({
+// Create the AppContext
+export const AppContext = React.createContext<AppContextType>({
   navigateTo: () => {},
   unreadNotificationsCount: 0,
   setUnreadNotificationsCount: () => {},
+  isInitialized: false,
 });
 
 // Add this function to handle base64 decoding in React Native
@@ -60,6 +65,8 @@ function RootLayoutNav() {
   const router = useRouter();
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(3);
   const { user, isLoading, getAuthToken } = useAuth();
+  const [isInitialized, setIsInitialized] = useState(false);
+  const colorScheme = useColorScheme();
   
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
@@ -98,6 +105,8 @@ function RootLayoutNav() {
 
   // Improved navigation function with better error handling
   const navigateTo = (route: string) => {
+    if (!isInitialized) return;
+    
     try {
       // Make sure the route is properly formatted
       const formattedRoute = route.startsWith('/') ? route : `/${route}`;
@@ -112,7 +121,8 @@ function RootLayoutNav() {
     navigateTo,
     unreadNotificationsCount,
     setUnreadNotificationsCount,
-  }), [unreadNotificationsCount]);
+    isInitialized,
+  }), [unreadNotificationsCount, isInitialized]);
 
   useEffect(() => {
     if (loaded) {
@@ -123,15 +133,18 @@ function RootLayoutNav() {
     }
   }, [loaded]);
 
+  // Handle navigation after initialization
   useEffect(() => {
-    if (!isLoading) {
+    if (!isLoading && loaded) {
+      setIsInitialized(true);
       if (!user) {
         router.replace('/auth/login');
-      } else if (router.pathname === '/auth/login' || router.pathname === '/auth/signup') {
+      } else {
+        // Simply redirect to tabs if we're on an auth screen
         router.replace('/(tabs)');
       }
     }
-  }, [user, isLoading]);
+  }, [user, isLoading, loaded]);
 
   if (!loaded || isLoading) {
     return <LoadingScreen />;
@@ -139,55 +152,56 @@ function RootLayoutNav() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ThemeProvider>
-        <AppContext.Provider value={contextValue}>
-          <NavigationThemeProvider value={DefaultTheme}>
-            <Stack screenOptions={{ 
-              headerShown: false,
-              animation: 'slide_from_right',
-            }}>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="paper-details" options={{ headerShown: false }} />
-              <Stack.Screen 
-                name="profile-settings" 
-                options={{ 
-                  headerShown: true,
-                  title: "Profile Settings",
-                  presentation: 'modal',
-                  animation: 'slide_from_bottom',
-                }} 
-              />
-              <Stack.Screen 
-                name="notifications" 
-                options={{ headerShown: false }} 
-              />
-              <Stack.Screen 
-                name="design-demo" 
-                options={{ 
-                  headerShown: true,
-                  title: "Design System",
-                  animation: 'slide_from_right',
-                }} 
-              />
-              <Stack.Screen 
-                name="auth" 
-                options={{ 
-                  headerShown: false,
-                  animation: 'fade',
-                }} 
-              />
-            </Stack>
-          </NavigationThemeProvider>
-        </AppContext.Provider>
-      </ThemeProvider>
+      <AppContext.Provider value={contextValue}>
+        <NavigationThemeProvider value={DefaultTheme}>
+          <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+          <Stack screenOptions={{ 
+            headerShown: false,
+            animation: 'slide_from_right',
+          }}>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="paper-details" options={{ headerShown: false }} />
+            <Stack.Screen 
+              name="profile-settings" 
+              options={{ 
+                headerShown: true,
+                title: "Profile Settings",
+                presentation: 'modal',
+                animation: 'slide_from_bottom',
+              }} 
+            />
+            <Stack.Screen 
+              name="notifications" 
+              options={{ headerShown: false }} 
+            />
+            <Stack.Screen 
+              name="design-demo" 
+              options={{ 
+                headerShown: true,
+                title: "Design System",
+                animation: 'slide_from_right',
+              }} 
+            />
+            <Stack.Screen 
+              name="auth" 
+              options={{ 
+                headerShown: false,
+                animation: 'fade',
+              }} 
+            />
+          </Stack>
+        </NavigationThemeProvider>
+      </AppContext.Provider>
     </GestureHandlerRootView>
   );
 }
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <RootLayoutNav />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <RootLayoutNav />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

@@ -198,34 +198,23 @@ export const Colors = {
     
     // UI colors
     tint: accent.neonBlue,
+    border: greyScale.element,
     icon: greyScale.textSecondary,
     tabIconDefault: greyScale.textSecondary,
-    tabIconSelected: accent.neonBlue,
-    
-    // Feedback colors
-    success: '#34C759',
-    successLight: 'rgba(52, 199, 89, 0.15)',
-    warning: '#FF9500',
-    warningLight: 'rgba(255, 149, 0, 0.15)',
-    error: '#FF3B30',
-    errorLight: 'rgba(255, 59, 48, 0.15)',
-    info: accent.neonBlue,
-    infoLight: accent.glowBlue,
-    
-    // Neutral colors
-    lightGray: greyScale.element,
-    mediumGray: greyScale.textSecondary,
-    darkGray: greyScale.textPrimary,
-    
-    // Border colors
-    border: greyScale.element,
-    borderFocus: accent.neonBlue,
     
     // Card and surface colors
     card: supporting.white,
-    cardHover: greyScale.surface,
-    surface: supporting.white,
-    surfaceHover: greyScale.surface,
+    
+    // Status colors
+    error: '#FF3B30',
+    errorLight: 'rgba(255, 59, 48, 0.15)',
+    warning: '#FF9500',
+    success: '#34C759',
+    info: '#5AC8FA',
+    
+    // Gray variations
+    mediumGray: greyScale.textSecondary,
+    lightGray: greyScale.element,
   },
   dark: {
     // Text colors
@@ -245,37 +234,26 @@ export const Colors = {
     primaryDark: darkAccent.subtleBlue,
     secondary: darkAccent.subtleBlue,
     secondaryLight: 'rgba(100, 181, 246, 0.25)',
-    secondaryDark: '#4A9CE8',
+    secondaryDark: '#1976D2',
     
     // UI colors
     tint: darkAccent.neonBlue,
+    border: darkGreyScale.element,
     icon: darkGreyScale.textSecondary,
     tabIconDefault: darkGreyScale.textSecondary,
-    tabIconSelected: darkAccent.neonBlue,
-    
-    // Feedback colors
-    success: '#4CD964',
-    successLight: 'rgba(76, 217, 100, 0.25)',
-    warning: '#FFA500',
-    warningLight: 'rgba(255, 165, 0, 0.25)',
-    error: '#FF453A',
-    errorLight: 'rgba(255, 69, 58, 0.25)',
-    info: darkAccent.neonBlue,
-    infoLight: darkAccent.glowBlue,
-    
-    // Neutral colors
-    lightGray: darkGreyScale.element,
-    mediumGray: darkGreyScale.textSecondary,
-    darkGray: darkGreyScale.textPrimary,
-    
-    // Border colors
-    border: darkGreyScale.element,
-    borderFocus: darkAccent.neonBlue,
     
     // Card and surface colors
     card: darkGreyScale.surface,
-    cardHover: darkGreyScale.element,
-    surface: darkGreyScale.surface,
-    surfaceHover: darkGreyScale.element,
+    
+    // Status colors
+    error: '#FF453A',
+    errorLight: 'rgba(255, 69, 58, 0.25)',
+    warning: '#FF9F0A',
+    success: '#30D158',
+    info: '#64D2FF',
+    
+    // Gray variations
+    mediumGray: darkGreyScale.textSecondary,
+    lightGray: darkGreyScale.element,
   }
 };

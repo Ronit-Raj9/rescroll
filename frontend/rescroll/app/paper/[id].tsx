@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { PaperDetail, PaperDetailProps } from '@/components/papers/PaperDetail';
-import { ThemedView } from '@/components/ThemedView';
+import { StyleSheet, View, ActivityIndicator } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
+import { PaperDetail, PaperDetailProps } from '@/components/papers/PaperDetail';
+import { PaperDetailSkeleton } from '@/components/ui/Skeleton';
 
 // Mock data fetching function - in a real app, this would be an API call
 const fetchPaperDetails = async (id: string): Promise<Partial<PaperDetailProps>> => {
@@ -81,8 +82,7 @@ export default function PaperDetailScreen() {
       
       {isLoading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#3498db" />
-          <ThemedText style={styles.loadingText}>Loading paper details...</ThemedText>
+          <PaperDetailSkeleton />
         </View>
       ) : error ? (
         <View style={styles.errorContainer}>
@@ -108,12 +108,6 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 15,
-    fontSize: 16,
   },
   errorContainer: {
     flex: 1,

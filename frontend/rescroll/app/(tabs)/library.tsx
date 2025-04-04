@@ -363,34 +363,6 @@ export default function LibraryScreen() {
           borderBottomColor: colors.border 
         }]}>
           <ThemedText style={[styles.headerTitle, { color: colors.text }]}>Library</ThemedText>
-          
-          <View style={[styles.searchContainer, { backgroundColor: isDarkMode ? colors.backgroundSecondary : colors.backgroundTertiary }]}>
-            <Feather 
-              name="search" 
-              size={18} 
-              color={colors.textSecondary}
-              style={styles.searchIcon} 
-            />
-            <TextInput
-              style={[
-                styles.searchInput, 
-                { color: colors.text, backgroundColor: isDarkMode ? colors.backgroundSecondary : colors.backgroundTertiary }
-              ]}
-              placeholder="Search your library"
-              placeholderTextColor={colors.textTertiary}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
-            {searchQuery !== '' && (
-              <TouchableOpacity onPress={() => setSearchQuery('')}>
-                <Feather 
-                  name="x" 
-                  size={18} 
-                  color={colors.textSecondary}
-                />
-              </TouchableOpacity>
-            )}
-          </View>
         </View>
         
         <View style={styles.tabsContainer}>
@@ -570,6 +542,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
+    marginTop: 16,
   },
   headerTitle: {
     fontSize: 24,

@@ -44,7 +44,7 @@ export default function TabLayout() {
     navigationStateRef.current = currentNavState;
     
     // Listen for tab navigation events
-    const unsubscribe = navigation.addListener('state', (e) => {
+    const unsubscribe = navigation.addListener('state', () => {
       // Check if we're trying to navigate to a disabled tab
       const currentState = navigation.getState?.();
       if (currentState) {
@@ -95,10 +95,13 @@ export default function TabLayout() {
           backgroundColor: colors.background,
           borderBottomWidth: 1,
           borderBottomColor: colors.border,
+          elevation: 0, // Remove shadow on Android
+          shadowOpacity: 0, // Remove shadow on iOS
         },
         headerShadowVisible: false,
+        headerTintColor: colors.text,
         headerTitle: () => (
-          <ThemedText style={styles.headerTitle}>ReScroll</ThemedText>
+          <ThemedText style={[styles.headerTitle, { color: colors.text }]}>ReScroll</ThemedText>
         ),
       }}>
       {/* Only include the explicitly allowed tabs */}

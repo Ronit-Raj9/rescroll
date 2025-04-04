@@ -154,6 +154,473 @@ const PREDEFINED_TAGS: InterestTag[] = [
   { id: '10', name: 'Materials Science', color: '#E6F7FF', textColor: '#0050B3' },
 ];
 
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+  },
+  backButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.05)',
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+  },
+  contentContainer: {
+    flex: 1,
+  },
+  profileHeader: {
+    padding: 24,
+    alignItems: 'center',
+    borderBottomWidth: 1,
+  },
+  avatarSection: {
+    alignItems: 'center',
+    marginBottom: 20,
+    position: 'relative',
+  },
+  avatarContainer: {
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  avatarWrapper: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    overflow: 'hidden',
+    borderWidth: 3,
+    borderColor: '#fff',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 50,
+  },
+  avatarPlaceholder: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarPlaceholderText: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  editAvatarButton: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  profileInfo: {
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 24,
+  },
+  userName: {
+    fontSize: 22,
+    fontWeight: '600',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  userBio: {
+    fontSize: 16,
+    textAlign: 'center',
+    maxWidth: '90%',
+    lineHeight: 22,
+  },
+  sectionContainer: {
+    padding: 20,
+    marginBottom: 8,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 16,
+  },
+  settingItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+  },
+  settingItemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  settingIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  settingText: {
+    fontSize: 16,
+  },
+  settingValue: {
+    fontSize: 16,
+    marginRight: 8,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  bottomSheet: {
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    padding: 20,
+    paddingBottom: 36,
+    minHeight: 200,
+  },
+  tooltip: {
+    position: 'absolute',
+    bottom: -30,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    zIndex: 5,
+  },
+  tooltipText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  avatarLoadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  editNameContainer: {
+    padding: 16,
+  },
+  nameInput: {
+    fontSize: 18,
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+  },
+  editBioContainer: {
+    padding: 16,
+  },
+  bioInput: {
+    fontSize: 16,
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    minHeight: 100,
+    textAlignVertical: 'top',
+  },
+  interestsContainer: {
+    padding: 16,
+  },
+  interestsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  interestsTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  editInterestsButton: {
+    padding: 8,
+  },
+  tagContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  interestTag: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+  },
+  interestTagText: {
+    fontSize: 14,
+  },
+  addInterestButton: {
+    padding: 8,
+    borderRadius: 16,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+  },
+  settingItemRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  interestSelectorContainer: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 16,
+  },
+  interestSelectorHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  interestSelectorTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+  },
+  interestSelectorContent: {
+    maxHeight: '80%',
+  },
+  interestTagsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  interestSelectorTag: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+  },
+  interestSelectorTagText: {
+    fontSize: 16,
+  },
+  selectedIndicator: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: Colors.light.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
+  },
+  interestTagSelected: {
+    backgroundColor: Colors.light.primary,
+  },
+  doneButton: {
+    padding: 16,
+    backgroundColor: Colors.light.primary,
+    borderRadius: 16,
+    alignItems: 'center',
+  },
+  doneButtonText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  languageModalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  languageModalContent: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 16,
+  },
+  languageModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  languageModalTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+  },
+  languageList: {
+    maxHeight: '80%',
+  },
+  languageItem: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+  },
+  selectedLanguageItem: {
+    backgroundColor: Colors.light.primary,
+  },
+  languageInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  languageName: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  languageNative: {
+    fontSize: 16,
+    color: '#999',
+  },
+  fullScreenImageContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fullScreenCloseButton: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  fullScreenImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'contain',
+  },
+  helpCenterHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+  },
+  helpCenterBackButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.05)',
+  },
+  helpCenterTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    marginLeft: 16,
+  },
+  helpCenterContainer: {
+    flex: 1,
+    padding: 16,
+  },
+  chatContainer: {
+    flex: 1,
+  },
+  chatContentContainer: {
+    padding: 16,
+  },
+  chatBubble: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  botBubble: {
+    backgroundColor: '#E0E0E0',
+  },
+  userBubble: {
+    backgroundColor: '#FFF0F6',
+  },
+  botAvatarContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  messageContent: {
+    flex: 1,
+  },
+  chatText: {
+    fontSize: 16,
+  },
+  botText: {
+    color: '#000',
+  },
+  userText: {
+    color: '#000',
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+  },
+  chatInput: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+  },
+  sendButton: {
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: Colors.light.primary,
+    marginLeft: 8,
+  },
+  privacyHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+  },
+  privacyBackButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.05)',
+  },
+  privacyTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    marginLeft: 16,
+  },
+  privacyContainer: {
+    flex: 1,
+    padding: 16,
+  },
+  privacyContent: {
+    flex: 1,
+  },
+  privacySection: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 16,
+  },
+  privacyHeading: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  privacyText: {
+    fontSize: 16,
+  },
+});
+
 export default function ProfileSettingsScreen() {
   const router = useRouter();
   const appContext = useContext(AppContext);
@@ -1138,22 +1605,7 @@ export default function ProfileSettingsScreen() {
           </View>
           
           {/* AI Features Section */}
-          <View style={styles.sectionContainer}>
-            <ThemedText style={styles.sectionTitle}>AI Features</ThemedText>
-            
-            <TouchableOpacity
-              style={styles.settingItem}
-              onPress={() => router.push('/ai-icons')}
-            >
-              <View style={styles.settingItemLeft}>
-                <View style={[styles.settingIcon, { backgroundColor: '#F9F0FF' }]}>
-                  <Feather name="star" size={18} color="#722ED1" />
-                </View>
-                <ThemedText style={styles.settingText}>AI Icon Gallery</ThemedText>
-              </View>
-              <Feather name="chevron-right" size={18} color="#999" />
-            </TouchableOpacity>
-          </View>
+          
           
           <View style={styles.sectionContainer}>
             <ThemedText style={styles.sectionTitle}>Support</ThemedText>
@@ -1495,638 +1947,4 @@ export default function ProfileSettingsScreen() {
   </SafeAreaView>
 </SafeGestureHandler>
 );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-    height: 56,
-    zIndex: 10,
-  },
-  backButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.05)',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#000',
-  },
-  contentContainer: {
-    flex: 1,
-  },
-  profileHeader: {
-    padding: 24,
-    alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  avatarSection: {
-    alignItems: 'center',
-    marginBottom: 20,
-    position: 'relative',
-  },
-  avatarContainer: {
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  avatarWrapper: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    overflow: 'hidden',
-    borderWidth: 3,
-    borderColor: '#fff',
-  },
-  avatarImage: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 50,
-  },
-  avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-  },
-  avatarPlaceholder: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#F0F0F0',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarPlaceholderText: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  editAvatarButton: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: Colors.light.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#fff',
-  },
-  profileInfo: {
-    alignItems: 'center',
-    width: '100%',
-    marginBottom: 24,
-  },
-  userInfo: {
-    alignItems: 'center',
-    width: '100%',
-    paddingHorizontal: 20,
-  },
-  nameContainer: {
-    alignItems: 'center',
-    marginBottom: 16,
-    width: '100%',
-  },
-  nameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  editNameContainer: {
-    alignItems: 'center',
-    marginBottom: 12,
-    width: '100%',
-  },
-  nameInput: {
-    fontSize: 22,
-    fontWeight: '600',
-    textAlign: 'center',
-    minWidth: 200,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    backgroundColor: 'rgba(0,0,0,0.03)',
-    borderRadius: 8,
-  },
-  userName: {
-    fontSize: 22,
-    fontWeight: '600',
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-  bioContainer: {
-    width: '100%',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  bioRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%',
-  },
-  editNameButton: {
-    padding: 8,
-    marginLeft: 8,
-  },
-  editBioButton: {
-    padding: 8,
-    marginLeft: 8,
-  },
-  editBioContainer: {
-    width: '100%',
-    alignItems: 'center',
-  },
-  bioInput: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    width: '100%',
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    backgroundColor: 'rgba(0,0,0,0.03)',
-    borderRadius: 8,
-    minHeight: 60,
-  },
-  userBio: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    maxWidth: '90%',
-    lineHeight: 22,
-  },
-  interestsContainer: {
-    width: '100%',
-    marginBottom: 16,
-  },
-  interestsHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-    paddingHorizontal: 16,
-  },
-  interestsTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  editInterestsButton: {
-    padding: 8,
-  },
-  interestTagsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: 16,
-  },
-  tagContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    width: '100%',
-    paddingHorizontal: 16,
-  },
-  interestTag: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 16,
-    marginRight: 8,
-    marginBottom: 8,
-    backgroundColor: '#F3E8FF',
-  },
-  interestTagText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#6C5CE7',
-  },
-  addInterestButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 16,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderStyle: 'dashed',
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  addInterestText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#666',
-    marginLeft: 4,
-  },
-  sectionContainer: {
-    padding: 20,
-    marginBottom: 8,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 16,
-    color: '#000',
-  },
-  settingsContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    overflow: 'hidden',
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#f0f0f0',
-  },
-  settingItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f5f5f5',
-  },
-  settingItemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  settingIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  settingText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  settingItemRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  settingValue: {
-    fontSize: 16,
-    color: '#666',
-    marginRight: 8,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  bottomSheet: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    padding: 20,
-    paddingBottom: 36,
-    minHeight: 200,
-  },
-  bottomSheetHeader: {
-    alignItems: 'center',
-    marginBottom: 24,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  bottomSheetIndicator: {
-    width: 40,
-    height: 5,
-    backgroundColor: '#DDDDDD',
-    borderRadius: 3,
-    marginBottom: 10,
-  },
-  bottomSheetTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-  },
-  bottomSheetContent: {
-    paddingBottom: 24,
-  },
-  bottomSheetOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f5f5f5',
-  },
-  bottomSheetOptionText: {
-    fontSize: 16,
-    marginLeft: 12,
-    color: '#333',
-  },
-  interestSelectorContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    width: '90%',
-    maxHeight: '80%',
-    padding: 20,
-  },
-  interestSelectorHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  interestSelectorTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-  },
-  interestSelectorContent: {
-    flex: 1,
-    paddingVertical: 8,
-  },
-  interestTagsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'flex-start',
-  },
-  interestSelectorTag: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 16,
-    margin: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minWidth: 100,
-  },
-  interestSelectorTagText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  interestTagSelected: {
-    borderWidth: 2,
-    borderColor: Colors.light.primary,
-  },
-  selectedIndicator: {
-    position: 'absolute',
-    top: -8,
-    right: -8,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: Colors.light.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#fff',
-  },
-  doneButton: {
-    backgroundColor: Colors.light.primary,
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  doneButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  helpCenterHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-  },
-  helpCenterBackButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.05)',
-  },
-  helpCenterTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#000',
-  },
-  helpCenterContainer: {
-    flex: 1,
-    padding: 16,
-  },
-  chatContainer: {
-    flex: 1,
-  },
-  chatContentContainer: {
-    padding: 16,
-  },
-  chatBubble: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  botBubble: {
-    backgroundColor: '#F3E8FF',
-    borderRadius: 12,
-    padding: 12,
-  },
-  userBubble: {
-    backgroundColor: '#E6FFFB',
-    borderRadius: 12,
-    padding: 12,
-  },
-  botAvatarContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#6C5CE7',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  messageContent: {
-    flex: 1,
-  },
-  chatText: {
-    fontSize: 16,
-    color: '#000',
-  },
-  botText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  userText: {
-    fontSize: 16,
-    color: '#666',
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-  },
-  chatInput: {
-    flex: 1,
-    padding: 12,
-    backgroundColor: '#fff',
-    borderRadius: 8,
-  },
-  sendButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#6C5CE7',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: 8,
-  },
-  privacyHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-  },
-  privacyBackButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.05)',
-  },
-  privacyTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#000',
-  },
-  privacyContainer: {
-    flex: 1,
-    padding: 16,
-  },
-  privacyContent: {
-    padding: 16,
-  },
-  privacySection: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 12,
-  },
-  privacyHeading: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  privacyText: {
-    fontSize: 16,
-    color: '#666',
-  },
-  languageModalContainer: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  languageModalContent: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    width: '90%',
-    maxHeight: '80%',
-    padding: 20,
-  },
-  languageModalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  languageModalTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-  },
-  languageList: {
-    flex: 1,
-  },
-  languageItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  languageInfo: {
-    flex: 1,
-  },
-  languageName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000',
-  },
-  languageNative: {
-    fontSize: 14,
-    color: '#666',
-  },
-  selectedLanguageItem: {
-    backgroundColor: '#E6FFFB',
-  },
-  fullScreenImageContainer: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.9)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  fullScreenImage: {
-    width: '100%',
-    height: '80%',
-  },
-  fullScreenCloseButton: {
-    position: 'absolute',
-    top: 40,
-    right: 20,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 10,
-  },
-  tooltip: {
-    position: 'absolute',
-    bottom: -30,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    zIndex: 5,
-  },
-  tooltipText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  avatarLoadingContainer: {
-    backgroundColor: 'rgba(0,0,0,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-}); 
+} 

@@ -44,21 +44,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const getCurrentUser = async (token: string) => {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
       const response = await fetch(`${apiUrl}/users/me`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
+        signal: controller.signal
       });
       
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
         throw new Error('Failed to get user data');
       }
 
       return await response.json();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error getting current user:', error);
+      if (error instanceof TypeError && error.message === 'Network request failed') {
+        throw new Error('Unable to connect to the server. Please check your internet connection and try again.');
+      }
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('Request timed out. Please try again.');
+      }
       throw error;
     }
   };
@@ -91,14 +103,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       console.log('Attempting login to:', `${apiUrl}/auth/login`);
       
+      // Add timeout to the fetch request
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
       const response = await fetch(`${apiUrl}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: formData.toString(),
+        signal: controller.signal
       });
 
+      clearTimeout(timeoutId);
       console.log('Login response status:', response.status);
 
       if (!response.ok) {
@@ -118,8 +136,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('Successfully got user data, navigating to home');
 
       router.replace('/(tabs)');
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error signing in:', error);
+      if (error instanceof TypeError && error.message === 'Network request failed') {
+        throw new Error('Unable to connect to the server. Please check your internet connection and try again.');
+      }
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('Request timed out. Please try again.');
+      }
       throw error;
     }
   };
