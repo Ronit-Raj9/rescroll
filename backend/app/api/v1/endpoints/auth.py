@@ -13,7 +13,7 @@ from app.utils import (
     generate_password_reset_token,
     verify_password_reset_token,
 )
-from app.db.database import get_db
+from app.db.session import get_db
 from app.services.auth_service import AuthService
 from app.services.user_service import UserService
 from app.schemas.token import Token
@@ -63,8 +63,30 @@ async def register_user(
     Register a new user.
     """
     try:
+        # First check if user with this email or username already exists
         user_service = UserService(db)
+        
+        # Check email
+        existing_email = await user_service.get_user_by_email(user_data.email)
+        if existing_email:
+            logger.warning(f"Registration attempt with existing email: {user_data.email}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="A user with this email address already exists"
+            )
+            
+        # Check username
+        existing_username = await user_service.get_user_by_username(user_data.username)
+        if existing_username:
+            logger.warning(f"Registration attempt with existing username: {user_data.username}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="This username is already taken"
+            )
+        
+        # Create user if validation passes
         user = await user_service.create_user(user_data)
+        logger.info(f"User registered successfully: {user_data.email}")
         return user
     except HTTPException as e:
         # Re-raise HTTP exceptions as they are already properly formatted

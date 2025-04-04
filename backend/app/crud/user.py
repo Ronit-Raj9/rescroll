@@ -4,8 +4,9 @@ from sqlalchemy import select
 from app.core.security import get_password_hash, verify_password
 from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate
+from uuid import UUID
 
-async def get_user_by_id(db: AsyncSession, id: int) -> Optional[User]:
+async def get_user_by_id(db: AsyncSession, id: UUID) -> Optional[User]:
     result = await db.execute(select(User).filter(User.id == id))
     return result.scalar_one_or_none()
 

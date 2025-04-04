@@ -1,6 +1,6 @@
 from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 from app import crud, models, schemas
 from app.api import deps
 from app.utils import upload_image, delete_image
@@ -9,7 +9,7 @@ router = APIRouter()
 
 @router.get("/", response_model=List[schemas.User])
 async def read_users(
-    db: AsyncSession = Depends(deps.get_db),
+    db: Session = Depends(deps.db_dependency),
     skip: int = 0,
     limit: int = 100,
     current_user: models.User = Depends(deps.get_current_active_user),
@@ -23,7 +23,7 @@ async def read_users(
 @router.post("/", response_model=schemas.User)
 async def create_user(
     *,
-    db: AsyncSession = Depends(deps.get_db),
+    db: Session = Depends(deps.db_dependency),
     user_in: schemas.UserCreate,
     current_user: models.User = Depends(deps.get_current_active_superuser),
 ) -> Any:
@@ -42,7 +42,7 @@ async def create_user(
 @router.put("/me", response_model=schemas.User)
 async def update_user_me(
     *,
-    db: AsyncSession = Depends(deps.get_db),
+    db: Session = Depends(deps.db_dependency),
     user_in: schemas.UserUpdate,
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
@@ -55,7 +55,7 @@ async def update_user_me(
 @router.post("/me/profile-image", response_model=schemas.ProfileImage)
 async def upload_profile_image(
     *,
-    db: AsyncSession = Depends(deps.get_db),
+    db: Session = Depends(deps.db_dependency),
     file: UploadFile = File(...),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
@@ -85,7 +85,7 @@ async def upload_profile_image(
 @router.delete("/me/profile-image", response_model=schemas.User)
 async def delete_profile_image(
     *,
-    db: AsyncSession = Depends(deps.get_db),
+    db: Session = Depends(deps.db_dependency),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """
@@ -113,7 +113,7 @@ async def delete_profile_image(
 
 @router.get("/me", response_model=schemas.User)
 async def read_user_me(
-    db: AsyncSession = Depends(deps.get_db),
+    db: Session = Depends(deps.db_dependency),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """
@@ -125,7 +125,7 @@ async def read_user_me(
 async def read_user_by_id(
     user_id: int,
     current_user: models.User = Depends(deps.get_current_active_user),
-    db: AsyncSession = Depends(deps.get_db),
+    db: Session = Depends(deps.db_dependency),
 ) -> Any:
     """
     Get a specific user by id.
@@ -142,7 +142,7 @@ async def read_user_by_id(
 @router.put("/{user_id}", response_model=schemas.User)
 async def update_user(
     *,
-    db: AsyncSession = Depends(deps.get_db),
+    db: Session = Depends(deps.db_dependency),
     user_id: int,
     user_in: schemas.UserUpdate,
     current_user: models.User = Depends(deps.get_current_active_superuser),

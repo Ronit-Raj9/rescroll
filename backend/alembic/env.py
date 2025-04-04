@@ -2,6 +2,7 @@ import asyncio
 import os
 import sys
 from logging.config import fileConfig
+import ssl
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
@@ -77,7 +78,22 @@ async def run_migrations_online() -> None:
     # Getting URL from settings
     configuration = config.get_section(config.config_ini_section)
     url = configuration["sqlalchemy.url"]
-    connectable = create_async_engine(url)
+    
+    # Create SSL context for Supabase connection if SSL is enabled
+    ssl_context = None
+    if settings.DATABASE_SSL:
+        # Create SSL context with appropriate security settings
+        ssl_context = ssl.create_default_context()
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = ssl.CERT_NONE
+    
+    connectable = create_async_engine(
+        url,
+        pool_pre_ping=True,
+        pool_size=10,
+        max_overflow=20,
+        connect_args={"ssl": ssl_context} if ssl_context else {}
+    )
 
     async with connectable.connect() as connection:
         await connection.run_sync(do_run_migrations)

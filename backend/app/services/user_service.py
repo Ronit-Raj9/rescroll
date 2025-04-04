@@ -5,6 +5,7 @@ from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate
 from passlib.context import CryptContext
 from fastapi import HTTPException, status
+from uuid import UUID
 
 # Password context for hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -38,39 +39,42 @@ class UserService:
         return False, False
 
     async def create_user(self, user_data: UserCreate) -> User:
-        # Check if user exists
-        email_exists, username_exists = await self.check_user_exists(
-            user_data.email, user_data.username
-        )
-        
-        if email_exists and username_exists:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Both email and username are already registered"
-            )
-        elif email_exists:
+        # Check if user exists - first check email and username individually
+        # for clearer error messages
+        existing_email = await self.get_user_by_email(user_data.email)
+        if existing_email:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Email already registered"
             )
-        elif username_exists:
+        
+        existing_username = await self.get_user_by_username(user_data.username)
+        if existing_username:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Username already taken"
             )
         
-        hashed_password = self.get_password_hash(user_data.password)
-        db_user = User(
-            email=user_data.email,
-            username=user_data.username,
-            full_name=user_data.full_name,
-            hashed_password=hashed_password,
-            is_active=True
-        )
-        self.db.add(db_user)
-        await self.db.commit()
-        await self.db.refresh(db_user)
-        return db_user
+        try:
+            # Create the user
+            hashed_password = self.get_password_hash(user_data.password)
+            db_user = User(
+                email=user_data.email,
+                username=user_data.username,
+                full_name=user_data.full_name,
+                hashed_password=hashed_password,
+                is_active=True
+            )
+            self.db.add(db_user)
+            await self.db.commit()
+            await self.db.refresh(db_user)
+            return db_user
+        except Exception as e:
+            await self.db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Database error: {str(e)}"
+            )
 
     async def get_user_by_email(self, email: str) -> Optional[User]:
         query = select(User).where(User.email == email)
@@ -82,12 +86,12 @@ class UserService:
         result = await self.db.execute(query)
         return result.scalars().first()
 
-    async def get_user_by_id(self, user_id: int) -> Optional[User]:
+    async def get_user_by_id(self, user_id: UUID) -> Optional[User]:
         query = select(User).where(User.id == user_id)
         result = await self.db.execute(query)
         return result.scalars().first()
 
-    async def update_user(self, user_id: int, user_data: UserUpdate) -> Optional[User]:
+    async def update_user(self, user_id: UUID, user_data: UserUpdate) -> Optional[User]:
         user = await self.get_user_by_id(user_id)
         if not user:
             return None
@@ -122,7 +126,7 @@ class UserService:
         await self.db.refresh(user)
         return user
 
-    async def delete_user(self, user_id: int) -> bool:
+    async def delete_user(self, user_id: UUID) -> bool:
         user = await self.get_user_by_id(user_id)
         if not user:
             return False

@@ -1,6 +1,6 @@
 from typing import Any, Dict, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 from app import models, schemas
 from app.api import deps
 import logging
@@ -36,7 +36,7 @@ async def get_paper_details(
 @router.get("/arxiv/{paper_id}/summary", response_model=Dict[str, Any])
 async def get_paper_summary(
     paper_id: str,
-    db: AsyncSession = Depends(deps.get_db),
+    db: Session = Depends(deps.db_dependency),
     current_user: models.User = Depends(deps.get_current_active_user)
 ) -> Dict[str, Any]:
     """
